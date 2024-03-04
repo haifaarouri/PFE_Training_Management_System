@@ -18,3 +18,18 @@ Route::get('/', function () {
 });
 
 require __DIR__.'/auth.php';
+
+//Pilote du processus Routes
+// Route::middleware(['auth', 'user-role:PiloteDuProcessus'])->group(function() {
+//     Route::get("/pilote/home", [PiloteHomeController::class, 'piloteHome'])->name('pilote.home');
+// });
+
+// //Sales Routes
+// Route::middleware(['auth', 'user-role:Sales'])->group(function() {
+//     Route::get("/sales/home", [SalesHomeController::class, 'salesHome'])->name('sales.home');
+// });
+
+//Pilote du processus Routes
+// Route::middleware(['auth', 'user-role:PiloteDuProcessus'])->group(function() {
+//     Route::get("/pilote-home", [PiloteHomeController::class, 'piloteHome'])->name('piloteHome');
+// });

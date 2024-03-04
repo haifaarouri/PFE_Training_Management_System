@@ -21,21 +21,32 @@ class RegisteredUserController extends Controller
     public function store(Request $request): Response
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'firstName' => 'required|string|max:255',
+            'lastName' => 'required|string|max:255',
+            'phoneNumber' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'profileImage' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        if ($request->hasFile('profileImage')) {
+            $fileName = time() . $request->file('profileImage')->getClientOriginalName();
+            $request->profileImage->move(public_path('profilePictures'), $fileName);
 
-        event(new Registered($user));
+            $user = User::create([
+                'firstName' => $request->firstName,
+                'lastName' => $request->lastName,
+                'email' => $request->email,
+                'phoneNumber' => $request->phoneNumber,
+                'profileImage' => $fileName,
+                'password' => Hash::make($request->password),
+            ]);
 
-        Auth::login($user);
+            event(new Registered($user));
 
-        return response()->noContent();
+            Auth::login($user);
+
+            return response()->noContent();
+        }
     }
 }
