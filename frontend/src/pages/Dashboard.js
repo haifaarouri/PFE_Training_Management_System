@@ -211,7 +211,7 @@ function Dashboard() {
                   <tbody>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face1.jpg" alt="image" />
+                        <img src="images/faces/face1.jpg" alt="images/faces/face1.jpg" />
                       </td>
                       <td>Herman Beck</td>
                       <td>
@@ -231,7 +231,7 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face2.jpg" alt="image" />
+                        <img src="images/faces/face2.jpg" alt="images/faces/face2.jpg" />
                       </td>
                       <td>Messsy Adam</td>
                       <td>
@@ -251,7 +251,7 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face3.jpg" alt="image" />
+                        <img src="images/faces/face3.jpg" alt="images/faces/face3.jpg" />
                       </td>
                       <td>John Richards</td>
                       <td>
@@ -271,7 +271,7 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face4.jpg" alt="image" />
+                        <img src="images/faces/face4.jpg" alt="images/faces/face4.jpg" />
                       </td>
                       <td>Peter Meggik</td>
                       <td>
@@ -291,7 +291,7 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face5.jpg" alt="image" />
+                        <img src="images/faces/face5.jpg" alt="images/faces/face5.jpg" />
                       </td>
                       <td>Edward</td>
                       <td>
@@ -311,7 +311,7 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face6.jpg" alt="image" />
+                        <img src="images/faces/face6.jpg" alt="images/faces/face6.jpg" />
                       </td>
                       <td>John Doe</td>
                       <td>
@@ -331,7 +331,7 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face7.jpg" alt="image" />
+                        <img src="images/faces/face7.jpg" alt="images/faces/face7.jpg" />
                       </td>
                       <td>Henry Tom</td>
                       <td>

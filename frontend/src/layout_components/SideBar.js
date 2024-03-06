@@ -9,7 +9,7 @@ function SideBar() {
           <span />
         </li>
         <li className="nav-item">
-          <Link className="nav-link" to="/">
+          <Link className="nav-link" to="/dashboard">
             <i className="mdi mdi-view-quilt menu-icon" />
             <span className="menu-title">Dashboard</span>
             {/* <div className="badge badge-info badge-pill">2</div> */}

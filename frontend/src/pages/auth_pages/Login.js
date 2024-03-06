@@ -1,10 +1,12 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "../../services/axios";
 import { useRef, useState } from "react";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../store/slices/authenticatedUserSlice";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +14,7 @@ function Login() {
   const navigate = useNavigate();
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
+  const dispatch = useDispatch();
 
   const handleError = (err) =>
     toast.error(err, {
@@ -51,22 +54,27 @@ function Login() {
       }
 
       setValidated(true);
-      const res = await axios.post(`/login`, {
+      await axios.post(`/login`, {
         email: email,
         password: password,
       });
-      console.log(res);
+
       handleSuccess("Connecté avec succès !");
       setEmail("");
       setPassword("");
 
       const userResponse = await axios.get("/api/user");
       const user = userResponse.data;
+      
+      //stock user in redux
+      dispatch(setUser(user));
 
-      if (user && user.role === "SuperAdministrateur") {
-        navigate("/super-admin/users");
-      } else if (user) {
-        navigate("/");
+      if (user) {
+        if (user.role === "SuperAdministrateur") {
+          navigate("/super-admin/users");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       if (error.response.status === 422) {
@@ -154,9 +162,9 @@ function Login() {
         </div>
         <div className="text-center mt-4 font-weight-light">
           Vous n'avez pas de compte ?{" "}
-          <a href="login.html" className="text-primary">
+          <Link to="/register" className="text-primary">
             S'inscrire
-          </a>
+          </Link>
         </div>
       </Form>
       <ToastContainer />

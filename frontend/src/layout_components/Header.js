@@ -1,8 +1,13 @@
 import moment from "moment";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 function Header() {
   const [today, setToday] = useState(null);
+  const [user, setUser] = useState(null);
+
+  const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
   useEffect(() => {
     let d = moment()
@@ -10,7 +15,9 @@ function Header() {
       .replace(/am/g, "matin")
       .replace(/pm/g, "après-midi");
     setToday(d);
-  }, []);
+
+    setUser(result.user);
+  }, [result.user]);
 
   return (
     <nav className="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
@@ -23,30 +30,30 @@ function Header() {
           <span className="mdi mdi-menu" />
         </button>
         {/* <div className="navbar-brand-wrapper">
-          <a className="navbar-brand brand-logo" href="index.html">
+          <Link className="navbar-brand brand-logo" to="index.html">
             <img src="images/logo.svg" alt="logo" />
-          </a>
-          <a className="navbar-brand brand-logo-mini" href="index.html">
+          </Link>
+          <Link className="navbar-brand brand-logo-mini" to="index.html">
             <img src="images/logo-mini.svg" alt="logo" />
-          </a>
+          </Link>
         </div> */}
         <h4 className="font-weight-bold mb-0 d-none d-md-block mt-1">
-          Welcome back, Brandon Haynes
+          Welcome back, {user && user.firstName}
         </h4>
         <ul className="navbar-nav navbar-nav-right">
           <li className="nav-item">
             <h4 className="mb-0 font-weight-bold d-none d-xl-block">{today}</h4>
           </li>
           <li className="nav-item dropdown me-1">
-            <a
+            <Link
               className="nav-link count-indicator dropdown-toggle d-flex justify-content-center align-items-center"
               id="messageDropdown"
-              href="#"
+              to="#"
               data-bs-toggle="dropdown"
             >
               <i className="mdi mdi-calendar mx-0" />
               <span className="count bg-info">2</span>
-            </a>
+            </Link>
             <div
               className="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
               aria-labelledby="messageDropdown"
@@ -54,11 +61,11 @@ function Header() {
               <p className="mb-0 font-weight-normal float-left dropdown-header">
                 Messages
               </p>
-              <a className="dropdown-item preview-item">
+              <Link className="dropdown-item preview-item">
                 <div className="preview-thumbnail">
                   <img
                     src="images/faces/face4.jpg"
-                    alt="image"
+                    alt="ProfileImage"
                     className="profile-pic"
                   />
                 </div>
@@ -70,12 +77,12 @@ function Header() {
                     The meeting is cancelled
                   </p>
                 </div>
-              </a>
-              <a className="dropdown-item preview-item">
+              </Link>
+              <Link className="dropdown-item preview-item">
                 <div className="preview-thumbnail">
                   <img
                     src="images/faces/face2.jpg"
-                    alt="image"
+                    alt="userImage"
                     className="profile-pic"
                   />
                 </div>
@@ -87,12 +94,12 @@ function Header() {
                     New product launch
                   </p>
                 </div>
-              </a>
-              <a className="dropdown-item preview-item">
+              </Link>
+              <Link className="dropdown-item preview-item">
                 <div className="preview-thumbnail">
                   <img
                     src="images/faces/face3.jpg"
-                    alt="image"
+                    alt="anotherImage"
                     className="profile-pic"
                   />
                 </div>
@@ -105,19 +112,19 @@ function Header() {
                     Upcoming board meeting
                   </p>
                 </div>
-              </a>
+              </Link>
             </div>
           </li>
           <li className="nav-item dropdown me-2">
-            <a
+            <Link
               className="nav-link count-indicator dropdown-toggle d-flex align-items-center justify-content-center"
               id="notificationDropdown"
-              href="#"
+              to="#"
               data-bs-toggle="dropdown"
             >
               <i className="mdi mdi-email-open mx-0" />
               <span className="count bg-danger">1</span>
-            </a>
+            </Link>
             <div
               className="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
               aria-labelledby="notificationDropdown"
@@ -125,7 +132,7 @@ function Header() {
               <p className="mb-0 font-weight-normal float-left dropdown-header">
                 Notifications
               </p>
-              <a className="dropdown-item preview-item">
+              <Link className="dropdown-item preview-item">
                 <div className="preview-thumbnail">
                   <div className="preview-icon bg-success">
                     <i className="mdi mdi-information mx-0" />
@@ -139,8 +146,8 @@ function Header() {
                     Just now
                   </p>
                 </div>
-              </a>
-              <a className="dropdown-item preview-item">
+              </Link>
+              <Link className="dropdown-item preview-item">
                 <div className="preview-thumbnail">
                   <div className="preview-icon bg-warning">
                     <i className="mdi mdi-settings mx-0" />
@@ -154,8 +161,8 @@ function Header() {
                     Private message
                   </p>
                 </div>
-              </a>
-              <a className="dropdown-item preview-item">
+              </Link>
+              <Link className="dropdown-item preview-item">
                 <div className="preview-thumbnail">
                   <div className="preview-icon bg-info">
                     <i className="mdi mdi-account-box mx-0" />
@@ -169,7 +176,7 @@ function Header() {
                     2 days ago
                   </p>
                 </div>
-              </a>
+              </Link>
             </div>
           </li>
         </ul>
@@ -197,43 +204,43 @@ function Header() {
         </ul>
         <ul className="navbar-nav navbar-nav-right">
           <li className="nav-item nav-profile dropdown">
-            <a
+            <Link
               className="nav-link dropdown-toggle"
-              href="#"
+              to="#"
               data-bs-toggle="dropdown"
               id="profileDropdown"
             >
               <img src="images/faces/face5.jpg" alt="profile" />
               <span className="nav-profile-name">Eleanor Richardson</span>
-            </a>
+            </Link>
             <div
               className="dropdown-menu dropdown-menu-right navbar-dropdown"
               aria-labelledby="profileDropdown"
             >
-              <a className="dropdown-item">
+              <Link className="dropdown-item">
                 <i className="mdi mdi-settings text-primary" />
                 Settings
-              </a>
-              <a className="dropdown-item">
+              </Link>
+              <Link className="dropdown-item">
                 <i className="mdi mdi-logout text-primary" />
                 Logout
-              </a>
+              </Link>
             </div>
           </li>
           <li className="nav-item">
-            <a href="#" className="nav-link icon-link">
+            <Link to="#" className="nav-link icon-link">
               <i className="mdi mdi-plus-circle-outline" />
-            </a>
+            </Link>
           </li>
           <li className="nav-item">
-            <a href="#" className="nav-link icon-link">
+            <Link to="#" className="nav-link icon-link">
               <i className="mdi mdi-web" />
-            </a>
+            </Link>
           </li>
           <li className="nav-item">
-            <a href="#" className="nav-link icon-link">
+            <Link to="#" className="nav-link icon-link">
               <i className="mdi mdi-clock-outline" />
-            </a>
+            </Link>
           </li>
         </ul>
       </div>

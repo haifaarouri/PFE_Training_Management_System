@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "../../services/axios";
 import { useRef, useState } from "react";
 import Card from "react-bootstrap/Card";
@@ -93,7 +93,7 @@ function Register() {
       setPasswordConfirm("");
       setPhoneNumber("");
       setProfileImage("");
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       if (error.response.status === 422) {
         handleError(error.response.data.message);
@@ -271,7 +271,7 @@ function Register() {
             </InputGroup.Text>
             <Form.Control
               type="text"
-              placeholder="Saisir votre niméro de téléphone"
+              placeholder="Saisir votre numéro de téléphone"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
@@ -310,9 +310,9 @@ function Register() {
         </div>
         <div className="text-center mt-4 font-weight-light">
           Vous avez déjà un compte ?{" "}
-          <a href="login.html" className="text-primary">
+          <Link to="/login" className="text-primary">
             Se connecter
-          </a>
+          </Link>
         </div>
       </Form>
       <ToastContainer />

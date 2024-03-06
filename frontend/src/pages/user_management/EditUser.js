@@ -1,24 +1,13 @@
-import { UploadOutlined } from "@ant-design/icons";
-import {
-  Button,
-  Card,
-  Col,
-  Form,
-  Input,
-  Row,
-  Select,
-  Typography,
-  Upload,
-} from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { editUser, fetchUserById } from "../../services/UserServices";
-import { useParams } from "react-router-dom";
-import { Option } from "antd/lib/mentions";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../services/axios";
+import { Button, Form, InputGroup } from "react-bootstrap";
+import { useDispatch } from "react-redux";
+import { setMsg } from "../../store/slices/successMessageSlice";
 
 function EditUser() {
-  const { Title } = Typography;
-  //   const navigate = useNavigate()
+  const navigate = useNavigate();
   const params = useParams();
   const { id } = params;
   const [user, setUser] = useState({
@@ -27,71 +16,64 @@ function EditUser() {
     id: "",
     lastName: "",
     phoneNumber: "",
-    profileImage: "",
     role: "",
+    profileImage: "",
   });
-  const [form] = Form.useForm(); // useForm hook initialized
+  const [validated, setValidated] = useState(false);
+  const formRef = useRef();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchUser = async () => {
       const userData = await fetchUserById(id);
-      // Once the user is fetched, set the form fields directly.
-      form.setFieldsValue({ ...userData });
       setUser(userData);
     };
 
     if (id) {
       fetchUser();
     }
-  }, [id, form]);
-
-  const onFinishFailed = (errorInfo) => {
-    console.log("Failed:", errorInfo);
-  };
+  }, [id]);
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
-  const handleRegister = async () => {
+  const handleEditUser = async (e) => {
+    e.preventDefault();
     await csrf();
 
     try {
+      const form = formRef.current;
+      if (form.checkValidity() === false) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      setValidated(true);
+
       const formData = new FormData();
+      formData.append("_method", "PUT");
       formData.append("firstName", user.firstName);
       formData.append("lastName", user.lastName);
       formData.append("email", user.email);
       formData.append("phoneNumber", user.phoneNumber);
-      formData.append("profileImage", user.profileImage);
       formData.append("role", user.role);
+      formData.append("profileImage", user.profileImage);
 
-      // Display FormData content
-      const formDataObject = {};
-      for (const [key, value] of formData.entries()) {
-        formDataObject[key] = value;
+      const res = await editUser(id, formData);
+
+      if (res.message) {
+        dispatch(setMsg(res.message));
+
+        setUser({
+          email: "",
+          firstName: "",
+          id: "",
+          lastName: "",
+          phoneNumber: "",
+          role: "",
+          profileImage: "",
+        });
+        navigate("/super-admin/users");
       }
-      console.log(formDataObject);
-
-      const config = {
-        headers: { "Content-Type": "multipart/form-data" },
-      };
-      const response = await axios.put(
-        `/api/update-user/${id}`,
-        formData,
-        config
-      );
-      // const res = await editUser(id, formDataObject);
-      console.log(response);
-
-      // form.resetFields();
-      // setUser({
-      //   email: "",
-      //   firstName: "",
-      //   id: "",
-      //   lastName: "",
-      //   phoneNumber: "",
-      //   profileImage: "",
-      //   role: "",
-      // });
-      //   navigate("/dashboard");
     } catch (error) {
       if (error.response.status === 422) {
         console.log(error.response.data.message);
@@ -100,197 +82,252 @@ function EditUser() {
   };
 
   return (
-    <Row gutter={[24, 0]}>
-      <Col xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24 mt-24">
-        <Card bordered={false} className="criclebox cardbody h-full">
-          <div className="project-ant">
-            <div>
-              <Title level={5} style={{ marginTop: "8%" }}>
-                Mettre à jour les informations d'un administrateur
-              </Title>
+    <div className="content-wrapper">
+      <div className="row">
+        <div className="col-lg-12 grid-margin stretch-card">
+          <div className="card shadow-lg p-3 mb-5 bg-white rounded">
+            <div className="card-body">
+              <h4 className="card-title mb-5 mt-2">
+                Mettre à jour les informations de l'administrateur{" "}
+                {user.firstName} {user.lastName}
+              </h4>
+              <Form
+                ref={formRef}
+                noValidate
+                validated={validated}
+                className="p-4"
+                onSubmit={handleEditUser}
+              >
+                <Form.Group className="mb-3">
+                  <Form.Label>Prénom</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i
+                            className="mdi mdi-account-outline text-primary"
+                            style={{ fontSize: "1.5em" }}
+                          />
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Control
+                      value={user.firstName}
+                      onChange={(e) =>
+                        setUser((prevUser) => ({
+                          ...prevUser,
+                          firstName: e.target.value,
+                        }))
+                      }
+                      type="text"
+                      placeholder="Saisir le prénom de l'admin"
+                      required
+                      minLength={3}
+                    />
+                    <Form.Control.Feedback>
+                      Cela semble bon !
+                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      Veuillez saisir le prénom de l'admin qui doit avoir
+                      minimum 3 caractères !
+                    </Form.Control.Feedback>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Nom</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i
+                            className="mdi mdi-account-outline text-primary"
+                            style={{ fontSize: "1.5em" }}
+                          />
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="text"
+                      placeholder="Saisir le nom de famille de l'admin"
+                      value={user.lastName}
+                      onChange={(e) =>
+                        setUser((prevUser) => ({
+                          ...prevUser,
+                          lastName: e.target.value,
+                        }))
+                      }
+                      required
+                      minLength={3}
+                    />
+                    <Form.Control.Feedback>
+                      Cela semble bon !
+                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      Veuillez saisir le nom de l'admin qui doit avoir minimum 3
+                      caractères !
+                    </Form.Control.Feedback>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Email</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i
+                            className="mdi mdi-email-outline text-primary"
+                            style={{ fontSize: "1.5em" }}
+                          />
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="email"
+                      placeholder="Saisir l'adresse e-mail de l'admin"
+                      value={user.email}
+                      onChange={(e) =>
+                        setUser((prevUser) => ({
+                          ...prevUser,
+                          email: e.target.value,
+                        }))
+                      }
+                      required
+                    />
+                    <Form.Control.Feedback>
+                      Cela semble bon !
+                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      Veuillez saisir l'adresse e-mail de l'admin dans un format
+                      adéquat !
+                    </Form.Control.Feedback>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Numéro de Téléphone</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i
+                            className="mdi mdi-phone text-primary"
+                            style={{ fontSize: "1.5em" }}
+                          />
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="text"
+                      placeholder="Saisir le numéro de téléphone de l'admin"
+                      value={user.phoneNumber}
+                      onChange={(e) =>
+                        setUser((prevUser) => ({
+                          ...prevUser,
+                          phoneNumber: e.target.value,
+                        }))
+                      }
+                      required
+                      minLength={8}
+                    />
+                    <Form.Control.Feedback>
+                      Cela semble bon !
+                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      Veuillez saisir le Numéro de Téléphone de l'admin qui doit
+                      comporter au moins 8 caractères !
+                    </Form.Control.Feedback>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Role</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i
+                            className="mdi mdi-account-key text-primary"
+                            style={{ fontSize: "1.5em" }}
+                          />
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Select
+                      name="role"
+                      value={user.role}
+                      onChange={(e) =>
+                        setUser((prevUser) => ({
+                          ...prevUser,
+                          role: e.target.value,
+                        }))
+                      }
+                      required
+                    >
+                      <option disabled>Selectionner le role de l'admin</option>
+                      <option value="PiloteDuProcessus">
+                        Pilote du Processus
+                      </option>
+                      <option value="Sales">Sales</option>
+                      <option value="ChargéFormation">
+                        Chargé de la Formation
+                      </option>
+                      <option value="AssistanceAcceuil">
+                        Assistance d'Acceuil
+                      </option>
+                      <option value="CommunityManager">
+                        Community Manager
+                      </option>
+                      <option value="ServiceFinancier">
+                        Service Financier
+                      </option>
+                    </Form.Select>
+                    <Form.Control.Feedback>
+                      Cela semble bon !
+                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      Veuillez selectionner le role de l'admin !
+                    </Form.Control.Feedback>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Image</Form.Label>
+                  <InputGroup className="mb-3">
+                    <Form.Control
+                      name="profileImage"
+                      style={{ height: "150%" }}
+                      type="file"
+                      accept="image/*"
+                      placeholder="Selectionner l'image de l'admin"
+                      onChange={(e) =>
+                        setUser((prevUser) => ({
+                          ...prevUser,
+                          profileImage: e.target.files[0],
+                        }))
+                      }
+                    />
+                  </InputGroup>
+                </Form.Group>
+                <img
+                  src={`http://localhost:8000/profilePictures/${user.profileImage}`}
+                  alt={user.profileImage}
+                  style={{
+                    width: "20%",
+                    height: "20%",
+                    borderRadius: "10%",
+                  }}
+                />
+                <div className="mt-5 d-flex justify-content-center">
+                  <Button
+                    type="submit"
+                    className="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn"
+                  >
+                    Metter à jour
+                  </Button>
+                </div>
+              </Form>
             </div>
           </div>
-          <div className="ant-list-box">
-            <Form
-              form={form}
-              name="basic"
-              encType="multipart/form-data"
-              onFinish={handleRegister}
-              onFinishFailed={onFinishFailed}
-              className="row-col"
-              style={{ margin: "8%" }}
-            >
-              <Form.Item
-                name="firstName"
-                rules={[
-                  {
-                    required: true,
-                    message: "Veuillez saisir le prénom !",
-                  },
-                  {
-                    whitespace: true,
-                    message: "'Prénom' ne peut pas être vide !",
-                  },
-                  {
-                    min: 3,
-                    message:
-                      "Le 'Prénom' doit comporter au moins 3 caractères !",
-                  },
-                ]}
-                type="text"
-                onChange={(e) =>
-                  setUser((prevUser) => ({
-                    ...prevUser,
-                    firstName: e.target.value,
-                  }))
-                }
-                hasFeedback
-              >
-                <Input placeholder="Prénom" />
-              </Form.Item>
-              <Form.Item
-                name="lastName"
-                rules={[
-                  {
-                    required: true,
-                    message: "Veuillez saisir le Nom de famille !",
-                  },
-                  {
-                    whitespace: true,
-                    message: "'Nom de famille' ne peut pas être vide !",
-                  },
-                  {
-                    min: 3,
-                    message:
-                      "Le 'Nom de famille' doit comporter au moins 3 caractères !",
-                  },
-                ]}
-                type="text"
-                onChange={(e) =>
-                  setUser((prevUser) => ({
-                    ...prevUser,
-                    lastName: e.target.value,
-                  }))
-                }
-                hasFeedback
-              >
-                <Input placeholder="Nom de famille" />
-              </Form.Item>
-              <Form.Item
-                name="email"
-                rules={[
-                  { required: true, message: "Veuillez saisir un Email !" },
-                  {
-                    type: "email",
-                    message: "'E-mail' n'est pas un e-mail valide !",
-                  },
-                ]}
-                hasFeedback
-                onChange={(e) =>
-                  setUser((prevUser) => ({
-                    ...prevUser,
-                    email: e.target.value,
-                  }))
-                }
-              >
-                <Input placeholder="Email" />
-              </Form.Item>
-              <Form.Item
-                name="phoneNumber"
-                rules={[
-                  {
-                    required: true,
-                    message: "Veuillez saisir le Numéro de Téléphone !",
-                  },
-                  {
-                    whitespace: true,
-                    message: "'Numéro de Téléphone' ne peut pas être vide !",
-                  },
-                  {
-                    min: 8,
-                    message:
-                      "Le 'Numéro de Téléphone' doit comporter au moins 8 caractères !",
-                  },
-                ]}
-                type="text"
-                onChange={(e) =>
-                  setUser((prevUser) => ({
-                    ...prevUser,
-                    phoneNumber: e.target.value,
-                  }))
-                }
-                hasFeedback
-              >
-                <Input placeholder="Numéro de Téléphone" />
-              </Form.Item>
-              <Form.Item
-                name="profileImage"
-                label="Image de profil"
-                rules={[
-                  {
-                    required: true,
-                    message: "Veuillez selectionner une image !",
-                  },
-                ]}
-                type="file"
-                onChange={(e) =>
-                  setUser((prevUser) => ({
-                    ...prevUser,
-                    profileImage: e.target.files[0],
-                  }))
-                }
-                hasFeedback
-              >
-                <Upload
-                  name="profileImage"
-                  action="http://localhost:3000"
-                  listType="picture"
-                  accept="image/*"
-                  beforeUpload={() => false}
-                >
-                  <Button icon={<UploadOutlined />}>
-                    Cliquez pour télécharger votre image
-                  </Button>
-                </Upload>
-              </Form.Item>
-              <Form.Item
-                name="role"
-                label="Sélectionner le role de cet admin"
-                hasFeedback
-                rules={[
-                  {
-                    required: true,
-                    message: "Veuillez selectionner un role !",
-                  },
-                ]}
-              >
-                <Select placeholder="Sélectionner le role de cet admin">
-                  <Option value="PiloteDuProcessus">Pilote du Processus</Option>
-                  <Option value="Sales">Sales</Option>
-                  <Option value="ChargéFormation">
-                    Chargé de la Formation
-                  </Option>
-                  <Option value="AssistanceAcceuil">
-                    Assistance d'Acceuil
-                  </Option>
-                  <Option value="CommunityManager">Community Manager</Option>
-                  <Option value="ServiceFinancier">Service Financier</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item>
-                <Button
-                  style={{ width: "100%" }}
-                  type="primary"
-                  htmlType="submit"
-                >
-                  S'inscrire
-                </Button>
-              </Form.Item>
-            </Form>
-          </div>
-        </Card>
-      </Col>
-    </Row>
+        </div>
+      </div>
+    </div>
   );
 }
 
