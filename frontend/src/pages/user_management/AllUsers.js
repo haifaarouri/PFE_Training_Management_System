@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "../../services/axios";
 import Button from "react-bootstrap/Button";
 import moment from "moment";
@@ -237,12 +237,13 @@ function AllUsers() {
                               )}
                             </td>
                             <td className="d-flex flex-column justify-content-center">
-                              <Button
+                              <Link
+                                to={`/super-admin/profile-user/${u.id}`}
                                 variant="outline-info"
-                                className="btn btn-sm mb-2"
+                                className="btn btn-sm mb-2 btn-outline-info"
                               >
                                 Détails
-                              </Button>
+                              </Link>
                               <Button
                                 variant="outline-primary"
                                 onClick={() => handleButtonEdit(u.id)}

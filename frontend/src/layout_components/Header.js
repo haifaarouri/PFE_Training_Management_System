@@ -38,7 +38,7 @@ function Header() {
           </Link>
         </div> */}
         <h4 className="font-weight-bold mb-0 d-none d-md-block mt-1">
-          Welcome back, {user && user.firstName}
+          Bienvenue de nouveau, {user && user.firstName} {user && user.lastName}
         </h4>
         <ul className="navbar-nav navbar-nav-right">
           <li className="nav-item">
@@ -204,26 +204,33 @@ function Header() {
         </ul>
         <ul className="navbar-nav navbar-nav-right">
           <li className="nav-item nav-profile dropdown">
-            <Link
-              className="nav-link dropdown-toggle"
-              to="#"
-              data-bs-toggle="dropdown"
-              id="profileDropdown"
-            >
-              <img src="images/faces/face5.jpg" alt="profile" />
-              <span className="nav-profile-name">Eleanor Richardson</span>
-            </Link>
+            {user && (
+              <Link
+                className="nav-link dropdown-toggle"
+                to="#"
+                data-bs-toggle="dropdown"
+                id="profileDropdown"
+              >
+                <img
+                  src={`http://localhost:8000/profilePictures/${user.profileImage}`}
+                  alt={user.profileImage}
+                />
+                <span className="nav-profile-name">
+                  {user.firstName} {user.lastName}
+                </span>
+              </Link>
+            )}
             <div
               className="dropdown-menu dropdown-menu-right navbar-dropdown"
               aria-labelledby="profileDropdown"
             >
-              <Link className="dropdown-item">
-                <i className="mdi mdi-settings text-primary" />
-                Settings
+              <Link className="dropdown-item" to="/profile">
+                <i className="mdi mdi-account-box text-primary" />
+                Profil
               </Link>
               <Link className="dropdown-item">
                 <i className="mdi mdi-logout text-primary" />
-                Logout
+                Se déconneter
               </Link>
             </div>
           </li>

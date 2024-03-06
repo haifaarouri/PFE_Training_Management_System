@@ -27,7 +27,9 @@ function SideBar() {
             aria-expanded="false"
             aria-controls="ui-basic"
           >
-            <i className="mdi mdi-palette menu-icon" />
+            <i
+              className="mdi mdi-settings menu-icon"
+            />
             <span className="menu-title">Gestions</span>
             <i className="menu-arrow" />
           </Link>

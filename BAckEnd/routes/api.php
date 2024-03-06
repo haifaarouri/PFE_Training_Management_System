@@ -28,4 +28,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/update-user/{id}', [UserController::class, 'update']);
     Route::post('/add-user', [UserController::class, 'store']);
     Route::delete('/delete-user/{id}', [UserController::class, 'destroy']);
+    Route::put('/edit-profile/{id}', [UserController::class, 'updateProfile']);
 });

@@ -15,6 +15,11 @@ function Login() {
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const dispatch = useDispatch();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleError = (err) =>
     toast.error(err, {
@@ -65,7 +70,7 @@ function Login() {
 
       const userResponse = await axios.get("/api/user");
       const user = userResponse.data;
-      
+
       //stock user in redux
       dispatch(setUser(user));
 
@@ -101,7 +106,10 @@ function Login() {
         <Form.Group className="mb-3">
           <Form.Label>Email</Form.Label>
           <InputGroup className="mb-3">
-            <InputGroup.Text id="inputGroup-sizing-default">
+            <InputGroup.Text
+              id="inputGroup-sizing-default"
+              style={{ width: "100%" }}
+            >
               <div className="input-group-prepend bg-transparent">
                 <span className="input-group-text bg-transparent border-right-0">
                   <i
@@ -110,14 +118,15 @@ function Login() {
                   />
                 </span>
               </div>
+              <Form.Control
+                style={{ width: "100%" }}
+                type="email"
+                placeholder="Saisir votre adresse e-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </InputGroup.Text>
-            <Form.Control
-              type="email"
-              placeholder="Saisir votre adresse e-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
             <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
             <Form.Control.Feedback type="invalid">
               Veuillez saisir votre adresse e-mail dans un format adéquat !
@@ -127,7 +136,10 @@ function Login() {
         <Form.Group className="mb-3">
           <Form.Label>Mot de passe</Form.Label>
           <InputGroup className="mb-3">
-            <InputGroup.Text id="inputGroup-sizing-default">
+            <InputGroup.Text
+              id="inputGroup-sizing-default"
+              style={{ width: "100%" }}
+            >
               <div className="input-group-prepend bg-transparent">
                 <span className="input-group-text bg-transparent border-right-0">
                   <i
@@ -136,15 +148,38 @@ function Login() {
                   />
                 </span>
               </div>
+              <div style={{ position: "relative", width: "100%" }}>
+                <Form.Control
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Saisir votre mot de passe"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                />
+                <button
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: "5px",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                  }}
+                  type="button"
+                  onClick={handleTogglePassword}
+                  className="text-primary"
+                >
+                  {showPassword ? (
+                    <i className="mdi mdi-eye-off" />
+                  ) : (
+                    <i className="mdi mdi-eye" />
+                  )}
+                </button>
+              </div>
             </InputGroup.Text>
-            <Form.Control
-              type="password"
-              placeholder="Saisir votre mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-            />
             <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
             <Form.Control.Feedback type="invalid">
               Veuillez saisir votre mot de passe qui doit comporter minimum 8

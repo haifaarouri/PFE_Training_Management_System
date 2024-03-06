@@ -121,4 +121,52 @@ class UserController extends Controller
         }
         return response()->json(['message' => 'Administrateur supprimé avec succès !']);
     }
+
+    public function updateProfile(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        if (!$user) {
+            return response()->json(['error' => "Pas d'administrateur avec cet ID !"], 404);
+        } else {
+            $request->validate([
+                'firstName' => 'required|string|max:255',
+                'lastName' => 'required|string|max:255',
+                'phoneNumber' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+            if ($request->file('profileImage') && $request->file('profileImage')->isValid()) {
+
+                $oldImagePath = public_path('profilePictures/' . $request->profileImage);
+                if (File::exists($oldImagePath)) {
+                    File::delete($oldImagePath);
+                }
+
+                $fileName = time() . $request->file('profileImage')->getClientOriginalName();
+                $request->profileImage->move(public_path('profilePictures'), $fileName);
+
+                $user->firstName = $request->input('firstName');
+                $user->lastName = $request->input('lastName');
+                $user->email = $request->input('email');
+                $user->phoneNumber = $request->input('phoneNumber');
+                $user->profileImage = $fileName;
+                $user->password = Hash::make($request->input('password'));
+
+                $user->save();
+                return response()->json(['message' => 'Votre Profil est modifié avec succès !']);
+            } else {
+                $user->firstName = $request->input('firstName');
+                $user->lastName = $request->input('lastName');
+                $user->email = $request->input('email');
+                $user->phoneNumber = $request->input('phoneNumber');
+                $user->profileImage = $request->input('profileImage');
+                $user->password = Hash::make($request->input('password'));
+
+                $user->save();
+                return response()->json(['message' => 'Votre Profil est modifié avec succès !']);
+            }
+        }
+    }
 }
