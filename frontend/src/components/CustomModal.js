@@ -4,8 +4,9 @@ import { ToastContainer, toast } from "react-toastify";
 import axios from "../services/axios";
 import { useDispatch } from "react-redux";
 import { setUser } from "../store/slices/authenticatedUserSlice";
+import Swal from "sweetalert2";
 
-const CustomModal = ({ show, handleClose, handleMsg }) => {
+const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -89,7 +90,123 @@ const CustomModal = ({ show, handleClose, handleMsg }) => {
     }
   };
 
-  return (
+  const handleSendEmail = async (event) => {
+    event.preventDefault();
+    await csrf();
+    try {
+      const form = formRef.current;
+      if (form.checkValidity() === false) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      setValidated(true);
+
+      const res = await axios.post("/forgot-password", { email });
+      let timerInterval;
+      Swal.fire({
+        title: "E-mail est en cours d'envoit !",
+        html: "E-mail sera envoyé dans quelques <b></b> milliseconds.",
+        timer: 2000,
+        timerProgressBar: true,
+        didOpen: () => {
+          Swal.showLoading();
+          const timer = Swal.getPopup().querySelector("b");
+          timerInterval = setInterval(() => {
+            timer.textContent = `${Swal.getTimerLeft()}`;
+          }, 100);
+        },
+        willClose: () => {
+          clearInterval(timerInterval);
+        },
+      }).then((result) => {
+        if (result.dismiss === Swal.DismissReason.timer) {
+          console.log("I was closed by the timer");
+        }
+      });
+console.log(res);
+      if (res.data.status === 200 && res.data.message) {
+        handleMsg(res.data.message);
+        console.log(res.data.message);
+        Swal.fire({
+          title: "Bravo !",
+          text: "Voir votre boite d'email !",
+          imageUrl: "/images/auth/emailImg.jpg",
+          imageWidth: 400,
+          imageHeight: 200,
+          imageAlt: "E-mail icon",
+        });
+        // setEmail("");
+        // handleClose();
+      }
+    } catch (error) {
+      if (error && error.response.status === 422) {
+        handleError(error.response.data.message);
+      }
+    }
+  };
+
+  return typeModal === "ForgotPassword" ? (
+    <Modal show={show} onHide={handleClose} dialogClassName="modal-lg">
+      <Modal.Header closeButton>
+        <Modal.Title>
+          <h5 className="modal-title">
+            Formulaire pour réinitialiser votre mot de passe
+          </h5>
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="row">
+        <Form
+          ref={formRef}
+          noValidate
+          validated={validated}
+          className="p-4"
+          onSubmit={handleSendEmail}
+        >
+          <Form.Group className="mb-3">
+            <Form.Label>Email</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <i
+                      className="mdi mdi-email-outline text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="email"
+                placeholder="Saisir l'adresse votre e-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir votre adresse e-mail dans un format adéquat !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <div className="mt-5 d-flex justify-content-center">
+            <Button
+              type="submit"
+              className="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn"
+            >
+              Envoyer
+            </Button>
+          </div>
+        </Form>
+        <ToastContainer />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  ) : (
     <Modal show={show} onHide={handleClose} dialogClassName="modal-lg">
       <Modal.Header closeButton>
         <Modal.Title>

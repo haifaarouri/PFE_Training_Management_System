@@ -1,11 +1,17 @@
 import moment from "moment";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "../services/axios";
+import { setUser } from "../store/slices/authenticatedUserSlice";
+import { Button } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
 
 function Header() {
   const [today, setToday] = useState(null);
-  const [user, setUser] = useState(null);
+  const [userAuth, setUserAuth] = useState(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -16,8 +22,47 @@ function Header() {
       .replace(/pm/g, "après-midi");
     setToday(d);
 
-    setUser(result.user);
+    setUserAuth(result.user);
   }, [result.user]);
+
+  const handleSuccess = (msg) =>
+    toast.success(msg, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
+  const handleError = (err) =>
+    toast.error(err, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
+  const logout = () => {
+    axios
+      .post("/logout")
+      .then(() => {
+        dispatch(setUser(null));
+        handleSuccess("Déconnecté avec succès !");
+        navigate("/login");
+      })
+      .catch((e) => {
+        if (e && e.response.status === 422) {
+          handleError(e.response.data.message);
+        }
+      });
+  };
 
   return (
     <nav className="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
@@ -29,6 +74,7 @@ function Header() {
         >
           <span className="mdi mdi-menu" />
         </button>
+        <ToastContainer />
         {/* <div className="navbar-brand-wrapper">
           <Link className="navbar-brand brand-logo" to="index.html">
             <img src="images/logo.svg" alt="logo" />
@@ -38,7 +84,8 @@ function Header() {
           </Link>
         </div> */}
         <h4 className="font-weight-bold mb-0 d-none d-md-block mt-1">
-          Bienvenue de nouveau, {user && user.firstName} {user && user.lastName}
+          Bienvenue de nouveau, {userAuth && userAuth.firstName}{" "}
+          {userAuth && userAuth.lastName}
         </h4>
         <ul className="navbar-nav navbar-nav-right">
           <li className="nav-item">
@@ -204,7 +251,7 @@ function Header() {
         </ul>
         <ul className="navbar-nav navbar-nav-right">
           <li className="nav-item nav-profile dropdown">
-            {user && (
+            {userAuth && (
               <Link
                 className="nav-link dropdown-toggle"
                 to="#"
@@ -212,11 +259,11 @@ function Header() {
                 id="profileDropdown"
               >
                 <img
-                  src={`http://localhost:8000/profilePictures/${user.profileImage}`}
-                  alt={user.profileImage}
+                  src={`http://localhost:8000/profilePictures/${userAuth.profileImage}`}
+                  alt={userAuth.profileImage}
                 />
                 <span className="nav-profile-name">
-                  {user.firstName} {user.lastName}
+                  {userAuth.firstName} {userAuth.lastName}
                 </span>
               </Link>
             )}
@@ -228,10 +275,10 @@ function Header() {
                 <i className="mdi mdi-account-box text-primary" />
                 Profil
               </Link>
-              <Link className="dropdown-item">
+              <Button className="dropdown-item btn btn-light" onClick={logout}>
                 <i className="mdi mdi-logout text-primary" />
                 Se déconneter
-              </Link>
+              </Button>
             </div>
           </li>
           <li className="nav-item">

@@ -17,6 +17,16 @@ function Register() {
   const navigate = useNavigate();
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleTogglePassword = () => { 
+    setShowPassword(!showPassword);
+  };
+
+  const handleToggleConfirmPassword = () => { 
+    setShowConfirmPassword(!showConfirmPassword);
+  };
 
   const isWhitespace = (str) => {
     return str.trim() === "";
@@ -201,7 +211,10 @@ function Register() {
         <Form.Group className="mb-3">
           <Form.Label>Mot de passe</Form.Label>
           <InputGroup className="mb-3">
-            <InputGroup.Text id="inputGroup-sizing-default">
+            <InputGroup.Text
+              id="inputGroup-sizing-default"
+              style={{ width: "100%" }}
+            >
               <div className="input-group-prepend bg-transparent">
                 <span className="input-group-text bg-transparent border-right-0">
                   <i
@@ -210,15 +223,38 @@ function Register() {
                   />
                 </span>
               </div>
+              <div style={{ position: "relative", width: "100%" }}>
+                <Form.Control
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Saisir votre mot de passe"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                />
+                <button
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: "5px",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                  }}
+                  type="button"
+                  onClick={handleTogglePassword}
+                  className="text-primary"
+                >
+                  {showPassword ? (
+                    <i className="mdi mdi-eye-off" />
+                  ) : (
+                    <i className="mdi mdi-eye" />
+                  )}
+                </button>
+              </div>
             </InputGroup.Text>
-            <Form.Control
-              type="password"
-              placeholder="Saisir votre mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-            />
             <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
             <Form.Control.Feedback type="invalid">
               Veuillez saisir votre mot de passe qui doit comporter minimum 8
@@ -229,7 +265,10 @@ function Register() {
         <Form.Group className="mb-3">
           <Form.Label>Confirmation de mot de passe</Form.Label>
           <InputGroup className="mb-3">
-            <InputGroup.Text id="inputGroup-sizing-default">
+            <InputGroup.Text
+              id="inputGroup-sizing-default"
+              style={{ width: "100%" }}
+            >
               <div className="input-group-prepend bg-transparent">
                 <span className="input-group-text bg-transparent border-right-0">
                   <i
@@ -238,15 +277,38 @@ function Register() {
                   />
                 </span>
               </div>
+              <div style={{ position: "relative", width: "100%" }}>
+                <Form.Control
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirmez votre mot de passe"
+                  value={password_confirmation}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                  required
+                  minLength={8}
+                />
+                <button
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: "5px",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                  }}
+                  type="button"
+                  onClick={handleToggleConfirmPassword}
+                  className="text-primary"
+                >
+                  {showConfirmPassword ? (
+                    <i className="mdi mdi-eye-off" />
+                  ) : (
+                    <i className="mdi mdi-eye" />
+                  )}
+                </button>
+              </div>
             </InputGroup.Text>
-            <Form.Control
-              type="password"
-              placeholder="Confirmez votre mot de passe"
-              value={password_confirmation}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              required
-              minLength={8}
-            />
             <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
             <Form.Control.Feedback type="invalid">
               Veuillez saisir votre mot de passe qui doit comporter minimum 8

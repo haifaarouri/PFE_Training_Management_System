@@ -5,19 +5,14 @@ import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useDispatch } from "react-redux";
-import { setUser } from "../../store/slices/authenticatedUserSlice";
-import CustomModal from "../../components/CustomModal";
 
-function Login() {
+function ForgotPassowrd() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
-  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -73,9 +68,6 @@ function Login() {
       const userResponse = await axios.get("/api/user");
       const user = userResponse.data;
 
-      //stock user in redux
-      dispatch(setUser(user));
-
       if (user) {
         if (user.role === "SuperAdministrateur") {
           navigate("/super-admin/users");
@@ -90,9 +82,6 @@ function Login() {
     }
   };
 
-  const showForgotPasswordModal = () => setShowModal(true);
-  const handleCloseForgotPasswordModal = () => setShowModal(false);
-
   return (
     <Card
       body
@@ -101,9 +90,6 @@ function Login() {
     >
       <h4>Bienvenue de nouveau !</h4>
       <h6 className="font-weight-light">Se connecter</h6>
-      {showModal && (
-        <CustomModal show={showModal} handleClose={handleCloseForgotPasswordModal} typeModal="ForgotPassword"/>
-      )}
       <Form
         ref={formRef}
         noValidate
@@ -204,11 +190,6 @@ function Login() {
           </Button>
         </div>
         <div className="text-center mt-4 font-weight-light">
-          <Button onClick={showForgotPasswordModal} variant="outline-primary">
-            Mot de passe oublié ?
-          </Button>
-        </div>
-        <div className="text-center mt-4 font-weight-light">
           Vous n'avez pas de compte ?{" "}
           <Link to="/register" className="text-primary">
             S'inscrire
@@ -220,4 +201,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default ForgotPassowrd;
