@@ -19,14 +19,18 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'show']);
-
-Route::middleware(['auth:sanctum'])->group(function () {
+// User Management Routes
+// Role-Based Routes
+Route::middleware(['auth:sanctum', 'user-role:SuperAdmin'])->group(function () {
+    // Routes accessible only to authenticated users with the 'SuperAdmin' role
     Route::get('/users', [UserController::class, 'index']);
-    Route::get('/user', [UserController::class, 'show']);
     Route::get('/user-id/{id}', [UserController::class, 'getUserById']);
     Route::put('/update-user/{id}', [UserController::class, 'update']);
     Route::post('/add-user', [UserController::class, 'store']);
     Route::delete('/delete-user/{id}', [UserController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/user', [UserController::class, 'show']);
     Route::put('/edit-profile/{id}', [UserController::class, 'updateProfile']);
 });

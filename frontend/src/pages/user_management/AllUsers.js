@@ -26,6 +26,13 @@ function AllUsers() {
     users.length > 0 && users.length / usersPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
+  const [userAuth, setUserAuth] = useState(null);
+
+  const resultUser = useSelector(state => state.user)
+
+  useEffect(() => {
+    setUserAuth(resultUser.user);
+  }, [resultUser.user]);
 
   const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
@@ -189,7 +196,7 @@ function AllUsers() {
 
                         const dateVerified = moment(u.email_verified_at);
                         dateCreated.locale("fr");
-                        return (
+                        return u.id !== userAuth.id && (
                           <tr key={index}>
                             <td>
                               <img

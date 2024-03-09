@@ -103,7 +103,7 @@ function Register() {
       setPasswordConfirm("");
       setPhoneNumber("");
       setProfileImage("");
-      navigate("/dashboard");
+      navigate("/login");
     } catch (error) {
       if (error.response.status === 422) {
         handleError(error.response.data.message);

@@ -103,6 +103,8 @@ const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
       setValidated(true);
 
       const res = await axios.post("/forgot-password", { email });
+      console.log(res);
+
       let timerInterval;
       Swal.fire({
         title: "E-mail est en cours d'envoit !",
@@ -124,13 +126,13 @@ const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
           console.log("I was closed by the timer");
         }
       });
-console.log(res);
-      if (res.data.status === 200 && res.data.message) {
-        handleMsg(res.data.message);
-        console.log(res.data.message);
+
+      if (res && res.data.status) {
+        handleMsg(res.data.status);
+        console.log(res.data.status);
         Swal.fire({
           title: "Bravo !",
-          text: "Voir votre boite d'email !",
+          text: "Vérifier votre boite d'e-mail !",
           imageUrl: "/images/auth/emailImg.jpg",
           imageWidth: 400,
           imageHeight: 200,
