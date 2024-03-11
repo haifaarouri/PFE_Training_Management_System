@@ -15,7 +15,6 @@ function AllUsers() {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [successMsg, setSuccessMsg] = useState(null);
   const [msgEdit, setMsgEdit] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 4;
@@ -83,20 +82,12 @@ function AllUsers() {
     };
 
     u();
-
-    if (successMsg) {
-      handleSuccess(successMsg);
-    }
     setMsgEdit(result.msg);
 
     if (result.msg) {
       handleSuccess(msgEdit);
     }
-  }, [showModal, successMsg, result.msg, msgEdit]);
-
-  const handleDataRecivedfromChild = (childData) => {
-    setSuccessMsg(childData);
-  };
+  }, [showModal, result.msg, msgEdit]);
 
   const handleDeleteUser = async (id) => {
     Swal.fire({
@@ -111,6 +102,7 @@ function AllUsers() {
       if (result.isConfirmed) {
         try {
           const res = await deleteUser(id);
+          console.log(res);
           Swal.fire({
             title: "Supprimé avec succès!",
             text: "Administarteur est supprimé !",
@@ -150,7 +142,6 @@ function AllUsers() {
         <div className="col-lg-12 grid-margin stretch-card">
           <div className="card">
             <div className="card-body">
-              {successMsg && <ToastContainer />}
               <ToastContainer />
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
@@ -167,7 +158,6 @@ function AllUsers() {
               <CustomModal
                 show={showModal}
                 handleClose={handleCloseAddModal}
-                handleMsg={handleDataRecivedfromChild}
               />
               <div className="table-responsive">
                 <table className="table table-striped table-hover">

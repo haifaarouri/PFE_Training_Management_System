@@ -69,8 +69,8 @@ class UserController extends Controller
                     'role' => $request->role,
                     'password' => Hash::make($request->input('firstName') . '-' . $request->input('lastName') . '-' . $request->input('role')),
                 ]);
-    
-                return response()->json(['message' => 'Administareur ajouté avec succès !']);
+                
+                return $user;
             }
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
@@ -109,10 +109,9 @@ class UserController extends Controller
                 $user->phoneNumber = $request->input('phoneNumber');
                 $user->profileImage = $fileName;
                 $user->role = $request->input('role');
-                $user->password = Hash::make($request->input('firstName') . '-' . $request->input('lastName') . '-' . $request->input('role'));
 
                 $user->save();
-                return response()->json(['message' => 'Administrateur modifié avec succès !']);
+                return $user;
             } else {
                 $user->firstName = $request->input('firstName');
                 $user->lastName = $request->input('lastName');
@@ -120,10 +119,9 @@ class UserController extends Controller
                 $user->phoneNumber = $request->input('phoneNumber');
                 $user->profileImage = $request->input('profileImage');
                 $user->role = $request->input('role');
-                $user->password = Hash::make($request->input('firstName') . '-' . $request->input('lastName') . '-' . $request->input('role'));
 
                 $user->save();
-                return response()->json(['message' => 'Administrateur modifié avec succès !']);
+                return $user;
             }
             }
         } else {

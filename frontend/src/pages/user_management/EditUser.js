@@ -5,6 +5,7 @@ import axios from "../../services/axios";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { setMsg } from "../../store/slices/successMessageSlice";
+import Swal from "sweetalert2";
 
 function EditUser() {
   const navigate = useNavigate();
@@ -59,9 +60,15 @@ function EditUser() {
       formData.append("profileImage", user.profileImage);
 
       const res = await editUser(id, formData);
-
       if (res.message) {
         dispatch(setMsg(res.message));
+
+        Swal.fire({
+          icon: "success",
+          title: res.message,
+          showConfirmButton: false,
+          timer: 1500
+        });
 
         setUser({
           email: "",
@@ -305,7 +312,7 @@ function EditUser() {
                     />
                   </InputGroup>
                 </Form.Group>
-                <img
+                {user.profileImage && <img
                   src={`http://localhost:8000/profilePictures/${user.profileImage}`}
                   alt={user.profileImage}
                   style={{
@@ -313,7 +320,7 @@ function EditUser() {
                     height: "20%",
                     borderRadius: "10%",
                   }}
-                />
+                />}
                 <div className="mt-5 d-flex justify-content-center">
                   <Button
                     type="submit"

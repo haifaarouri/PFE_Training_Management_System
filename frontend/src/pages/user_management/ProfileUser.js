@@ -130,7 +130,7 @@ function ProfileUser() {
                     >
                       <div className="mb-5 mt-5">
                         <p className="lead fw-normal mb-3">
-                          À propos cet Administrateur
+                          Mon Profil
                         </p>
                         <div
                           className="p-4 d-flex justify-content-around"
@@ -151,12 +151,19 @@ function ProfileUser() {
                               />
                               Numéro de téléphone : {userAuth.phoneNumber}
                             </p>
-                            <p className="font-italic mb-0 text-primary">
+                            <p className="font-italic mb-3 text-primary">
                               <i
                                 className="mdi mdi-account-key px-3 py-3"
                                 style={{ fontSize: "1.5em" }}
                               />
                               Mot de passe : {userAuth.password}
+                            </p>
+                            <p className="font-italic mb-0 text-primary">
+                              <i
+                                className="mdi mdi-account-outline px-3 py-3"
+                                style={{ fontSize: "1.5em" }}
+                              />
+                              Role : {userAuth.role}
                             </p>
                           </div>
                           <div>

@@ -2,11 +2,9 @@ import React, { useRef, useState } from "react";
 import { Modal, Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "../services/axios";
-import { useDispatch } from "react-redux";
-import { setUser } from "../store/slices/authenticatedUserSlice";
 import Swal from "sweetalert2";
 
-const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
+const CustomModal = ({ show, handleClose, typeModal }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,7 +13,6 @@ const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
   const [profileImage, setProfileImage] = useState("");
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
-  const dispatch = useDispatch();
 
   const isWhitespace = (str) => {
     return str.trim() === "";
@@ -60,19 +57,18 @@ const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
       formData.append("profileImage", profileImage);
       formData.append("role", role);
 
-      const res = await axios.post("/api/add-user", formData, {
+      const res = await axios.post("/api/send-email-add-user", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-        },
-      });
+        },})
 
       if (res.status === 200 && res.data.message) {
-        const user = {
-          firstName: "testbb",
-        };
-        dispatch(setUser(user));
-
-        handleMsg(res.data.message);
+        Swal.fire({
+          icon: "success",
+          title: res.data.message,
+          showConfirmButton: false,
+          timer: 1500
+        });
 
         setFirstName("");
         setLastName("");
@@ -86,6 +82,11 @@ const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
     } catch (error) {
       if (error && error.response.status === 422) {
         handleError(error.response.data.message);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Quelque chose s'est mal passé !",
+        });
       }
     }
   };
@@ -105,22 +106,22 @@ const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
       const res = await axios.post("/forgot-password", { email });
       console.log(res);
 
-      let timerInterval;
+      // let timerInterval;
       Swal.fire({
         title: "E-mail est en cours d'envoit !",
         html: "E-mail sera envoyé dans quelques <b></b> milliseconds.",
         timer: 2000,
         timerProgressBar: true,
-        didOpen: () => {
-          Swal.showLoading();
-          const timer = Swal.getPopup().querySelector("b");
-          timerInterval = setInterval(() => {
-            timer.textContent = `${Swal.getTimerLeft()}`;
-          }, 100);
-        },
-        willClose: () => {
-          clearInterval(timerInterval);
-        },
+        // didOpen: () => {
+        //   Swal.showLoading();
+        //   const timer = Swal.getPopup().querySelector("b");
+        //   timerInterval = setInterval(() => {
+        //     timer.textContent = `${Swal.getTimerLeft()}`;
+        //   }, 100);
+        // },
+        // willClose: () => {
+        //   clearInterval(timerInterval);
+        // },
       }).then((result) => {
         if (result.dismiss === Swal.DismissReason.timer) {
           console.log("I was closed by the timer");
@@ -128,8 +129,6 @@ const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
       });
 
       if (res && res.data.status) {
-        handleMsg(res.data.status);
-        console.log(res.data.status);
         Swal.fire({
           title: "Bravo !",
           text: "Vérifier votre boite d'e-mail !",
@@ -138,8 +137,8 @@ const CustomModal = ({ show, handleClose, handleMsg, typeModal }) => {
           imageHeight: 200,
           imageAlt: "E-mail icon",
         });
-        // setEmail("");
-        // handleClose();
+        setEmail("");
+        handleClose();
       }
     } catch (error) {
       if (error && error.response.status === 422) {

@@ -73,18 +73,16 @@ function ResetPassword() {
       }
 
       setValidated(true);
-      const res =await axios.post(`/reset-password`, {
+      await axios.post(`/reset-password`, {
         email,
         token,
         password,
         password_confirmation
       });
       
-console.log(res);
       handleSuccess("Mot de passe réinitialisé avec succès !");
-      // setEmail("")
-      // setPassword("");
-      // setPasswordConfirm("")
+      setPassword("");
+      setPasswordConfirm("")
 
     } catch (error) {
       if (error.response.status === 422) {
@@ -100,7 +98,6 @@ console.log(res);
       style={{ width: "130%", marginLeft: "-15%" }}
     >
       <h4>Changez votre mot de passe</h4>
-      {/* <h6 className="font-weight-light">Se connecter</h6> */}
       <Form
         ref={formRef}
         noValidate

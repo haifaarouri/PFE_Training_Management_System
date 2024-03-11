@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class MyEmail extends Mailable
+class EditUserEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -26,43 +26,9 @@ class MyEmail extends Mailable
         $this->user = $user;
     }
 
-    // /**
-    //  * Get the message envelope.
-    //  *
-    //  * @return \Illuminate\Mail\Mailables\Envelope
-    //  */
-    // public function envelope()
-    // {
-    //     return new Envelope(
-    //         subject: 'My Email',
-    //     );
-    // }
-
-    // /**
-    //  * Get the message content definition.
-    //  *
-    //  * @return \Illuminate\Mail\Mailables\Content
-    //  */
-    // public function content()
-    // {
-    //     return new Content(
-    //         view: 'view.name',
-    //     );
-    // }
-
-    // /**
-    //  * Get the attachments for the message.
-    //  *
-    //  * @return array
-    //  */
-    // public function attachments()
-    // {
-    //     return [];
-    // }
-
     public function build()
     {
-        return $this->view('emails.newUserWelcome')
+        return $this->view('emails.editUserMail')
             ->with([
                 'firstName' => $this->user->firstName,
                 'email' => $this->user->email,
@@ -71,6 +37,6 @@ class MyEmail extends Mailable
                 'phoneNumber' => $this->user->phoneNumber,
                 'profileImage' => $this->user->profileImage
             ])
-            ->subject('Nouveau compte administateur créé avec succès !');
+            ->subject('Mettre à jour le profil administateur avec succès !');
     }
 }

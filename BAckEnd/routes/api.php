@@ -3,7 +3,7 @@
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\EmailController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -28,6 +28,11 @@ Route::middleware(['auth:sanctum', 'user-role:SuperAdmin'])->group(function () {
     Route::put('/update-user/{id}', [UserController::class, 'update']);
     Route::post('/add-user', [UserController::class, 'store']);
     Route::delete('/delete-user/{id}', [UserController::class, 'destroy']);
+
+    //Email route 
+    Route::post('/send-email-add-user', [EmailController::class, 'sendEmailAddUser']);
+    Route::put('/send-email-edit-user/{id}', [EmailController::class, 'sendEmailEditUser']);
+    Route::delete('/send-email-delete-user/{id}', [EmailController::class, 'sendEmailDeteteUser']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {

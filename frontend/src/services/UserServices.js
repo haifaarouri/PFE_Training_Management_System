@@ -20,7 +20,7 @@ export const fetchUserById = async (id) => {
 
 export const editUser = async (id, formData) => {
   try {
-    const response = await axios.post(`/api/update-user/${id}`, formData, {
+    const response = await axios.post(`/api/send-email-edit-user/${id}`, formData, {
       headers: {
         ContentType: "multipart/form-data",
       },
@@ -33,7 +33,7 @@ export const editUser = async (id, formData) => {
 
 export const deleteUser = async (id) => {
   try {
-    const response = await axios.delete(`/api/delete-user/${id}`);
+    const response = await axios.delete(`/api/send-email-delete-user/${id}`);
     return response.data;
   } catch (error) {
     console.log("Error deleting user with this id :", error);
