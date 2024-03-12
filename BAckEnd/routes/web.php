@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\ProviderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,17 +20,5 @@ Route::get('/', function () {
 
 require __DIR__.'/auth.php';
 
-//Pilote du processus Routes
-// Route::middleware(['auth', 'user-role:PiloteDuProcessus'])->group(function() {
-//     Route::get("/pilote/home", [PiloteHomeController::class, 'piloteHome'])->name('pilote.home');
-// });
-
-// //Sales Routes
-// Route::middleware(['auth', 'user-role:Sales'])->group(function() {
-//     Route::get("/sales/home", [SalesHomeController::class, 'salesHome'])->name('sales.home');
-// });
-
-//Pilote du processus Routes
-// Route::middleware(['auth', 'user-role:PiloteDuProcessus'])->group(function() {
-//     Route::get("/pilote-home", [PiloteHomeController::class, 'piloteHome'])->name('piloteHome');
-// });
+Route::get('/auth/google/redirect', [ProviderController::class, 'redirect']);
+Route::get('/auth/google/callback', [ProviderController::class, 'callback']);

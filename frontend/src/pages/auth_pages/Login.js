@@ -110,6 +110,10 @@ function Login() {
   const showForgotPasswordModal = () => setShowModal(true);
   const handleCloseForgotPasswordModal = () => setShowModal(false);
 
+  const googleAuth = () => {
+    window.open("http://localhost:8000/auth/google/redirect", "_self");
+  };
+
   return (
     <Card
       body
@@ -117,6 +121,7 @@ function Login() {
       style={{ width: "130%", marginLeft: "-15%" }}
     >
       <h4>Bienvenue de nouveau !</h4>
+      <Button onClick={googleAuth}>Login avec Google</Button>
       <h6 className="font-weight-light">Se connecter</h6>
       {showModal && (
         <CustomModal show={showModal} handleClose={handleCloseForgotPasswordModal} typeModal="ForgotPassword"/>
