@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -27,6 +30,32 @@ class AuthServiceProvider extends ServiceProvider
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
 
-        //
+        VerifyEmail::createUrlUsing(function ($notifiable) {
+            $frontendUrl = config('app.frontend_url');
+            $verifyUrl = URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addMinutes(60),
+                ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())]
+            );
+        
+            $path = parse_url($verifyUrl, PHP_URL_PATH);
+            $queryParams = parse_url($verifyUrl, PHP_URL_QUERY);
+        
+            return "{$frontendUrl}{$path}?{$queryParams}";
+        });
+    }
+
+     /**
+     * Build the email verification notification.
+     *
+     * @param  string  $url
+     * @return \Illuminate\Notifications\Messages\MailMessage
+     */
+    protected function buildEmailVerificationNotification($url)
+    {
+        return (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject('Verify Your Email Address')
+            ->line('Please click the button below to verify your email address.')
+            ->action('Verify Email Address', $url);
     }
 }

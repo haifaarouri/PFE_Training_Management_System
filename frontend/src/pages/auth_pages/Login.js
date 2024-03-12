@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../store/slices/authenticatedUserSlice";
 import CustomModal from "../../components/CustomModal";
+import Swal from "sweetalert2";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -61,28 +62,44 @@ function Login() {
       }
 
       setValidated(true);
-      await axios.post(`/login`, {
+      axios.post(`/login`, {
         email: email,
         password: password,
-      });
+      })
+        .then(() => {
+          handleSuccess("Connecté avec succès !");
+          setEmail("");
+          setPassword("");
+    
+          axios.get("/api/user")
+          .then((userResponse)=> {
+            const user = userResponse.data;
+    
+            //stock user in redux
+            dispatch(setUser(user));
+            
+            if (user) {
+              if (user.role === "SuperAdministrateur") {
+                navigate("/super-admin/users");
+              } else {
+                navigate("/dashboard");
+              }
+            }
+          })
+        })
+        .catch((error) => {
+          if (error.response.status === 409) {
+            Swal.fire({
+              title: "Vérifier votre adresse e-mail !",
+              text: " Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Envoyer un autre e-mail!",
+            });
+            navigate("/verify-email");
+          }
+        });
 
-      handleSuccess("Connecté avec succès !");
-      setEmail("");
-      setPassword("");
-
-      const userResponse = await axios.get("/api/user");
-      const user = userResponse.data;
-
-      //stock user in redux
-      dispatch(setUser(user));
-
-      if (user) {
-        if (user.role === "SuperAdministrateur") {
-          navigate("/super-admin/users");
-        } else {
-          navigate("/dashboard");
-        }
-      }
     } catch (error) {
       if (error.response.status === 422) {
         handleError(error.response.data.message);

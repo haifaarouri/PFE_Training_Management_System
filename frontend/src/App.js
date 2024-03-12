@@ -10,6 +10,7 @@ import ProfileUser from "./pages/user_management/ProfileUser";
 import Unauthorized from "./pages/Unauthorized";
 import RequireAuth from "./components/RequireAuth";
 import ResetPassword from "./pages/auth_pages/ResetPassword";
+import EmailVerif from "./pages/auth_pages/EmailVerif"
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path="/password-reset/:token" element={<ResetPassword />} />
         </Route>
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/verify-email/:id/:hash" element={<EmailVerif />} />
       </Routes>
     </div>
   );

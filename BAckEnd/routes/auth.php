@@ -13,6 +13,7 @@ Route::post('/register', [RegisteredUserController::class, 'store'])
                 ->name('register');
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+                // ->middleware(['guest', 'verified'])
                 ->middleware('guest')
                 ->name('login');
 
@@ -33,5 +34,5 @@ Route::post('/email/verification-notification', [EmailVerificationNotificationCo
                 ->name('verification.send');
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-                ->middleware('auth')
+                ->middleware(['auth', 'verified'])
                 ->name('logout');

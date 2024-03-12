@@ -1,10 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "../../services/axios";
 import { useRef, useState } from "react";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Swal from "sweetalert2";
 
 function Register() {
   const [firstName, setFirstName] = useState("");
@@ -14,7 +15,6 @@ function Register() {
   const [password_confirmation, setPasswordConfirm] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [profileImage, setProfileImage] = useState("");
-  const navigate = useNavigate();
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const [showPassword, setShowPassword] = useState(false);
@@ -62,6 +62,10 @@ function Register() {
       theme: "light",
     });
 
+  const resendVerifLink = () => {
+    axios.post('/email/verification-notification')
+  }
+
   const handleRegister = async (event) => {
     event.preventDefault();
     await csrf();
@@ -89,12 +93,35 @@ function Register() {
       formData.append("phoneNumber", phoneNumber);
       formData.append("profileImage", profileImage);
 
-      await axios.post("/register", formData, {
+      const res =await axios.post("/register", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
+      console.log(res);
       handleSuccess("Enregistré avec succès !");
+
+      Swal.fire({
+        title: "Vérifier votre adresse e-mail !",
+        text: " Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: <button onClick={resendVerifLink}>Envoyer un autre e-mail!</button>,
+        showClass: {
+          popup: `
+            animate__animated
+            animate__fadeInUp
+            animate__faster
+          `
+        },
+        hideClass: {
+          popup: `
+            animate__animated
+            animate__fadeOutDown
+            animate__faster
+          `
+        }
+      });
 
       setFirstName("");
       setLastName("");
@@ -103,7 +130,6 @@ function Register() {
       setPasswordConfirm("");
       setPhoneNumber("");
       setProfileImage("");
-      navigate("/login");
     } catch (error) {
       if (error.response.status === 422) {
         handleError(error.response.data.message);
