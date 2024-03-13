@@ -18,9 +18,9 @@ function AuthLayout() {
           <div className="row flex-grow">
             <div className="col-sm-12 col-xl-6 col-lg-6 col-md-12 d-flex align-items-center justify-content-center">
               <div className="auth-form-transparent text-left p-3">
-                <div className="brand-logo">
-                  Gestion des Formations
-                  {/* <img src="../../images/logo-dark.svg" alt="logo" /> */}
+                <div className="d-flex justify-content-center">
+                  <img src="../../images/smartSkillsLogo.png" alt="logo" width="30%" />
+                  <h4 className="text-center align-self-center">Gestion des Formations</h4>
                 </div>
                 <Outlet />
               </div>

@@ -27,7 +27,7 @@ function AllUsers() {
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [userAuth, setUserAuth] = useState(null);
 
-  const resultUser = useSelector(state => state.user)
+  const resultUser = useSelector((state) => state.user);
 
   useEffect(() => {
     setUserAuth(resultUser.user);
@@ -155,10 +155,7 @@ function AllUsers() {
                   Ajouter un Admin
                 </Button>
               </div>
-              <CustomModal
-                show={showModal}
-                handleClose={handleCloseAddModal}
-              />
+              <CustomModal show={showModal} handleClose={handleCloseAddModal} />
               <div className="table-responsive">
                 <table className="table table-striped table-hover">
                   <thead>
@@ -186,77 +183,84 @@ function AllUsers() {
 
                         const dateVerified = moment(u.email_verified_at);
                         dateCreated.locale("fr");
-                        return u.id !== userAuth.id && (
-                          <tr key={index}>
-                            <td>
-                              <img
-                                src={`http://localhost:8000/profilePictures/${u.profileImage}`}
-                                alt={u.profileImage}
-                              />
-                            </td>
-                            <td>
-                              <h6>{u.firstName}</h6>
-                            </td>
-                            <td>{u.lastName}</td>
-                            <td>{u.email}</td>
-                            <td>{u.phoneNumber}</td>
-                            <td>{u.role}</td>
-                            <td>
-                              {dateCreated
-                                .format("dddd, MMMM Do YYYY, h:mm:ss a")
-                                .replace(/am/g, "matin")
-                                .replace(/pm/g, "après-midi")}
-                            </td>
-                            <td>
-                              {dateModified
-                                .format("dddd, MMMM Do YYYY, h:mm:ss a")
-                                .replace(/am/g, "matin")
-                                .replace(/pm/g, "après-midi")}
-                            </td>
-                            <td>
-                              {u.email_verified_at ? (
-                                dateVerified
+                        return (
+                          u.id !== userAuth.id && (
+                            <tr key={index}>
+                              <td>
+                                <img
+                                  src={
+                                    u.provider === "google"
+                                      ? `${u.profileImage}`
+                                      : `http://localhost:8000/profilePictures/${u.profileImage}`
+                                  }
+                                  alt={u.profileImage}
+                                />
+                              </td>
+                              <td>
+                                <h6>{u.firstName}</h6>
+                              </td>
+                              <td>{u.lastName}</td>
+                              <td>{u.email}</td>
+                              <td>{u.phoneNumber}</td>
+                              <td>{u.role}</td>
+                              <td>
+                                {dateCreated
                                   .format("dddd, MMMM Do YYYY, h:mm:ss a")
                                   .replace(/am/g, "matin")
-                                  .replace(/pm/g, "après-midi")
-                              ) : (
-                                <Badge
-                                  pill
-                                  bg="danger"
-                                  style={{
-                                    width: "100%",
-                                    height: "30px",
-                                    paddingTop: "7%",
-                                  }}
+                                  .replace(/pm/g, "après-midi")}
+                              </td>
+                              <td>
+                                {dateModified
+                                  .format("dddd, MMMM Do YYYY, h:mm:ss a")
+                                  .replace(/am/g, "matin")
+                                  .replace(/pm/g, "après-midi")}
+                              </td>
+                              <td>
+                                {u.email_verified_at ? (
+                                  dateVerified
+                                    .format("dddd, MMMM Do YYYY, h:mm:ss a")
+                                    .replace(/am/g, "matin")
+                                    .replace(/pm/g, "après-midi")
+                                ) : (
+                                  <Badge
+                                    pill
+                                    bg="danger"
+                                    style={{
+                                      width: "100%",
+                                      height: "30px",
+                                      paddingTop: "5%",
+                                    }}
+                                  >
+                                    <i className="mdi mdi-email me-2"></i>
+                                    Email non vérifié
+                                  </Badge>
+                                )}
+                              </td>
+                              <td className="d-flex flex-column justify-content-center">
+                                <Link
+                                  to={`/super-admin/profile-user/${u.id}`}
+                                  variant="outline-info"
+                                  className="btn btn-sm mb-2 btn-outline-info"
                                 >
-                                  Email non vérifié
-                                </Badge>
-                              )}
-                            </td>
-                            <td className="d-flex flex-column justify-content-center">
-                              <Link
-                                to={`/super-admin/profile-user/${u.id}`}
-                                variant="outline-info"
-                                className="btn btn-sm mb-2 btn-outline-info"
-                              >
-                                Détails
-                              </Link>
-                              <Button
-                                variant="outline-primary"
-                                onClick={() => handleButtonEdit(u.id)}
-                                className="btn btn-sm mb-2"
-                              >
-                                Modifier
-                              </Button>
-                              <Button
-                                onClick={() => handleDeleteUser(u.id)}
-                                variant="outline-danger"
-                                className="btn btn-sm"
-                              >
-                                Supprimer
-                              </Button>
-                            </td>
-                          </tr>
+                                  Détails
+                                </Link>
+                                <Button
+                                  variant="outline-primary"
+                                  onClick={() => handleButtonEdit(u.id)}
+                                  className="btn btn-sm mb-2"
+                                >
+                                  Modifier
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeleteUser(u.id)}
+                                  variant="outline-danger"
+                                  className="btn btn-sm"
+                                >
+                                  Supprimer
+                                </Button>
+                              </td>
+                            </tr>
+                          )
                         );
                       })}
                   </tbody>

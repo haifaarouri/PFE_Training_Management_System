@@ -19,9 +19,13 @@ return new class extends Migration
             $table->string('lastName');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('phoneNumber');
-            $table->string('password');
-            $table->string('profileImage');
+            $table->string('phoneNumber')->nullable();
+            $table->string('password')->nullable();
+            $table->string('profileImage')->nullable();
+            $table->string('provider')->nullable();
+            $table->string('provider_id')->nullable();
+            $table->string('provider_token', 255)->nullable();
+            // $table->string('provider_refresh_token')->nullable();
             $table->string('role')->default("Admin");
             $table->rememberToken();
             $table->timestamps();

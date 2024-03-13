@@ -11,6 +11,7 @@ import Unauthorized from "./pages/Unauthorized";
 import RequireAuth from "./components/RequireAuth";
 import ResetPassword from "./pages/auth_pages/ResetPassword";
 import EmailVerif from "./pages/auth_pages/EmailVerif"
+import AssignRole from "./pages/user_management/AssignRole";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="users" element={<RequireAuth allowedRoles={['SuperAdmin']}><AllUsers /></RequireAuth>} />
             <Route path="edit-user/:id" element={<RequireAuth allowedRoles={['SuperAdmin']}><EditUser /></RequireAuth>} />
             <Route path="profile-user/:id" element={<RequireAuth allowedRoles={['SuperAdmin']}><ProfileUser /></RequireAuth>} />
+            <Route path="manage-roles" element={<RequireAuth allowedRoles={['SuperAdmin']}><AssignRole /></RequireAuth>} />
           </Route>
           <Route path="profile" element={<RequireAuth><ProfileUser /></RequireAuth>} />
         </Route>

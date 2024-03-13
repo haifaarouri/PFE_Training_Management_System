@@ -62,22 +62,22 @@ function Login() {
       }
 
       setValidated(true);
-      axios.post(`/login`, {
-        email: email,
-        password: password,
-      })
+      axios
+        .post(`/login`, {
+          email: email,
+          password: password,
+        })
         .then(() => {
           handleSuccess("Connecté avec succès !");
           setEmail("");
           setPassword("");
-    
-          axios.get("/api/user")
-          .then((userResponse)=> {
+
+          axios.get("/api/user").then((userResponse) => {
             const user = userResponse.data;
-    
+
             //stock user in redux
             dispatch(setUser(user));
-            
+
             if (user) {
               if (user.role === "SuperAdministrateur") {
                 navigate("/super-admin/users");
@@ -85,7 +85,7 @@ function Login() {
                 navigate("/dashboard");
               }
             }
-          })
+          });
         })
         .catch((error) => {
           if (error.response.status === 409) {
@@ -99,7 +99,6 @@ function Login() {
             navigate("/verify-email");
           }
         });
-
     } catch (error) {
       if (error.response.status === 422) {
         handleError(error.response.data.message);
@@ -112,6 +111,20 @@ function Login() {
 
   const googleAuth = () => {
     window.open("http://localhost:8000/auth/google/redirect", "_self");
+    // axios.get("/api/user").then((userResponse) => {
+    //   const user = userResponse.data;
+
+    //   //stock user in redux
+    //   dispatch(setUser(user));
+
+    //   if (user) {
+    //     if (user.role === "SuperAdministrateur") {
+    //       navigate("/super-admin/users");
+    //     } else {
+    //       navigate("/dashboard");
+    //     }
+    //   }
+    // });
   };
 
   return (
@@ -120,11 +133,24 @@ function Login() {
       className="shadow-lg p-3 mb-5 bg-white rounded"
       style={{ width: "130%", marginLeft: "-15%" }}
     >
-      <h4>Bienvenue de nouveau !</h4>
-      <Button onClick={googleAuth}>Login avec Google</Button>
-      <h6 className="font-weight-light">Se connecter</h6>
+      <div className="d-flex flex-column align-items-center">
+        <h4 className="text-center mb-4">Bienvenue de nouveau !</h4>
+        <h6 className="font-weight-light mb-3">Se connecter avec</h6>
+        <button
+          type="button"
+          className="btn btn-google btn-social-icon-text mb-3"
+          onClick={googleAuth}
+        >
+          <i className="mdi mdi-google-plus"></i> Google
+        </button>
+        <h6 className="font-weight-light">Ou</h6>
+      </div>
       {showModal && (
-        <CustomModal show={showModal} handleClose={handleCloseForgotPasswordModal} typeModal="ForgotPassword"/>
+        <CustomModal
+          show={showModal}
+          handleClose={handleCloseForgotPasswordModal}
+          typeModal="ForgotPassword"
+        />
       )}
       <Form
         ref={formRef}

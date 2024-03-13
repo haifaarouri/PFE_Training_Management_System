@@ -259,7 +259,7 @@ console.log(userAuth);
                 id="profileDropdown"
               >
                 <img
-                  src={`http://localhost:8000/profilePictures/${userAuth.profileImage}`}
+                  src={userAuth.provider==="google" ? `${userAuth.profileImage}` : `http://localhost:8000/profilePictures/${userAuth.profileImage}`}
                   alt={userAuth.profileImage}
                 />
                 <span className="nav-profile-name">

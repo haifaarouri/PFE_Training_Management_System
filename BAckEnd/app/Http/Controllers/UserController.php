@@ -41,7 +41,7 @@ class UserController extends Controller
             return response()->json($users);
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
-        }   
+        }
     }
 
     public function store(Request $request)
@@ -55,11 +55,11 @@ class UserController extends Controller
                 'profileImage' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'role' => 'required|string|max:255'
             ]);
-    
+
             if ($request->hasFile('profileImage')) {
                 $fileName = time() . $request->file('profileImage')->getClientOriginalName();
                 $request->profileImage->move(public_path('profilePictures'), $fileName);
-    
+
                 $user = User::create([
                     'firstName' => $request->firstName,
                     'lastName' => $request->lastName,
@@ -69,12 +69,12 @@ class UserController extends Controller
                     'role' => $request->role,
                     'password' => Hash::make($request->input('firstName') . '-' . $request->input('lastName') . '-' . $request->input('role')),
                 ]);
-                
+
                 return $user;
             }
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
-        } 
+        }
     }
 
     public function update(Request $request, $id)
@@ -83,50 +83,50 @@ class UserController extends Controller
             $user = User::findOrFail($id);
 
             if (!$user) {
-            return response()->json(['error' => "Pas d'administrateur avec cet ID !"], 404);
+                return response()->json(['error' => "Pas d'administrateur avec cet ID !"], 404);
             } else {
-            $request->validate([
-                'firstName' => 'required|string|max:255',
-                'lastName' => 'required|string|max:255',
-                'phoneNumber' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
-                'role' => 'required|string|max:255'
-            ]);
+                $request->validate([
+                    'firstName' => 'required|string|max:255',
+                    'lastName' => 'required|string|max:255',
+                    'phoneNumber' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255',
+                    'role' => 'required|string|max:255'
+                ]);
 
-            if ($request->file('profileImage') && $request->file('profileImage')->isValid()) {
+                if ($request->file('profileImage') && $request->file('profileImage')->isValid()) {
 
-                $oldImagePath = public_path('profilePictures/' . $request->profileImage);
-                if (File::exists($oldImagePath)) {
-                    File::delete($oldImagePath);
+                    $oldImagePath = public_path('profilePictures/' . $request->profileImage);
+                    if (File::exists($oldImagePath)) {
+                        File::delete($oldImagePath);
+                    }
+
+                    $fileName = time() . $request->file('profileImage')->getClientOriginalName();
+                    $request->profileImage->move(public_path('profilePictures'), $fileName);
+
+                    $user->firstName = $request->input('firstName');
+                    $user->lastName = $request->input('lastName');
+                    $user->email = $request->input('email');
+                    $user->phoneNumber = $request->input('phoneNumber');
+                    $user->profileImage = $fileName;
+                    $user->role = $request->input('role');
+
+                    $user->save();
+                    return $user;
+                } else {
+                    $user->firstName = $request->input('firstName');
+                    $user->lastName = $request->input('lastName');
+                    $user->email = $request->input('email');
+                    $user->phoneNumber = $request->input('phoneNumber');
+                    $user->profileImage = $request->input('profileImage');
+                    $user->role = $request->input('role');
+
+                    $user->save();
+                    return $user;
                 }
-
-                $fileName = time() . $request->file('profileImage')->getClientOriginalName();
-                $request->profileImage->move(public_path('profilePictures'), $fileName);
-
-                $user->firstName = $request->input('firstName');
-                $user->lastName = $request->input('lastName');
-                $user->email = $request->input('email');
-                $user->phoneNumber = $request->input('phoneNumber');
-                $user->profileImage = $fileName;
-                $user->role = $request->input('role');
-
-                $user->save();
-                return $user;
-            } else {
-                $user->firstName = $request->input('firstName');
-                $user->lastName = $request->input('lastName');
-                $user->email = $request->input('email');
-                $user->phoneNumber = $request->input('phoneNumber');
-                $user->profileImage = $request->input('profileImage');
-                $user->role = $request->input('role');
-
-                $user->save();
-                return $user;
-            }
             }
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
-        } 
+        }
     }
 
     public function destroy($id)
@@ -143,12 +143,12 @@ class UserController extends Controller
             return response()->json(['message' => 'Administrateur supprimé avec succès !']);
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
-        } 
+        }
     }
 
     public function updateProfile(Request $request, $id)
     {
-        if (auth()->user()->role === 'SuperAdmin') {
+        if (auth()->user()) {
             $user = User::findOrFail($id);
 
             if (!$user) {
@@ -161,24 +161,24 @@ class UserController extends Controller
                     'email' => 'required|string|email|max:255',
                     'password' => 'required|string|min:8|confirmed',
                 ]);
-    
+
                 if ($request->file('profileImage') && $request->file('profileImage')->isValid()) {
-    
+
                     $oldImagePath = public_path('profilePictures/' . $request->profileImage);
                     if (File::exists($oldImagePath)) {
                         File::delete($oldImagePath);
                     }
-    
+
                     $fileName = time() . $request->file('profileImage')->getClientOriginalName();
                     $request->profileImage->move(public_path('profilePictures'), $fileName);
-    
+
                     $user->firstName = $request->input('firstName');
                     $user->lastName = $request->input('lastName');
                     $user->email = $request->input('email');
                     $user->phoneNumber = $request->input('phoneNumber');
                     $user->profileImage = $fileName;
                     $user->password = Hash::make($request->input('password'));
-    
+
                     $user->save();
                     return response()->json(['message' => 'Votre Profil est modifié avec succès !']);
                 } else {
@@ -188,13 +188,13 @@ class UserController extends Controller
                     $user->phoneNumber = $request->input('phoneNumber');
                     $user->profileImage = $request->input('profileImage');
                     $user->password = Hash::make($request->input('password'));
-    
+
                     $user->save();
                     return response()->json(['message' => 'Votre Profil est modifié avec succès !']);
                 }
             }
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
-        } 
+        }
     }
 }

@@ -39,4 +39,30 @@ class EmailController extends Controller
 
         return response()->json(['message' => 'Administrateur supprimé avec succès et e-mail envoyé !']);
     }
+
+    public function sendEmailAssignRole(Request $request, $email)
+    {
+        if (auth()->user()->role === 'SuperAdmin') {
+
+            $request->validate([
+                'role' => 'required|string|in:PiloteDuProcessus,Sales,ChargéFormation,AssistanceAcceuil,CommunityManager,ServiceFinancier', 
+            ]);
+
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                return response()->json(['error' => 'Administateur non trouvé avec cet e-mail !'], 404);
+            }
+
+            $user->update([
+                'role' => $request->role,
+            ]);
+
+            // Mail::to($user->email)->send(new DeleteUserEmail($user));
+
+            return response()->json(['message' => 'Role assigné à l\'administrateur avec succès !']);
+        } else {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+    }
 }

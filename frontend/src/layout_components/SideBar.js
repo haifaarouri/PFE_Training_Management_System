@@ -5,7 +5,16 @@ function SideBar() {
     <nav className="sidebar sidebar-offcanvas" id="sidebar">
       <ul className="nav">
         <li className="nav-item sidebar-category">
-          <p>Gestion des Formations</p>
+          <div className="d-flex justify-content-center">
+            <img
+              src="../../images/smartSkillsLogo.png"
+              alt="logo"
+              width="45%"
+            />
+            <p className="text-center align-self-center" style={{color: "white"}}>
+              Gestion des Formations
+            </p>
+          </div>
           <span />
         </li>
         <li className="nav-item">
@@ -27,9 +36,7 @@ function SideBar() {
             aria-expanded="false"
             aria-controls="ui-basic"
           >
-            <i
-              className="mdi mdi-settings menu-icon"
-            />
+            <i className="mdi mdi-settings menu-icon" />
             <span className="menu-title">Gestions</span>
             <i className="menu-arrow" />
           </Link>
@@ -44,15 +51,15 @@ function SideBar() {
                   Administareurs
                 </Link>
               </li>
-              {/* <li className="nav-item">
-                {" "}
-                <Link
-                  className="nav-link"
-                  to="pages/ui-features/typography.html"
-                >
-                  Typography
+              <li className="nav-item">
+                <Link className="nav-link" to="/super-admin/manage-roles">
+                  <i
+                    className="mdi mdi-account-multiple-outline"
+                    style={{ marginRight: "10%" }}
+                  />
+                  Roles
                 </Link>
-              </li> */}
+              </li>
             </ul>
           </div>
         </li>

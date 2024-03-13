@@ -407,7 +407,11 @@ const EditProfileModal = ({ show, handleClose, handleMsg }) => {
             </InputGroup>
           </Form.Group>
           <img
-            src={`http://localhost:8000/profilePictures/${userToEdit.profileImage}`}
+            src={
+              userToEdit.provider === "google"
+                ? `${userToEdit.profileImage}`
+                : `http://localhost:8000/profilePictures/${userToEdit.profileImage}`
+            }
             alt={userToEdit.profileImage}
             style={{
               width: "30%",

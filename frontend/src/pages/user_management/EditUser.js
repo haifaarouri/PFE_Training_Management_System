@@ -67,7 +67,7 @@ function EditUser() {
           icon: "success",
           title: res.message,
           showConfirmButton: false,
-          timer: 1500
+          timer: 1500,
         });
 
         setUser({
@@ -312,15 +312,21 @@ function EditUser() {
                     />
                   </InputGroup>
                 </Form.Group>
-                {user.profileImage && <img
-                  src={`http://localhost:8000/profilePictures/${user.profileImage}`}
-                  alt={user.profileImage}
-                  style={{
-                    width: "20%",
-                    height: "20%",
-                    borderRadius: "10%",
-                  }}
-                />}
+                {user.profileImage && (
+                  <img
+                    src={
+                      user.provider === "google"
+                        ? `${user.profileImage}`
+                        : `http://localhost:8000/profilePictures/${user.profileImage}`
+                    }
+                    alt={user.profileImage}
+                    style={{
+                      width: "20%",
+                      height: "20%",
+                      borderRadius: "10%",
+                    }}
+                  />
+                )}
                 <div className="mt-5 d-flex justify-content-center">
                   <Button
                     type="submit"

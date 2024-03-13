@@ -39,3 +39,24 @@ export const deleteUser = async (id) => {
     console.log("Error deleting user with this id :", error);
   }
 };
+
+export const assignRole = async (formData) => {
+  // Display FormData content
+  const formDataObject = {};
+  for (const [key, value] of formData.entries()) {
+    formDataObject[key] = value;
+  }
+  console.log(formDataObject);
+  const email = formDataObject.email;
+  console.log(email);
+  try {
+    const response = await axios.post(`/api/send-email-assign-role/${email}`, formData, {
+      headers: {
+        ContentType: "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.log("Error assigning role to user with this email :", error);
+  }
+};

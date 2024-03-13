@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum', 'user-role:SuperAdmin'])->group(function () {
     Route::post('/send-email-add-user', [EmailController::class, 'sendEmailAddUser']);
     Route::put('/send-email-edit-user/{id}', [EmailController::class, 'sendEmailEditUser']);
     Route::delete('/send-email-delete-user/{id}', [EmailController::class, 'sendEmailDeteteUser']);
+    Route::patch('/send-email-assign-role/{email}', [EmailController::class, 'sendEmailAssignRole']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {

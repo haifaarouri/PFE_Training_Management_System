@@ -90,7 +90,11 @@ function ProfileUser() {
                         style={{ width: 150 }}
                       >
                         <img
-                          src={`http://localhost:8000/profilePictures/${userAuth.profileImage}`}
+                          src={
+                            userAuth.provider === "google"
+                              ? `${userAuth.profileImage}`
+                              : `http://localhost:8000/profilePictures/${userAuth.profileImage}`
+                          }
                           alt={userAuth.profileImage}
                           className="img-fluid img-thumbnail mt-4 mb-2"
                           style={{ width: 150, zIndex: 1 }}
@@ -129,9 +133,7 @@ function ProfileUser() {
                       style={{ fontSize: "1em" }}
                     >
                       <div className="mb-5 mt-5">
-                        <p className="lead fw-normal mb-3">
-                          Mon Profil
-                        </p>
+                        <p className="lead fw-normal mb-3">Mon Profil</p>
                         <div
                           className="p-4 d-flex justify-content-around"
                           style={{ backgroundColor: "#f8f9fa" }}
@@ -236,7 +238,11 @@ function ProfileUser() {
                         style={{ width: 150 }}
                       >
                         <img
-                          src={`http://localhost:8000/profilePictures/${user.profileImage}`}
+                          src={
+                            user.provider === "google"
+                              ? `${user.profileImage}`
+                              : `http://localhost:8000/profilePictures/${user.profileImage}`
+                          }
                           alt={user.profileImage}
                           className="img-fluid img-thumbnail mt-4 mb-2"
                           style={{ width: 150, zIndex: 1 }}
