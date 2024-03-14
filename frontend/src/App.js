@@ -12,6 +12,7 @@ import RequireAuth from "./components/RequireAuth";
 import ResetPassword from "./pages/auth_pages/ResetPassword";
 import EmailVerif from "./pages/auth_pages/EmailVerif"
 import AssignRole from "./pages/user_management/AssignRole";
+import GoogleCallback from "./pages/auth_pages/GoogleCallback";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
         </Route>
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/verify-email/:id/:hash" element={<EmailVerif />} />
+        <Route path="/auth/google/callback" element={<GoogleCallback />}></Route>
       </Routes>
     </div>
   );

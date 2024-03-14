@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../../services/axios";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
@@ -110,22 +110,29 @@ function Login() {
   const handleCloseForgotPasswordModal = () => setShowModal(false);
 
   const googleAuth = () => {
-    window.open("http://localhost:8000/auth/google/redirect", "_self");
-    // axios.get("/api/user").then((userResponse) => {
-    //   const user = userResponse.data;
-
-    //   //stock user in redux
-    //   dispatch(setUser(user));
-
-    //   if (user) {
-    //     if (user.role === "SuperAdministrateur") {
-    //       navigate("/super-admin/users");
-    //     } else {
-    //       navigate("/dashboard");
-    //     }
-    //   }
-    // });
+    setTimeout(() => {
+      window.open("http://localhost:8000/auth/google/redirect", "_self");
+    }, 0);
   };
+
+  const [loginUrl, setLoginUrl] = useState(null);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/auth/google/redirect", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error("Something went wrong!");
+      })
+      .then((data) => setLoginUrl(data.url))
+      .catch((error) => console.error(error));
+  }, []);
 
   return (
     <Card
@@ -136,6 +143,7 @@ function Login() {
       <div className="d-flex flex-column align-items-center">
         <h4 className="text-center mb-4">Bienvenue de nouveau !</h4>
         <h6 className="font-weight-light mb-3">Se connecter avec</h6>
+        <div>{loginUrl != null && <a href={loginUrl}>Google Sign In</a>}</div>
         <button
           type="button"
           className="btn btn-google btn-social-icon-text mb-3"

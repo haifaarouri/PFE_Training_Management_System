@@ -106,7 +106,8 @@ function Register() {
         text: " Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: <button onClick={resendVerifLink}>Envoyer un autre e-mail!</button>,
+        // confirmButtonText: <button onClick={resendVerifLink}>Envoyer un autre e-mail!</button>,
+        // getConfirmButton: <button onClick={resendVerifLink}>Envoyer un autre e-mail!</button>,
         showClass: {
           popup: `
             animate__animated

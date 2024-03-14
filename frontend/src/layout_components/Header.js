@@ -6,6 +6,7 @@ import axios from "../services/axios";
 import { setUser } from "../store/slices/authenticatedUserSlice";
 import { Button } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
+import { apiFetch } from "../services/api";
 
 function Header() {
   const [today, setToday] = useState(null);
@@ -49,21 +50,31 @@ function Header() {
       theme: "light",
     });
 
-  const logout = () => {
-    axios
-      .post("/logout")
-      .then(() => {
-        dispatch(setUser(null));
-        handleSuccess("Déconnecté avec succès !");
-        navigate("/login");
-      })
-      .catch((e) => {
-        if (e && e.response.status === 422) {
-          handleError(e.response.data.message);
-        }
+  const logout = async () => {
+    if (localStorage.getItem("token")) {
+      await apiFetch("google-logout", {
+        method: "POST",
       });
+      dispatch(setUser(null));
+      localStorage.removeItem("token");
+      handleSuccess("Déconnecté avec succès !");
+      navigate("/login");
+    } else {
+      axios
+        .post("/logout")
+        .then(() => {
+          dispatch(setUser(null));
+          handleSuccess("Déconnecté avec succès !");
+          navigate("/login");
+        })
+        .catch((e) => {
+          if (e && e.response.status === 422) {
+            handleError(e.response.data.message);
+          }
+        });
+    }
   };
-console.log(userAuth);
+
   return (
     <nav className="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
       <div className="navbar-menu-wrapper d-flex align-items-center justify-content-end">
@@ -259,7 +270,11 @@ console.log(userAuth);
                 id="profileDropdown"
               >
                 <img
-                  src={userAuth.provider==="google" ? `${userAuth.profileImage}` : `http://localhost:8000/profilePictures/${userAuth.profileImage}`}
+                  src={
+                    userAuth.provider === "google"
+                      ? `${userAuth.profileImage}`
+                      : `http://localhost:8000/profilePictures/${userAuth.profileImage}`
+                  }
                   alt={userAuth.profileImage}
                 />
                 <span className="nav-profile-name">

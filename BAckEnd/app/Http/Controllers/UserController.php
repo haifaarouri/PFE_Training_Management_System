@@ -46,6 +46,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->all());
         if (auth()->user()->role === 'SuperAdmin') {
             $request->validate([
                 'firstName' => 'required|string|max:255',
@@ -61,12 +62,12 @@ class UserController extends Controller
                 $request->profileImage->move(public_path('profilePictures'), $fileName);
 
                 $user = User::create([
-                    'firstName' => $request->firstName,
-                    'lastName' => $request->lastName,
-                    'email' => $request->email,
-                    'phoneNumber' => $request->phoneNumber,
+                    'firstName' => $request->input('firstName'),
+                    'lastName' => $request->input('lastName'),
+                    'email' => $request->input('email'),
+                    'phoneNumber' => $request->input('phoneNumber'),
                     'profileImage' => $fileName,
-                    'role' => $request->role,
+                    'role' => $request->input('role'),
                     'password' => Hash::make($request->input('firstName') . '-' . $request->input('lastName') . '-' . $request->input('role')),
                 ]);
 
@@ -193,6 +194,18 @@ class UserController extends Controller
                     return response()->json(['message' => 'Votre Profil est modifié avec succès !']);
                 }
             }
+        } else {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+    }
+
+    public function logoutFromGoogle(Request $request)
+    {
+        if (auth()->user()) {
+            // Revoke the token that was used to authenticate the current request...
+            $request->user()->currentAccessToken()->delete();
+
+            return response()->json(['message' => "Vous avez déconnecté avec succès !"]);
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }

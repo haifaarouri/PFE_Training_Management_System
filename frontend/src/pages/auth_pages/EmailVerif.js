@@ -9,37 +9,46 @@ function EmailVerif() {
     const queryParams = location.search;
 
     useEffect(() => {
-      const verification = async () => {
+      const verification = () => {
         // Construct the verification URL to call the backend
         const verifyUrl = `/verify-email/${id}/${hash}${queryParams}`;
 
-        try {
-          const response = await  axios.get(verifyUrl)
-          console.log(response);
-              Swal.fire({
-                title: "Adresse e-mail verifiée avec succès !",                  
-                showClass: {
-                  popup: `
-                    animate__animated
-                    animate__fadeInUp
-                    animate__faster
-                  `
-                },
-                hideClass: {
-                  popup: `
-                    animate__animated
-                    animate__fadeOutDown
-                    animate__faster
-                  `
-                }
-              });
-        } catch (error) {
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: `Erreur lors de la vérification de l'adresse e-mail : ${error}`,
-          });
-        }
+        // try {
+          fetch(verifyUrl).then((response) => {
+            console.log(response);
+            Swal.fire({
+              title: "Adresse e-mail verifiée avec succès !",                  
+              showClass: {
+                popup: `
+                  animate__animated
+                  animate__fadeInUp
+                  animate__faster
+                `
+              },
+              hideClass: {
+                popup: `
+                  animate__animated
+                  animate__fadeOutDown
+                  animate__faster
+                `
+              }
+            });
+          })
+          .catch((error) => {
+            console.log(error);
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: `Erreur lors de la vérification de l'adresse e-mail : ${error}`,
+            });
+          })
+          // const response = await  axios.get(verifyUrl)
+          // console.log(response);
+              
+        // } catch (error) {
+        //   console.log(error);
+         
+        // }
       }
      
       verification()

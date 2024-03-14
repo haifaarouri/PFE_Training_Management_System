@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { assignRole } from "../../services/UserServices";
+import { assignRole, fetchAllUsers } from "../../services/UserServices";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../services/axios";
 import { Button, Form, InputGroup } from "react-bootstrap";
@@ -20,8 +20,8 @@ function AssignRole() {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get("/api/users");
-      return response.data;
+      const response = await fetchAllUsers();
+      return response;
     } catch (error) {
       console.log("Error fetching users :", error);
     }
@@ -51,12 +51,13 @@ function AssignRole() {
 
       setValidated(true);
 
-      const formData = new FormData();
-      formData.append("_method", "PATCH");
-      formData.append("email", email);
-      formData.append("role", role);
+      // const formData = new FormData();
+      // formData.append("_method", "PATCH");
+      // formData.append("email", email);
+      // formData.append("role", role);
 
-      const res = await assignRole(formData);
+      const res = await assignRole({email, role});
+      console.log(res);
       if (res.message) {
         dispatch(setMsg(res.message));
 
@@ -73,6 +74,7 @@ function AssignRole() {
         navigate("/super-admin/users");
       }
     } catch (error) {
+      console.log(error);
       if (error.response.status === 422) {
         console.log(error.response.data.message);
       }

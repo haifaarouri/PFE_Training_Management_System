@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "../../services/axios";
 import Button from "react-bootstrap/Button";
 import moment from "moment";
 import { Badge, Pagination } from "react-bootstrap";
 import CustomModal from "../../components/CustomModal";
 import { ToastContainer, toast } from "react-toastify";
-import { deleteUser } from "../../services/UserServices";
+import { deleteUser, fetchAllUsers } from "../../services/UserServices";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
 require("moment/locale/fr");
@@ -66,8 +65,8 @@ function AllUsers() {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get("/api/users");
-      return response.data;
+      const response = await fetchAllUsers();
+      return response;
     } catch (error) {
       console.log("Error fetching users :", error);
     }

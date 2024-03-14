@@ -55,7 +55,7 @@ class EmailController extends Controller
             }
 
             $user->update([
-                'role' => $request->role,
+                'role' => $request->input('role'),
             ]);
 
             // Mail::to($user->email)->send(new DeleteUserEmail($user));

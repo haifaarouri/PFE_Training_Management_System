@@ -40,4 +40,5 @@ Route::middleware(['auth:sanctum', 'user-role:SuperAdmin'])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', [UserController::class, 'show']);
     Route::put('/edit-profile/{id}', [UserController::class, 'updateProfile']);
+    Route::post('/google-logout', [UserController::class, 'logoutFromGoogle']);
 });

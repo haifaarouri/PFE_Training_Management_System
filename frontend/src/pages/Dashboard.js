@@ -1,4 +1,15 @@
+import { useEffect, useState } from "react";
+
 function Dashboard() {
+  const [firstAccess, setFirstAccess] = useState(true);
+
+  // useEffect(() => {
+  //   if (firstAccess) {
+  //     window.location.reload()
+  //     setFirstAccess(false);
+  //   }
+  // }, []);
+
   return (
     <div className="content-wrapper">
       <div className="row">

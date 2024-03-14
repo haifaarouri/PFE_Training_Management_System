@@ -3,6 +3,7 @@ import { Modal, Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
+import { apiFetch } from "../services/api";
 
 const CustomModal = ({ show, handleClose, typeModal }) => {
   const [firstName, setFirstName] = useState("");
@@ -57,27 +58,64 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
       formData.append("profileImage", profileImage);
       formData.append("role", role);
 
-      const res = await axios.post("/api/send-email-add-user", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },})
+      try {
+        if (!localStorage.getItem("token")) {
+          const res = await axios.post("/api/send-email-add-user", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
 
-      if (res.status === 200 && res.data.message) {
-        Swal.fire({
-          icon: "success",
-          title: res.data.message,
-          showConfirmButton: false,
-          timer: 1500
-        });
+          if (res.status === 200 && res.data.message) {
+            Swal.fire({
+              icon: "success",
+              title: res.data.message,
+              showConfirmButton: false,
+              timer: 1500,
+            });
 
-        setFirstName("");
-        setLastName("");
-        setEmail("");
-        setPhoneNumber("");
-        setProfileImage("");
-        setRole("");
+            setFirstName("");
+            setLastName("");
+            setEmail("");
+            setPhoneNumber("");
+            setProfileImage("");
+            setRole("");
 
-        handleClose();
+            handleClose();
+          }
+        } else {
+          const formDataObject = {};
+          for (const [key, value] of formData.entries()) {
+            formDataObject[key] = value;
+          }
+          const response = await apiFetch(`send-email-add-user`, {
+            method: "POST",
+            body: { userInfo: JSON.stringify(formDataObject), profileImage },
+            withCredentials: true,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          if (response.status === 200 && response.data.message) {
+            Swal.fire({
+              icon: "success",
+              title: response.data.message,
+              showConfirmButton: false,
+              timer: 1500,
+            });
+
+            setFirstName("");
+            setLastName("");
+            setEmail("");
+            setPhoneNumber("");
+            setProfileImage("");
+            setRole("");
+
+            handleClose();
+          }
+        }
+      } catch (error) {
+        console.log("Error assigning role to user with this email :", error);
       }
     } catch (error) {
       if (error && error.response.status === 422) {
