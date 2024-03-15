@@ -46,7 +46,6 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
         if (auth()->user()->role === 'SuperAdmin') {
             $request->validate([
                 'firstName' => 'required|string|max:255',

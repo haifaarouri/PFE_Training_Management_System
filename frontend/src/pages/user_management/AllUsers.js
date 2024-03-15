@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import moment from "moment";
-import { Badge, Pagination } from "react-bootstrap";
+import { Badge, Form, InputGroup, Pagination } from "react-bootstrap";
 import CustomModal from "../../components/CustomModal";
 import { ToastContainer, toast } from "react-toastify";
 import { deleteUser, fetchAllUsers } from "../../services/UserServices";
@@ -155,6 +155,64 @@ function AllUsers() {
                 </Button>
               </div>
               <CustomModal show={showModal} handleClose={handleCloseAddModal} />
+              <div className="d-flex justify-content-center mt-3 mb-5">
+                <Form style={{ width: "50%" }}>
+                  <div className="inner-form">
+                    {/* <div className="input-field first-wrap"> */}
+                      <div className="input-select">
+                        <Form.Group>
+                          <InputGroup>
+                            <Form.Select
+                            style={{border: "none"}}
+                              name="email"
+                              // value={email}
+                              // onChange={(e) => setEmail(e.target.value)}
+                              required
+                            >
+                              <option>Categorie</option>
+                              <option value="E-mail">E-mail</option>
+                            </Form.Select>
+                          </InputGroup>
+                        </Form.Group>
+                      </div>
+                    {/* </div> */}
+                    <div className="input-field second-wrap">
+                      <Form.Group>
+                        <InputGroup>
+                          <Form.Control
+                            id="search"
+                            type="text"
+                            placeholder="Recherchez des administareurs ..."
+                            size="lg"
+                            name=""
+                            // value={email}
+                            // onChange={(e) => setEmail(e.target.value)}
+                            required
+                          ></Form.Control>
+                        </InputGroup>
+                      </Form.Group>
+                    </div>
+                    <div className="input-field third-wrap">
+                      <button className="btn-search" type="button">
+                        <svg
+                          className="svg-inline--fa fa-search fa-w-16"
+                          aria-hidden="true"
+                          data-prefix="fas"
+                          data-icon="search"
+                          role="img"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 512 512"
+                        >
+                          <path
+                            fill="currentColor"
+                            d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </Form>
+              </div>
               <div className="table-responsive">
                 <table className="table table-striped table-hover">
                   <thead>

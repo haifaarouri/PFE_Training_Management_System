@@ -14,7 +14,7 @@ function GoogleCallback() {
   const dispatch = useDispatch();
 
   // On page load, we take "search" parameters
-  // and proxy them to /api/auth/callback on our Laravel API
+  // and proxy them to /api/auth/callback on Laravel API
   useEffect(() => {
     fetch(`http://localhost:8000/auth/google/callback${location.search}`, {
       headers: {
@@ -29,11 +29,11 @@ function GoogleCallback() {
         console.log(data);
         setLoading(false);
         setData(data);
-        localStorage.setItem('token', data.access_token); // Store the token
+        localStorage.setItem("token", data.access_token); // Store the token
         dispatch(setUser(data.user));
-        navigate('/dashboard');
+        navigate("/dashboard");
       });
-  }, []);
+  }, [dispatch, location.search, navigate]);
 
   // Helper method to fetch User data for authenticated user
   // Watch out for "Authorization" header that is added to this call
@@ -72,7 +72,24 @@ function GoogleCallback() {
 }
 
 function DisplayLoading() {
-  return <div>Loading....</div>;
+  return (
+    <div className="d-flex justify-content-center">
+      <div
+        className="spinner-grow text-primary"
+        style={{
+          width: "3rem",
+          height: "3rem",
+          position: "absolute",
+          margin: "auto",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+        }}
+        role="status"
+      ></div>
+    </div>
+  );
 }
 
 function DisplayData(data) {

@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 
 function Dashboard() {
-  const [firstAccess, setFirstAccess] = useState(true);
+  // const [firstAccess, setFirstAccess] = useState(true);
 
   // useEffect(() => {
-  //   if (firstAccess) {
+  //   setTimeout(() => { 
   //     window.location.reload()
-  //     setFirstAccess(false);
-  //   }
-  // }, []);
+  // }, )
+  // }, [firstAccess]);
 
   return (
     <div className="content-wrapper">
@@ -222,7 +221,10 @@ function Dashboard() {
                   <tbody>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face1.jpg" alt="images/faces/face1.jpg" />
+                        <img
+                          src="images/faces/face1.jpg"
+                          alt="images/faces/face1.jpg"
+                        />
                       </td>
                       <td>Herman Beck</td>
                       <td>
@@ -242,7 +244,10 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face2.jpg" alt="images/faces/face2.jpg" />
+                        <img
+                          src="images/faces/face2.jpg"
+                          alt="images/faces/face2.jpg"
+                        />
                       </td>
                       <td>Messsy Adam</td>
                       <td>
@@ -262,7 +267,10 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face3.jpg" alt="images/faces/face3.jpg" />
+                        <img
+                          src="images/faces/face3.jpg"
+                          alt="images/faces/face3.jpg"
+                        />
                       </td>
                       <td>John Richards</td>
                       <td>
@@ -282,7 +290,10 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face4.jpg" alt="images/faces/face4.jpg" />
+                        <img
+                          src="images/faces/face4.jpg"
+                          alt="images/faces/face4.jpg"
+                        />
                       </td>
                       <td>Peter Meggik</td>
                       <td>
@@ -302,7 +313,10 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face5.jpg" alt="images/faces/face5.jpg" />
+                        <img
+                          src="images/faces/face5.jpg"
+                          alt="images/faces/face5.jpg"
+                        />
                       </td>
                       <td>Edward</td>
                       <td>
@@ -322,7 +336,10 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face6.jpg" alt="images/faces/face6.jpg" />
+                        <img
+                          src="images/faces/face6.jpg"
+                          alt="images/faces/face6.jpg"
+                        />
                       </td>
                       <td>John Doe</td>
                       <td>
@@ -342,7 +359,10 @@ function Dashboard() {
                     </tr>
                     <tr>
                       <td className="py-1">
-                        <img src="images/faces/face7.jpg" alt="images/faces/face7.jpg" />
+                        <img
+                          src="images/faces/face7.jpg"
+                          alt="images/faces/face7.jpg"
+                        />
                       </td>
                       <td>Henry Tom</td>
                       <td>

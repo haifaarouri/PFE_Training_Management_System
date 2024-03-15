@@ -51,18 +51,28 @@ export const editUser = async (id, formData) => {
         formData,
         {
           headers: {
-            ContentType: "multipart/form-data",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
       return response.data;
     } else {
-      const response = await apiFetch(`send-email-edit-user/${id}`, formData, {
-        method: "POST",
-        headers: {
-          ContentType: "multipart/form-data",
-        },
-      });
+      const headers = {
+        "Content-Type": "multipart/form-data",
+      };
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await axios.post(
+        `/api/send-email-edit-user/${id}`,
+        formData,
+        {
+          headers: headers,
+        }
+      );
       return response;
     }
   } catch (error) {

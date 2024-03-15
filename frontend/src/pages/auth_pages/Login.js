@@ -19,6 +19,7 @@ function Login() {
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [loginUrl, setLoginUrl] = useState(null);
 
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -109,14 +110,6 @@ function Login() {
   const showForgotPasswordModal = () => setShowModal(true);
   const handleCloseForgotPasswordModal = () => setShowModal(false);
 
-  const googleAuth = () => {
-    setTimeout(() => {
-      window.open("http://localhost:8000/auth/google/redirect", "_self");
-    }, 0);
-  };
-
-  const [loginUrl, setLoginUrl] = useState(null);
-
   useEffect(() => {
     fetch("http://localhost:8000/auth/google/redirect", {
       headers: {
@@ -143,14 +136,15 @@ function Login() {
       <div className="d-flex flex-column align-items-center">
         <h4 className="text-center mb-4">Bienvenue de nouveau !</h4>
         <h6 className="font-weight-light mb-3">Se connecter avec</h6>
-        <div>{loginUrl != null && <a href={loginUrl}>Google Sign In</a>}</div>
-        <button
-          type="button"
-          className="btn btn-google btn-social-icon-text mb-3"
-          onClick={googleAuth}
-        >
-          <i className="mdi mdi-google-plus"></i> Google
-        </button>
+        {loginUrl != null && (
+          <Link
+            to={loginUrl}
+            type="button"
+            className="btn btn-google btn-social-icon-text mb-3"
+          >
+            <i className="mdi mdi-google-plus"></i> Google
+          </Link>
+        )}
         <h6 className="font-weight-light">Ou</h6>
       </div>
       {showModal && (

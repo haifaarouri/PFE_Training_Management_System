@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import axios from "../services/axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../store/slices/authenticatedUserSlice";
+import Swal from "sweetalert2";
 
 const EditProfileModal = ({ show, handleClose, handleMsg }) => {
   const [validated, setValidated] = useState(false);
@@ -89,33 +90,85 @@ const EditProfileModal = ({ show, handleClose, handleMsg }) => {
       formData.append("phoneNumber", userToEdit.phoneNumber);
       formData.append("profileImage", userToEdit.profileImage);
 
-      const res = await axios.post(
-        `/api/edit-profile/${userToEdit.id}`,
-        formData,
-        {
-          headers: {
+      try {
+        if (!localStorage.getItem("token")) {
+          const res = await axios.post(
+            `/api/edit-profile/${userToEdit.id}`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+
+          if (res.data.message) {
+            //stock user in redux
+            dispatch(setUser(userToEdit));
+
+            Swal.fire({
+              icon: "success",
+              title: res.data.message,
+              showConfirmButton: false,
+              timer: 1500,
+            });
+
+            setUserToEdit({
+              email: "",
+              firstName: "",
+              id: "",
+              lastName: "",
+              phoneNumber: "",
+              profileImage: "",
+              password: "",
+              password_confirmation: "",
+            });
+            handleClose();
+          }
+        } else {
+          const headers = {
             "Content-Type": "multipart/form-data",
-          },
+          };
+
+          const token = localStorage.getItem("token");
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+
+          const response = await axios.post(
+            `/api/edit-profile/${userToEdit.id}`,
+            formData,
+            {
+              headers: headers,
+            }
+          );
+
+          if (response.data.message) {
+            //stock user in redux
+            dispatch(setUser(userToEdit));
+
+            Swal.fire({
+              icon: "success",
+              title: response.data.message,
+              showConfirmButton: false,
+              timer: 1500,
+            });
+
+            setUserToEdit({
+              email: "",
+              firstName: "",
+              id: "",
+              lastName: "",
+              phoneNumber: "",
+              profileImage: "",
+              password: "",
+              password_confirmation: "",
+            });
+            handleClose();
+          }
         }
-      );
-
-      if (res.data.message) {
-        //stock user in redux
-        dispatch(setUser(userToEdit));
-
-        handleMsg(res.message);
-
-        setUserToEdit({
-          email: "",
-          firstName: "",
-          id: "",
-          lastName: "",
-          phoneNumber: "",
-          profileImage: "",
-          password: "",
-          password_confirmation: "",
-        });
-        handleClose();
+      } catch (error) {
+        console.log("Error adding a new user :", error);
       }
     } catch (error) {
       if (error && error.response.status === 422) {

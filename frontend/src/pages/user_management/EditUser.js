@@ -60,8 +60,9 @@ function EditUser() {
       formData.append("profileImage", user.profileImage);
 
       const res = await editUser(id, formData);
-      if (res.message) {
-        dispatch(setMsg(res.message));
+
+      if (res.data.message) {
+        dispatch(setMsg(res.data.message));
 
         Swal.fire({
           icon: "success",

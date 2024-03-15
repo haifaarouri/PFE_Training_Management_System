@@ -3,7 +3,6 @@ import { Modal, Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
-import { apiFetch } from "../services/api";
 
 const CustomModal = ({ show, handleClose, typeModal }) => {
   const [firstName, setFirstName] = useState("");
@@ -84,18 +83,23 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
             handleClose();
           }
         } else {
-          const formDataObject = {};
-          for (const [key, value] of formData.entries()) {
-            formDataObject[key] = value;
+          const headers = {
+            "Content-Type": "multipart/form-data",
+          };
+
+          const token = localStorage.getItem("token");
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
           }
-          const response = await apiFetch(`send-email-add-user`, {
-            method: "POST",
-            body: { userInfo: JSON.stringify(formDataObject), profileImage },
-            withCredentials: true,
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          });
+
+          const response = await axios.post(
+            "/api/send-email-add-user",
+            formData,
+            {
+              headers: headers,
+            }
+          );
+
           if (response.status === 200 && response.data.message) {
             Swal.fire({
               icon: "success",
@@ -115,7 +119,7 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
           }
         }
       } catch (error) {
-        console.log("Error assigning role to user with this email :", error);
+        console.log("Error adding a new user :", error);
       }
     } catch (error) {
       if (error && error.response.status === 422) {

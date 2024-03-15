@@ -286,37 +286,46 @@ ul.social li{
       	<tr>
           <td valign="top" class="bg_white" style="padding: 1em 2.5em 0 2.5em;">
           	<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+			  	<!-- <tr>
+					<td class="logo" style="display: flex; justify-content: center;">
+						<img src="{{ asset('smartSkillsLogo.png') }}" alt="Image" style="width: 100px; height: auto; margin: auto; display: block;">
+					</td>
+				</tr> -->
           		<tr>
-          			<td class="logo" style="text-align: center;">
+					<td class="logo" style="text-align: center;">
 			            <h1><a href="#">Gestion des Formations</a></h1>
-			          </td>
+			        </td>
           		</tr>
           	</table>
           </td>
 	      </tr>
 		<tr>
-          <td valign="middle" class="hero bg_white" style="padding: 2em 0 4em 0;">
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            	<tr>
-            		<td style="padding: 0 2.5em; text-align: center; padding-bottom: 3em;">
-            			<div class="text">
-            				<h3>On a modifié vos informations personnelles dans notre application web de gestion des formations !</h3>
-            			</div>
-            		</td>
-            	</tr>
-            	<tr>
-			        <td style="text-align: center;">
-			          	<div class="text-author">
-						  <img src="{{ url('/profilePictures/' . $profileImage) }}" alt="Image" style="width: 100px; max-width: 600px; height: auto; margin: auto; display: block;">
-				          	<h3 class="name">{{$firstName}} {{$lastName}}</h3>
-                            <p>Email : {{ $email }}</p><br />
-                            <span class="position">Role : {{$role}}</span><br />
-                            <span class="position">Numéro de téléphone : {{$phoneNumber}}</span>
-			           	</div>
-			        </td>
-			    </tr>
-            </table>
-          </td>
+        	<td valign="middle" class="hero bg_white" style="padding: 2em 0 4em 0;">
+				<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+					<tr>
+						<td style="padding: 0 2.5em; text-align: center; padding-bottom: 3em;">
+							<div class="text">
+								<h3>On a modifié vos informations personnelles dans notre application web de gestion des formations !</h3>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td style="text-align: center;">
+							<div class="text-author">
+								@if (file_exists(public_path('profilePictures/' . $profileImage)))
+									<img src="{{ url('/profilePictures/' . $profileImage) }}" alt="Image" style="width: 100px; max-width: 600px; height: auto; margin: auto; display: block;">
+								@else
+									<img src="{{url($profileImage)}}" alt="Image" style="width: 100px; max-width: 600px; height: auto; margin: auto; display: block;">
+								@endif
+								<h3 class="name">{{$firstName}} {{$lastName}}</h3>
+								<p>Email : {{ $email }}</p><br />
+								<span class="position">Role : {{$role}}</span><br />
+								<span class="position">Numéro de téléphone : {{$phoneNumber}}</span>
+							</div>
+						</td>
+					</tr>
+				</table>
+        	</td>
 	    </tr>
       </table>
     </div>
