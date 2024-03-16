@@ -25,6 +25,26 @@ function AllUsers() {
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [userAuth, setUserAuth] = useState(null);
+  const [filteredData, setFilteredData] = useState([]);
+  const [wordEntered, setWordEntered] = useState("");
+  const [columnName, setColumnName] = useState(null);
+
+  const handleFilter = (event) => {
+    const searchWord = event.target.value.toLowerCase();
+    setWordEntered(searchWord);
+    if (columnName && columnName !== "Colonne") {
+      const newFilter = users.filter((user) =>
+        user[columnName].toLowerCase().includes(searchWord.toLowerCase())
+      );
+      setFilteredData(newFilter);
+    } else {
+      const newFilter = users.filter((user) => {
+        const userFields = Object.values(user).join(" ").toLowerCase();
+        return userFields.includes(searchWord);
+      });
+      setFilteredData(newFilter);
+    }
+  };
 
   const resultUser = useSelector((state) => state.user);
 
@@ -134,12 +154,12 @@ function AllUsers() {
       setCurrentPage(currentPage + 1);
     }
   };
-
+  console.log(filteredData);
   return (
     <div className="content-wrapper">
       <div className="row">
         <div className="col-lg-12 grid-margin stretch-card">
-          <div className="card">
+          <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
               <ToastContainer />
               <div className="d-flex justify-content-between">
@@ -158,24 +178,25 @@ function AllUsers() {
               <div className="d-flex justify-content-center mt-3 mb-5">
                 <Form style={{ width: "50%" }}>
                   <div className="inner-form">
-                    {/* <div className="input-field first-wrap"> */}
-                      <div className="input-select">
-                        <Form.Group>
-                          <InputGroup>
-                            <Form.Select
-                            style={{border: "none"}}
-                              name="email"
-                              // value={email}
-                              // onChange={(e) => setEmail(e.target.value)}
-                              required
-                            >
-                              <option>Categorie</option>
-                              <option value="E-mail">E-mail</option>
-                            </Form.Select>
-                          </InputGroup>
-                        </Form.Group>
-                      </div>
-                    {/* </div> */}
+                    <div className="input-select">
+                      <Form.Group>
+                        <InputGroup>
+                          <Form.Select
+                            style={{ border: "none" }}
+                            name="email"
+                            value={columnName}
+                            onChange={(e) => setColumnName(e.target.value)}
+                            required
+                          >
+                            <option>Colonne</option>
+                            <option value="email">E-mail</option>
+                            <option value="firstName">Prénom</option>
+                            <option value="lastName">Noml</option>
+                            <option value="role">Role</option>
+                          </Form.Select>
+                        </InputGroup>
+                      </Form.Group>
+                    </div>
                     <div className="input-field second-wrap">
                       <Form.Group>
                         <InputGroup>
@@ -185,8 +206,8 @@ function AllUsers() {
                             placeholder="Recherchez des administareurs ..."
                             size="lg"
                             name=""
-                            // value={email}
-                            // onChange={(e) => setEmail(e.target.value)}
+                            value={wordEntered}
+                            onChange={handleFilter}
                             required
                           ></Form.Control>
                         </InputGroup>
@@ -230,7 +251,100 @@ function AllUsers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.length > 0 &&
+                    {filteredData.length > 0 ? (
+                      filteredData.map((u, index) => {
+                        const dateCreated = moment(u.created_at);
+                        dateCreated.locale("fr");
+
+                        const dateModified = moment(u.updated_at);
+                        dateModified.locale("fr");
+
+                        const dateVerified = moment(u.email_verified_at);
+                        dateCreated.locale("fr");
+                        return (
+                          u.id !== userAuth.id && (
+                            <tr key={index}>
+                              <td>
+                                <img
+                                  src={
+                                    u.provider === "google"
+                                      ? `${u.profileImage}`
+                                      : `http://localhost:8000/profilePictures/${u.profileImage}`
+                                  }
+                                  alt={u.profileImage}
+                                />
+                              </td>
+                              <td>
+                                <h6>{u.firstName}</h6>
+                              </td>
+                              <td>{u.lastName}</td>
+                              <td>{u.email}</td>
+                              <td>{u.phoneNumber}</td>
+                              <td>{u.role}</td>
+                              <td>
+                                {dateCreated
+                                  .format("dddd, MMMM Do YYYY, h:mm:ss a")
+                                  .replace(/am/g, "matin")
+                                  .replace(/pm/g, "après-midi")}
+                              </td>
+                              <td>
+                                {dateModified
+                                  .format("dddd, MMMM Do YYYY, h:mm:ss a")
+                                  .replace(/am/g, "matin")
+                                  .replace(/pm/g, "après-midi")}
+                              </td>
+                              <td>
+                                {u.email_verified_at ? (
+                                  dateVerified
+                                    .format("dddd, MMMM Do YYYY, h:mm:ss a")
+                                    .replace(/am/g, "matin")
+                                    .replace(/pm/g, "après-midi")
+                                ) : (
+                                  <Badge
+                                    pill
+                                    bg="danger"
+                                    style={{
+                                      width: "100%",
+                                      height: "30px",
+                                      paddingTop: "5%",
+                                    }}
+                                  >
+                                    <i className="mdi mdi-email me-2"></i>
+                                    Email non vérifié
+                                  </Badge>
+                                )}
+                              </td>
+                              <td className="d-flex flex-column justify-content-center">
+                                <Link
+                                  to={`/super-admin/profile-user/${u.id}`}
+                                  variant="outline-info"
+                                  className="btn btn-sm mb-2 btn-outline-info"
+                                >
+                                  Détails
+                                </Link>
+                                <Button
+                                  variant="outline-primary"
+                                  onClick={() => handleButtonEdit(u.id)}
+                                  className="btn btn-sm mb-2"
+                                >
+                                  Modifier
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeleteUser(u.id)}
+                                  variant="outline-danger"
+                                  className="btn btn-sm"
+                                >
+                                  Supprimer
+                                </Button>
+                              </td>
+                            </tr>
+                          )
+                        );
+                      })
+                    ) : filteredData.length === 0 && users.length === 0 ? (
+                      <></>
+                    ) : (
+                      users.length > 0 &&
                       usersPage.map((u, index) => {
                         const dateCreated = moment(u.created_at);
                         dateCreated.locale("fr");
@@ -319,7 +433,8 @@ function AllUsers() {
                             </tr>
                           )
                         );
-                      })}
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
