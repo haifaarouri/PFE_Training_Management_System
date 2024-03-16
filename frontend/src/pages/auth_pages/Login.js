@@ -98,6 +98,13 @@ function Login() {
               confirmButtonText: "Envoyer un autre e-mail!",
             });
             navigate("/verify-email");
+          } else if (error.response.status === 401) {
+            Swal.fire({
+              icon: "error",
+              title: error.response.data.error,
+              showConfirmButton: false,
+              timer: 2000,
+            });
           }
         });
     } catch (error) {
