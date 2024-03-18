@@ -16,13 +16,13 @@ use App\Http\Controllers\EmailController;
 |
 */
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+Route::middleware(['auth:sanctum', 'verified'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
 // User Management Routes
 // Role-Based Routes
-Route::middleware(['auth:sanctum', 'user-role:SuperAdmin'])->group(function () {
+Route::middleware(['auth:sanctum', 'user-role:SuperAdmin', 'verified'])->group(function () {
     // Routes accessible only to authenticated users with the 'SuperAdmin' role
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/user-id/{id}', [UserController::class, 'getUserById']);
@@ -39,6 +39,6 @@ Route::middleware(['auth:sanctum', 'user-role:SuperAdmin'])->group(function () {
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', [UserController::class, 'show']);
-    Route::put('/edit-profile/{id}', [UserController::class, 'updateProfile']);
-    Route::post('/google-logout', [UserController::class, 'logoutFromGoogle']);
+    Route::put('/edit-profile/{id}', [UserController::class, 'updateProfile'])->middleware(['verified']);
+    Route::post('/google-logout', [UserController::class, 'logoutFromGoogle'])->middleware(['verified']);
 });

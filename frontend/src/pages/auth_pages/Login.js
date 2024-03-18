@@ -51,6 +51,12 @@ function Login() {
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
+  const resendVerifLink = () => {
+    axios.post("/email/verification-notification").then((res) => {
+      console.log(res);
+    });
+  };
+
   const handleLogIn = async (event) => {
     event.preventDefault();
     await csrf();
@@ -79,12 +85,31 @@ function Login() {
             //stock user in redux
             dispatch(setUser(user));
 
-            if (user) {
+            if (user && user.email_verified_at) {
               if (user.role === "SuperAdministrateur") {
                 navigate("/super-admin/users");
               } else {
                 navigate("/dashboard");
               }
+            } else if (user && !user.email_verified_at) {
+              Swal.fire({
+                title: "Vérifier votre adresse e-mail !",
+                text: "Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "Renvoyer E-mail de vérification",
+                showClass: {
+                  popup: "animate__animated animate__fadeInUp animate__faster",
+                },
+                hideClass: {
+                  popup:
+                    "animate__animated animate__fadeOutDown animate__faster",
+                },
+                preConfirm: () => {
+                  resendVerifLink();
+                  return false;
+                },
+              });
+              navigate("/request-to-verify-email");
             }
           });
         })
@@ -92,12 +117,21 @@ function Login() {
           if (error.response.status === 409) {
             Swal.fire({
               title: "Vérifier votre adresse e-mail !",
-              text: " Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
+              text: "Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
               confirmButtonColor: "#3085d6",
               cancelButtonColor: "#d33",
-              confirmButtonText: "Envoyer un autre e-mail!",
+              showClass: {
+                popup: "animate__animated animate__fadeInUp animate__faster",
+              },
+              hideClass: {
+                popup: "animate__animated animate__fadeOutDown animate__faster",
+              },
+              preConfirm: () => {
+                resendVerifLink();
+                return false;
+              },
             });
-            navigate("/verify-email");
+            navigate("/request-to-verify-email");
           } else if (error.response.status === 401) {
             Swal.fire({
               icon: "error",

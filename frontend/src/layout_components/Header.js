@@ -292,7 +292,7 @@ function Header() {
               </Link>
               <Button className="dropdown-item btn btn-light" onClick={logout}>
                 <i className="mdi mdi-logout text-primary" />
-                Se déconneter
+                Se déconnecter
               </Button>
             </div>
           </li>

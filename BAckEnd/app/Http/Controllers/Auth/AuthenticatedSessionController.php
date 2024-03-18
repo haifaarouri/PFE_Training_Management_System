@@ -15,7 +15,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): JsonResponse
+    public function store(LoginRequest $request): Response | JsonResponse
     {
         $existingUser = User::where('email', $request->email)->first();
         if ($existingUser && $existingUser->provider == 'google') {

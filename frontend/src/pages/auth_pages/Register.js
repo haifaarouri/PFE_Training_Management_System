@@ -20,11 +20,11 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleTogglePassword = () => { 
+  const handleTogglePassword = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleToggleConfirmPassword = () => { 
+  const handleToggleConfirmPassword = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
@@ -63,8 +63,10 @@ function Register() {
     });
 
   const resendVerifLink = () => {
-    axios.post('/email/verification-notification')
-  }
+    axios.post("/email/verification-notification").then((res) => {
+      console.log(res);
+    });
+  };
 
   const handleRegister = async (event) => {
     event.preventDefault();
@@ -93,7 +95,7 @@ function Register() {
       formData.append("phoneNumber", phoneNumber);
       formData.append("profileImage", profileImage);
 
-      const res =await axios.post("/register", formData, {
+      const res = await axios.post("/register", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -103,25 +105,19 @@ function Register() {
 
       Swal.fire({
         title: "Vérifier votre adresse e-mail !",
-        text: " Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
+        text: "Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
         confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        // confirmButtonText: <button onClick={resendVerifLink}>Envoyer un autre e-mail!</button>,
-        // getConfirmButton: <button onClick={resendVerifLink}>Envoyer un autre e-mail!</button>,
+        confirmButtonText: "Renvoyer E-mail de vérification",
         showClass: {
-          popup: `
-            animate__animated
-            animate__fadeInUp
-            animate__faster
-          `
+          popup: "animate__animated animate__fadeInUp animate__faster",
         },
         hideClass: {
-          popup: `
-            animate__animated
-            animate__fadeOutDown
-            animate__faster
-          `
-        }
+          popup: "animate__animated animate__fadeOutDown animate__faster",
+        },
+        preConfirm: () => {
+          resendVerifLink();
+          return false;
+        },
       });
 
       setFirstName("");
