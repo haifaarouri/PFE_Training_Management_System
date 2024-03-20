@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SalleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -41,4 +42,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', [UserController::class, 'show']);
     Route::put('/edit-profile/{id}', [UserController::class, 'updateProfile'])->middleware(['verified']);
     Route::post('/google-logout', [UserController::class, 'logoutFromGoogle'])->middleware(['verified']);
+});
+
+Route::middleware(['auth:sanctum', 'user-role:Admin', 'verified'])->group(function () {
+    // Routes accessible only to authenticated users with the 'Admin' role
+    Route::get('/salles', [SalleController::class, 'index']);
+    Route::get('/salle-id/{id}', [salleController::class, 'show']);
+    Route::put('/update-salle/{id}', [salleController::class, 'update']);
+    Route::post('/add-salle', [salleController::class, 'store']);
+    Route::delete('/delete-salle/{id}', [salleController::class, 'destroy']);
 });

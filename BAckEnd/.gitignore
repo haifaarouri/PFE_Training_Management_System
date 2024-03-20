@@ -3,6 +3,7 @@
 /public/hot
 /public/storage
 /public/profilePictures
+/public/sallePictures
 /storage/*.key
 /vendor
 .env

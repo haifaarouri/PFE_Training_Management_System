@@ -1,6 +1,16 @@
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
 function SideBar() {
+  const [userAuth, setUserAuth] = useState(null);
+
+  const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
+
+  useEffect(() => {
+    setUserAuth(result.user);
+  }, [result.user]);
+
   return (
     <nav className="sidebar sidebar-offcanvas" id="sidebar">
       <ul className="nav">
@@ -11,7 +21,10 @@ function SideBar() {
               alt="logo"
               width="45%"
             />
-            <p className="text-center align-self-center" style={{color: "white"}}>
+            <p
+              className="text-center align-self-center"
+              style={{ color: "white" }}
+            >
               Gestion des Formations
             </p>
           </div>
@@ -28,48 +41,50 @@ function SideBar() {
           <p>Pages</p>
           <span />
         </li>
+        {userAuth && userAuth.role === "SuperAdmin" && (
+          <li className="nav-item">
+            <Link
+              className="nav-link"
+              data-bs-toggle="collapse"
+              to="#ui-basic"
+              aria-expanded="false"
+              aria-controls="ui-basic"
+            >
+              <i className="mdi mdi-settings menu-icon" />
+              <span className="menu-title">Gestions</span>
+              <i className="menu-arrow" />
+            </Link>
+            <div className="collapse" id="ui-basic">
+              <ul className="nav flex-column sub-menu">
+                <li className="nav-item">
+                  <Link className="nav-link" to="/super-admin/users">
+                    <i
+                      className="mdi mdi-account-multiple"
+                      style={{ marginRight: "10%" }}
+                    />
+                    Administareurs
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/super-admin/manage-roles">
+                    <i
+                      className="mdi mdi-account-multiple-outline"
+                      style={{ marginRight: "10%" }}
+                    />
+                    Roles
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </li>
+        )}
         <li className="nav-item">
-          <Link
-            className="nav-link"
-            data-bs-toggle="collapse"
-            to="#ui-basic"
-            aria-expanded="false"
-            aria-controls="ui-basic"
-          >
-            <i className="mdi mdi-settings menu-icon" />
-            <span className="menu-title">Gestions</span>
-            <i className="menu-arrow" />
-          </Link>
-          <div className="collapse" id="ui-basic">
-            <ul className="nav flex-column sub-menu">
-              <li className="nav-item">
-                <Link className="nav-link" to="/super-admin/users">
-                  <i
-                    className="mdi mdi-account-multiple"
-                    style={{ marginRight: "10%" }}
-                  />
-                  Administareurs
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/super-admin/manage-roles">
-                  <i
-                    className="mdi mdi-account-multiple-outline"
-                    style={{ marginRight: "10%" }}
-                  />
-                  Roles
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </li>
-        {/* <li className="nav-item">
-          <Link className="nav-link" to="pages/forms/basic_elements.html">
-            <i className="mdi mdi-view-headline menu-icon" />
-            <span className="menu-title">Form elements</span>
+          <Link className="nav-link" to="/salles">
+            <i className="mdi mdi-home-variant menu-icon" />
+            <span className="menu-title">Gestion des Salles</span>
           </Link>
         </li>
-        <li className="nav-item">
+        {/*<li className="nav-item">
           <Link className="nav-link" to="pages/charts/chartjs.html">
             <i className="mdi mdi-chart-pie menu-icon" />
             <span className="menu-title">Charts</span>

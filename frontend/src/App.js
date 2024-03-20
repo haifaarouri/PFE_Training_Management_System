@@ -14,6 +14,7 @@ import EmailVerif from "./pages/auth_pages/EmailVerif";
 import AssignRole from "./pages/user_management/AssignRole";
 import GoogleCallback from "./pages/auth_pages/GoogleCallback";
 import EmailVerification from "./pages/auth_pages/EmailVerification";
+import AllSalles from "./pages/salle_management/AllSalles";
 
 function App() {
   return (
@@ -37,6 +38,25 @@ function App() {
                 ]}
               >
                 <Dashboard />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/salles"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <AllSalles />
               </RequireAuth>
             }
           />
@@ -96,11 +116,11 @@ function App() {
         />
         <Route path="/unauthorized" element={<Unauthorized status="403" />} />
         <Route path="/verify-email/:id/:hash" element={<EmailVerif />} />
-        <Route path="/request-to-verify-email" element={<EmailVerification />} />
         <Route
-          path="/auth/google/callback"
-          element={<GoogleCallback />}
+          path="/request-to-verify-email"
+          element={<EmailVerification />}
         />
+        <Route path="/auth/google/callback" element={<GoogleCallback />} />
       </Routes>
     </div>
   );
