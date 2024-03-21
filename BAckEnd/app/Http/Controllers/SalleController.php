@@ -6,6 +6,7 @@ use App\Rules\DispositionRule;
 use DateTimeZone;
 use Illuminate\Http\Request;
 use App\Models\Salle;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
 use App\Enums\DispositionEnum;
@@ -14,9 +15,17 @@ use DateTime;
 
 class SalleController extends Controller
 {
+    public $list_roles = [];
+
+    public function __construct()
+    {
+        $this->list_roles = collect(["Admin", "SuperAdmin", "Sales", "ChargéFormation", "AssistanceAcceuil", "PiloteDuProcessus", "CommunityManager", "ServiceFinancier"]);
+    }
+
     public function index()
     {
-        if (auth()->user()->role === 'Admin') {
+        if ($this->list_roles->contains(auth()->user()->role)) {
+
             $salles = Salle::all();
             return response()->json($salles);
         } else {
@@ -27,13 +36,13 @@ class SalleController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()->role === 'Admin') {
-            // dd($request->all());
+        if ($this->list_roles->contains(auth()->user()->role)) {
+
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'capacity' => 'required|integer',
                 'disponibility' => 'required',
-                'disposition' =>  ['required', new DispositionRule()],
+                'disposition' => ['required', new DispositionRule()],
                 'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
 
@@ -51,13 +60,6 @@ class SalleController extends Controller
                     $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
                     $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
                 }
-
-                // for ($i=0; $i < count($request->input('disponibility')); $i++) { 
-                //     $salleDisponibilities = [
-                //         new Disponibility(new DateTime('2024-03-20'), new DateTime('2024-03-25')),
-                //         new Disponibility(new DateTime('2024-04-01'), new DateTime('2024-04-05')),
-                //     ];
-                // }
 
                 $salle = Salle::create([
                     'name' => $request->input('name'),
@@ -77,7 +79,7 @@ class SalleController extends Controller
 
     public function show($id)
     {
-        if (auth()->user()->role === 'Admin') {
+        if ($this->list_roles->contains(auth()->user()->role)) {
             $salle = Salle::find($id);
             if (!$salle) {
                 return response()->json(['error' => 'Salle avec cette ID non trouvé !'], 404);
@@ -91,7 +93,7 @@ class SalleController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (auth()->user()->role === 'Admin') {
+        if ($this->list_roles->contains(auth()->user()->role)) {
             $salle = Salle::find($id);
             if (!$salle) {
                 return response()->json(['error' => 'Salle avec cette ID non trouvé !'], 404);
@@ -101,7 +103,7 @@ class SalleController extends Controller
                 'name' => 'required|string|max:255',
                 'capacity' => 'required|integer',
                 'disponibility' => 'required|boolean',
-                'disposition' => 'required|string|max:255'. implode(',', DispositionEnum::all()),
+                'disposition' => 'required|string|max:255' . implode(',', DispositionEnum::all()),
                 'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
 
@@ -145,7 +147,7 @@ class SalleController extends Controller
 
     public function destroy($id)
     {
-        if (auth()->user()->role === 'Admin') {
+        if ($this->list_roles->contains(auth()->user()->role)) {
             $salle = Salle::find($id);
             if (!$salle) {
                 return response()->json(['error' => 'Salle avec cette ID non trouvé !'], 404);
@@ -157,7 +159,7 @@ class SalleController extends Controller
             }
 
             $salle->delete();
-            return response()->json(null, 204);
+            return response()->json(['message' => 'Salle supprimée avec succès !']);
         } else {
             // User does not have access, return a 403 response
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);

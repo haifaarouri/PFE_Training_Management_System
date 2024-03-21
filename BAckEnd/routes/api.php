@@ -44,7 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/google-logout', [UserController::class, 'logoutFromGoogle'])->middleware(['verified']);
 });
 
-Route::middleware(['auth:sanctum', 'user-role:Admin', 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Routes accessible only to authenticated users with the 'Admin' role
     Route::get('/salles', [SalleController::class, 'index']);
     Route::get('/salle-id/{id}', [salleController::class, 'show']);

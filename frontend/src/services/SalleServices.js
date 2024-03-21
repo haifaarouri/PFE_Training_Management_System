@@ -66,44 +66,19 @@ export const editUser = async (id, formData) => {
   }
 };
 
-export const deleteUser = async (id) => {
+export const deleteSalle = async (id) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.delete(`/api/send-email-delete-user/${id}`);
+      const response = await axios.delete(`/api/delete-salle/${id}`);
       return response.data;
     } else {
-      const response = await apiFetch(`send-email-delete-user/${id}`, {
+      const response = await apiFetch(`delete-salle/${id}`, {
         method: "DELETE",
       });
+      console.log(response);
       return response;
     }
   } catch (error) {
-    console.log("Error deleting user with this id :", error);
-  }
-};
-
-export const assignRole = async (data) => {
-  try {
-    if (!localStorage.getItem("token")) {
-      const response = await axios.post(
-        `/api/send-email-assign-role/${data.email}`,
-        data,
-        {
-          headers: {
-            ContentType: "multipart/form-data",
-          },
-        }
-      );
-      return response.data;
-    } else {
-      const response = await apiFetch(`send-email-assign-role/${data.email}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-        withCredentials: true,
-      });
-      return response;
-    }
-  } catch (error) {
-    console.log("Error assigning role to user with this email :", error);
+    console.log("Error deleting salle with this id :", error);
   }
 };

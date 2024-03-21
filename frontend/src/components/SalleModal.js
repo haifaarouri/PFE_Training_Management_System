@@ -18,17 +18,9 @@ const SalleModal = ({ show, handleClose }) => {
   const [image, setImage] = useState("");
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
-  // const [dateRanges, setDateRanges] = useState([
-  //   { startDate: null, endDate: null },
-  // ]);
 
   const handleDateChange = (dates, index) => {
     const [start, end] = dates;
-    // setDateRanges((current) =>
-    //   current.map((range, i) =>
-    //     i === index ? { ...range, startDate: start, endDate: end } : range
-    //   )
-    // );
     setDisponibility((current) =>
       current?.map((range, i) =>
         i === index ? { ...range, startDate: start, endDate: end } : range
@@ -37,10 +29,6 @@ const SalleModal = ({ show, handleClose }) => {
   };
 
   const addNewRange = () => {
-    // setDateRanges((current) => [
-    //   ...current,
-    //   { startDate: null, endDate: null },
-    // ]);
     setDisponibility((current) => [
       ...current,
       { startDate: null, endDate: null },
@@ -105,11 +93,11 @@ const SalleModal = ({ show, handleClose }) => {
               timer: 1500,
             });
 
-            setCapacity(null);
-            setDisponibility(null);
-            setDisposition(null);
-            setImage(null);
-            setName(null);
+            setCapacity("");
+            setDisponibility([{ startDate: null, endDate: null }]);
+            setDisposition("");
+            setImage("");
+            setName("");
 
             handleClose();
           }
@@ -135,11 +123,11 @@ const SalleModal = ({ show, handleClose }) => {
               timer: 1500,
             });
 
-            setCapacity(null);
-            setDisponibility(null);
-            setDisposition(null);
-            setImage(null);
-            setName(null);
+            setCapacity("");
+            setDisponibility([{ startDate: null, endDate: null }]);
+            setDisposition("");
+            setImage("");
+            setName("");
 
             handleClose();
           }
@@ -248,96 +236,97 @@ const SalleModal = ({ show, handleClose }) => {
                   </span>
                 </div>
               </InputGroup.Text>
-              {disponibility.map((range, index) => (
-                <DatePicker
-                  name="disponibility"
-                  value={disponibility}
-                  customInput={
-                    <input
-                      style={{
-                        padding: "10px",
-                        border: "none",
-                        borderRadius: "4px",
-                        width: "600px",
-                        height: "64px",
-                      }}
-                    />
-                  }
-                  selectsRange={true}
-                  startDate={range.startDate}
-                  endDate={range.endDate}
-                  onChange={(dates) => handleDateChange(dates, index)}
-                  withPortal
-                  minDate={new Date()}
-                  isClearable
-                  showYearDropdown
-                  scrollableMonthYearDropdown
-                  placeholderText="Séléctionner les intervalles des dates de disponibilité de cette salle"
-                  monthsShown={2}
-                  dateFormat="dd/MM/yyyy"
-                  renderCustomHeader={({
-                    monthDate,
-                    customHeaderCount,
-                    decreaseMonth,
-                    increaseMonth,
-                  }) => (
-                    <div>
-                      <button
-                        aria-label="Previous Month"
-                        className={
-                          "react-datepicker__navigation react-datepicker__navigation--previous"
-                        }
-                        style={
-                          customHeaderCount === 1
-                            ? { visibility: "hidden" }
-                            : null
-                        }
-                        onClick={(e) => {
-                          e.preventDefault();
-                          decreaseMonth();
+              {disponibility.length > 0 &&
+                Array.isArray(disponibility) &&
+                disponibility.map((range, index) => (
+                  <DatePicker
+                    name="disponibility"
+                    customInput={
+                      <input
+                        style={{
+                          padding: "10px",
+                          border: "none",
+                          borderRadius: "4px",
+                          width: "600px",
+                          height: "64px",
                         }}
-                      >
-                        <span
+                      />
+                    }
+                    selectsRange={true}
+                    startDate={range.startDate}
+                    endDate={range.endDate}
+                    onChange={(dates) => handleDateChange(dates, index)}
+                    withPortal
+                    minDate={new Date()}
+                    isClearable
+                    showYearDropdown
+                    scrollableMonthYearDropdown
+                    placeholderText="Séléctionner les intervalles des dates de disponibilité de cette salle"
+                    monthsShown={2}
+                    dateFormat="dd/MM/yyyy"
+                    renderCustomHeader={({
+                      monthDate,
+                      customHeaderCount,
+                      decreaseMonth,
+                      increaseMonth,
+                    }) => (
+                      <div>
+                        <button
+                          aria-label="Previous Month"
                           className={
-                            "react-datepicker__navigation-icon react-datepicker__navigation-icon--previous"
+                            "react-datepicker__navigation react-datepicker__navigation--previous"
                           }
+                          style={
+                            customHeaderCount === 1
+                              ? { visibility: "hidden" }
+                              : null
+                          }
+                          onClick={(e) => {
+                            e.preventDefault();
+                            decreaseMonth();
+                          }}
                         >
-                          {"<"}
+                          <span
+                            className={
+                              "react-datepicker__navigation-icon react-datepicker__navigation-icon--previous"
+                            }
+                          >
+                            {"<"}
+                          </span>
+                        </button>
+                        <span className="react-datepicker__current-month">
+                          {monthDate.toLocaleString("en-US", {
+                            month: "long",
+                            year: "numeric",
+                          })}
                         </span>
-                      </button>
-                      <span className="react-datepicker__current-month">
-                        {monthDate.toLocaleString("en-US", {
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                      <button
-                        aria-label="Next Month"
-                        className={
-                          "react-datepicker__navigation react-datepicker__navigation--next"
-                        }
-                        style={
-                          customHeaderCount === 0
-                            ? { visibility: "hidden" }
-                            : null
-                        }
-                        onClick={(e) => {
-                          e.preventDefault();
-                          increaseMonth();
-                        }}
-                      >
-                        <span
+                        <button
+                          aria-label="Next Month"
                           className={
-                            "react-datepicker__navigation-icon react-datepicker__navigation-icon--next"
+                            "react-datepicker__navigation react-datepicker__navigation--next"
                           }
+                          style={
+                            customHeaderCount === 0
+                              ? { visibility: "hidden" }
+                              : null
+                          }
+                          onClick={(e) => {
+                            e.preventDefault();
+                            increaseMonth();
+                          }}
                         >
-                          {">"}
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                />
-              ))}
+                          <span
+                            className={
+                              "react-datepicker__navigation-icon react-datepicker__navigation-icon--next"
+                            }
+                          >
+                            {">"}
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  />
+                ))}
               <Button
                 className="btn btn-inverse-primary btn-rounded btn-icon"
                 onClick={addNewRange}
