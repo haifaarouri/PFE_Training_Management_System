@@ -11,12 +11,14 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import Carousel from "react-bootstrap/Carousel";
 import Swal from "sweetalert2";
+import DisponibilityModal from "../../components/DisponibilityModal";
 require("moment/locale/fr");
 
 function AllSalles() {
   const [salles, setSalles] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+  const [showDispoModal, setShowDispoModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const sallesPerPage = 2;
   const lastIndex = currentPage * sallesPerPage;
@@ -31,17 +33,26 @@ function AllSalles() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
+  const [modalDates, setModalDates] = useState(null);
+  const [otherFilters, setOtherFilters] = useState(false);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
     setWordEntered(searchWord);
     if (columnName && columnName !== "Colonne") {
-      const newFilter =
-        salles.length > 0 &&
-        salles.filter((salle) =>
-          salle[columnName].toLowerCase().includes(searchWord.toLowerCase())
-        );
-      setFilteredData(newFilter);
+      if (columnName === "name" || columnName === "disposition") {
+        const newFilter =
+          salles.length > 0 &&
+          salles.filter((salle) =>
+            salle[columnName].toLowerCase().includes(searchWord.toLowerCase())
+          );
+        setFilteredData(newFilter);
+      } else if (columnName === "capacity") {
+        const newFilter =
+          salles.length > 0 &&
+          salles.filter((salle) => salle[columnName] >= searchWord);
+        setFilteredData(newFilter);
+      }
     } else {
       const newFilter =
         salles.length > 0 &&
@@ -55,6 +66,8 @@ function AllSalles() {
 
   const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
+
+  const handleCloseDispoModal = () => setShowDispoModal(false);
 
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -81,7 +94,7 @@ function AllSalles() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/super-admin/edit-user/${id}`);
+    navigate(`/edit-salle/${id}`);
   };
 
   const fetchData = async () => {
@@ -158,6 +171,43 @@ function AllSalles() {
     setShowList(false);
   };
 
+  const handleCallback = (childData) => {
+    setModalDates(childData);
+    // Parse childData dates to moment for easier comparison
+    const modalRanges = childData.map((range) => ({
+      startDate: moment(range.startDate),
+      endDate: moment(range.endDate),
+    }));
+
+    // Function to check if two date ranges overlap (range 2 inculs dans range1)
+    const rangesOverlap = (range1, range2) => {
+      return (
+        range2.startDate.isBefore(range1.endDate) &&
+        range2.endDate.isBefore(range1.endDate) &&
+        range2.endDate.isAfter(range1.startDate) &&
+        range2.startDate.isAfter(range1.startDate)
+      );
+    };
+
+    // Compare each modal range with each salle's disponibility range
+    const overlappingSalles = salles.filter((salle) => {
+      return salle.disponibility.some((dispo) => {
+        const salleRange = {
+          startDate: moment(dispo.startDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
+          endDate: moment(dispo.endDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
+        };
+        return modalRanges.some((modalRange) =>
+          rangesOverlap(salleRange, modalRange)
+        );
+      });
+    });
+
+    overlappingSalles.length > 0
+      ? handleSuccess("Voici les salles disponibles !")
+      : handleError("Pas de salles disponibles !");
+    setFilteredData(overlappingSalles);
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -177,7 +227,7 @@ function AllSalles() {
                   Ajouter une Salle
                 </Button>
               </div>
-              <div className="d-flex justify-content-end px-3 pt-2">
+              <div className="d-flex justify-content-end px-3 py-3">
                 <div className="btn-group">
                   <Button
                     className="btn btn-lg btn-inverse-success btn-icon"
@@ -193,68 +243,97 @@ function AllSalles() {
                   </Button>
                 </div>
               </div>
-              <div className="d-flex justify-content-center mt-3 mb-5">
-                <Form style={{ width: "50%" }}>
-                  <div className="inner-form">
-                    <div className="input-select">
-                      <Form.Group>
-                        <InputGroup>
-                          <Form.Select
-                            style={{ border: "none" }}
-                            name="email"
-                            value={columnName}
-                            onChange={(e) => setColumnName(e.target.value)}
-                            required
-                          >
-                            <option>Colonne</option>
-                            <option value="email">E-mail</option>
-                            <option value="firstName">Prénom</option>
-                            <option value="lastName">Nom</option>
-                            <option value="role">Role</option>
-                          </Form.Select>
-                        </InputGroup>
-                      </Form.Group>
-                    </div>
-                    <div className="input-field second-wrap">
-                      <Form.Group>
-                        <InputGroup>
-                          <Form.Control
-                            id="search"
-                            type="text"
-                            placeholder="Recherchez des administareurs ..."
-                            size="lg"
-                            name=""
-                            value={wordEntered}
-                            onChange={handleFilter}
-                            required
-                          ></Form.Control>
-                        </InputGroup>
-                      </Form.Group>
-                    </div>
-                    <div className="input-field third-wrap">
-                      <button className="btn-search" type="button">
-                        <svg
-                          className="svg-inline--fa fa-search fa-w-16"
-                          aria-hidden="true"
-                          data-prefix="fas"
-                          data-icon="search"
-                          role="img"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 512 512"
-                        >
-                          <path
-                            fill="currentColor"
-                            d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </Form>
-              </div>
               <SalleModal show={showModal} handleClose={handleCloseAddModal} />
               {showList && (
                 <>
+                  <div className="d-flex justify-content-center mt-3 mb-5">
+                    <Form style={{ width: "50%" }}>
+                      <div className="inner-form">
+                        <div className="input-select">
+                          <Form.Group>
+                            <InputGroup>
+                              <Form.Select
+                                style={{ border: "none" }}
+                                value={columnName}
+                                onChange={(e) => {
+                                  e.target.options[4].selected
+                                    ? setShowDispoModal(true)
+                                    : setShowDispoModal(false);
+                                  !e.target.options[4].selected &&
+                                    setOtherFilters(true);
+                                  return setColumnName(e.target.value);
+                                }}
+                                required
+                              >
+                                <option>Colonne</option>
+                                <option value="name">Nom</option>
+                                <option value="capacity">Capacité</option>
+                                <option value="disposition">Disposition</option>
+                                <option value="disponibility">
+                                  Disponibilité
+                                </option>
+                              </Form.Select>
+                            </InputGroup>
+                            <DisponibilityModal
+                              show={showDispoModal}
+                              handleClose={handleCloseDispoModal}
+                              handleCallback={handleCallback}
+                            />
+                          </Form.Group>
+                        </div>
+                        <div className="input-field second-wrap">
+                          <Form.Group>
+                            <InputGroup>
+                              {!showDispoModal && (
+                                <Form.Control
+                                  id="search"
+                                  type="text"
+                                  placeholder="Recherchez des administareurs ..."
+                                  size="lg"
+                                  name=""
+                                  value={wordEntered}
+                                  onChange={handleFilter}
+                                  required
+                                />
+                              )}
+                            </InputGroup>
+                          </Form.Group>
+                        </div>
+                        <div className="input-field third-wrap">
+                          <button className="btn-search" type="button">
+                            <svg
+                              className="svg-inline--fa fa-search fa-w-16"
+                              aria-hidden="true"
+                              data-prefix="fas"
+                              data-icon="search"
+                              role="img"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 512 512"
+                            >
+                              <path
+                                fill="currentColor"
+                                d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      {modalDates && !otherFilters && (
+                        <Card className="shadow-lg p-3 mb-2 mt-3 rounded">
+                          {modalDates.map((d, i) => (
+                            <div
+                              pill
+                              className="badge badge-outline-success badge-pill mb-2"
+                              key={i}
+                            >
+                              {moment(d.startDate).locale("fr").format("LL")} -{" "}
+                              {moment(d.endDate).locale("fr").format("LL")}
+                            </div>
+                          ))}
+                        </Card>
+                      )}
+                    </Form>
+                  </div>
                   <div className="table-responsive">
                     <table className="table table-striped table-hover">
                       <thead>

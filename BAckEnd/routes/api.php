@@ -45,7 +45,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-    // Routes accessible only to authenticated users with the 'Admin' role
     Route::get('/salles', [SalleController::class, 'index']);
     Route::get('/salle-id/{id}', [salleController::class, 'show']);
     Route::put('/update-salle/{id}', [salleController::class, 'update']);

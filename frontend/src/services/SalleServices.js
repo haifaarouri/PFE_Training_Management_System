@@ -15,32 +15,28 @@ export const fetchAllSalles = async () => {
   }
 };
 
-export const fetchUserById = async (id) => {
+export const fetchSalleById = async (id) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.get(`user-id/${id}`);
+      const response = await axios.get(`salle-id/${id}`);
       return response.data;
     } else {
-      const response = await apiFetch(`user-id/${id}`);
+      const response = await apiFetch(`salle-id/${id}`);
       return response;
     }
   } catch (error) {
-    console.log("Error fetching user with this id :", error);
+    console.log("Error fetching salle with this id :", error);
   }
 };
 
-export const editUser = async (id, formData) => {
+export const editSalle = async (id, formData) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.post(
-        `/api/send-email-edit-user/${id}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await axios.post(`/api/update-salle/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return response.data;
     } else {
       const headers = {
@@ -52,17 +48,13 @@ export const editUser = async (id, formData) => {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await axios.post(
-        `/api/send-email-edit-user/${id}`,
-        formData,
-        {
-          headers: headers,
-        }
-      );
+      const response = await axios.post(`/api/update-salle/${id}`, formData, {
+        headers: headers,
+      });
       return response;
     }
   } catch (error) {
-    console.log("Error editing user with this id :", error);
+    console.log("Error editing salle with this id :", error);
   }
 };
 

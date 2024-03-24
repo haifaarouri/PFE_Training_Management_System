@@ -15,6 +15,7 @@ import AssignRole from "./pages/user_management/AssignRole";
 import GoogleCallback from "./pages/auth_pages/GoogleCallback";
 import EmailVerification from "./pages/auth_pages/EmailVerification";
 import AllSalles from "./pages/salle_management/AllSalles";
+import EditSalle from "./pages/salle_management/EditSalle";
 
 function App() {
   return (
@@ -57,6 +58,25 @@ function App() {
                 ]}
               >
                 <AllSalles />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/edit-salle/:id"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <EditSalle />
               </RequireAuth>
             }
           />

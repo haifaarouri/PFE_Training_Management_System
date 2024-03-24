@@ -102,9 +102,8 @@ class SalleController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'capacity' => 'required|integer',
-                'disponibility' => 'required|boolean',
-                'disposition' => 'required|string|max:255' . implode(',', DispositionEnum::all()),
-                'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+                'disponibility' => 'required',
+                'disposition' => ['required', new DispositionRule()],
             ]);
 
             if ($validator->fails()) {
@@ -121,18 +120,32 @@ class SalleController extends Controller
                 $fileName = time() . $request->file('image')->getClientOriginalName();
                 $request->image->move(public_path('sallePictures'), $fileName);
 
+                $salleDisponibilities = [];
+                foreach (json_decode($request->input('disponibility'), true) as $key => $value) {
+                    $startDate = new DateTime($value['startDate'], new DateTimeZone('UTC'));
+                    $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
+                    $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
+                }
+
                 $salle->name = $request->input('name');
                 $salle->capacity = $request->input('capacity');
-                $salle->disponibility = $request->input('disponibility');
+                $salle->disponibility = $salleDisponibilities;
                 $salle->disposition = $request->input('disposition');
                 $salle->image = $fileName;
 
                 $salle->save();
                 return response()->json($salle, 200);
             } else {
+                $salleDisponibilities = [];
+                foreach (json_decode($request->input('disponibility'), true) as $key => $value) {
+                    $startDate = new DateTime($value['startDate'], new DateTimeZone('UTC'));
+                    $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
+                    $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
+                }
+
                 $salle->name = $request->input('name');
                 $salle->capacity = $request->input('capacity');
-                $salle->disponibility = $request->input('disponibility');
+                $salle->disponibility = $salleDisponibilities;
                 $salle->disposition = $request->input('disposition');
                 $salle->image = $request->input('image');
 
