@@ -20,42 +20,6 @@ class ProviderController extends Controller
         ]);
     }
 
-    // public function callback()
-    // {
-    //     try {
-    //         $socialiteUser = Socialite::driver('google')->stateless()->user();
-    //         $existingUser = User::where('email', $socialiteUser->getEmail())->first();
-    //         if ($existingUser && $existingUser->provider == null) {
-    //             return response()->json(['error' => 'Cet e-mail utilise une autre méthode d\'authentification'], 401);
-    //         }
-    //     } catch (ClientException $e) {
-    //         return response()->json(['error' => 'Informations d\'identification fournies sont non valides !'], 422);
-    //     }
-
-    //     $user = User::query()
-    //         ->firstOrCreate(
-    //             [
-    //                 'email' => $socialiteUser->getEmail(),
-    //             ],
-    //             [
-    //                 'firstName' => $socialiteUser->user['given_name'],
-    //                 'lastName' => $socialiteUser->user['family_name'],
-    //                 'email' => $socialiteUser->email,
-    //                 'profileImage' => $socialiteUser->avatar,
-    //                 'email_verified_at' => Carbon::now(),
-    //                 'provider_token' => $socialiteUser->token,
-    //                 'provider_id' => $socialiteUser->id,
-    //                 'provider' => 'google'
-    //             ]
-    //         );
-
-    //     return response()->json([
-    //         'user' => $user,
-    //         'access_token' => $user->createToken('google-token')->plainTextToken,
-    //         'token_type' => 'Bearer',
-    //     ]);
-    // }
-
     public function callback()
     {
         try {

@@ -301,7 +301,7 @@ ul.social li{
             		<td style="padding: 0 2.5em; text-align: center; padding-bottom: 3em;">
             			<div class="text">
             				<h3>On a créer un nouveau compte pour vous dans notre application web de gestion des formations !</h3>
-            				<p>Vous pouvez maintenant réinitialiser votre mot de passe !</p>
+            				<p>Vous pouvez réinitialiser votre mot de passe, ou se connecter avec le mot de passe généré automatiquement lors de la création de votre nouveau compte.</p>
             				<p>Voici vos identifiants de connexion :</p>
             				<p>Email : {{ $email }}</p>
             				<p>Mot de passe : {{ $firstName . '-' . $lastName . '-' . $role }}</p>
@@ -315,7 +315,18 @@ ul.social li{
 				          	<h3 class="name">{{$firstName}} {{$lastName}}</h3>
 				          	<span class="position">Role : {{$role}}</span><br />
                             <span class="position">Numéro de téléphone : {{$phoneNumber}}</span>
-				           	<p><a href="#" class="btn btn-primary">Changer mot de passe</a></p>
+				           	<p><a href=" {{ config('app.frontend_url') . '/login'}} " class="btn btn-primary">Se connecter</a></p>
+			           	</div>
+			        </td>
+			    </tr>
+				<tr>
+			        <td style="text-align: center;">
+			          	<div class="text-author">
+				          	<h3 class="name">Vous devez vérifier votre adresse e-mail avant d'effectuer n'importe quel action dans notre application web de gestion des formations !</h3>
+							<p><a href=" {{ $verificationUrl }} " class="btn btn-primary">Vérifier l'adresse E-mail</a></p>
+							<p>
+								Si vous ne parvenez pas à cliquer sur le bouton « Vérifier l'adresse e-mail », copiez et collez l'URL ci-dessous dans votre navigateur Web : {{$verificationUrl}}
+							</p>
 			           	</div>
 			        </td>
 			    </tr>

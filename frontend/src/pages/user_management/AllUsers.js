@@ -5,7 +5,7 @@ import moment from "moment";
 import { Badge, Form, InputGroup, Pagination } from "react-bootstrap";
 import CustomModal from "../../components/CustomModal";
 import { ToastContainer, toast } from "react-toastify";
-import { deleteUser, fetchAllUsers } from "../../services/UserServices";
+import { editIsActive, fetchAllUsers } from "../../services/UserServices";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
 require("moment/locale/fr");
@@ -14,7 +14,6 @@ function AllUsers() {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [msgEdit, setMsgEdit] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 4;
   const lastIndex = currentPage * usersPerPage;
@@ -92,8 +91,6 @@ function AllUsers() {
     }
   };
 
-  const result = useSelector((state) => state.msg); //pour récuperer la value de msg inside redux
-
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
@@ -101,30 +98,23 @@ function AllUsers() {
     };
 
     u();
-    setMsgEdit(result.msg);
-
-    if (result.msg) {
-      handleSuccess(msgEdit);
-    }
-  }, [showModal, result.msg, msgEdit]);
+  }, [showModal]);
 
   const handleDeleteUser = async (id) => {
     Swal.fire({
       title: "Êtes-vous sûr?",
-      text: "Vous ne pourrez pas revenir en arrière !",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Oui, supprimer!",
+      confirmButtonText: "Oui, désactiver ce compte !",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await deleteUser(id);
-          console.log(res);
+          const res = await editIsActive(id);
           Swal.fire({
-            title: "Supprimé avec succès!",
-            text: "Administarteur est supprimé !",
+            title: "Désacivé avec succès!",
+            text: "Compte est Désacivé !",
             icon: "success",
           });
           const d = await fetchData();
@@ -191,7 +181,7 @@ function AllUsers() {
                             <option>Colonne</option>
                             <option value="email">E-mail</option>
                             <option value="firstName">Prénom</option>
-                            <option value="lastName">Noml</option>
+                            <option value="lastName">Nom</option>
                             <option value="role">Role</option>
                           </Form.Select>
                         </InputGroup>
@@ -334,7 +324,7 @@ function AllUsers() {
                                   variant="outline-danger"
                                   className="btn btn-sm"
                                 >
-                                  Supprimer
+                                  Désactiver
                                 </Button>
                               </td>
                             </tr>
@@ -427,7 +417,7 @@ function AllUsers() {
                                   variant="outline-danger"
                                   className="btn btn-sm"
                                 >
-                                  Supprimer
+                                  Désactiver
                                 </Button>
                               </td>
                             </tr>

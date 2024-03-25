@@ -17,11 +17,11 @@ const EditProfileModal = ({ show, handleClose, handleMsg }) => {
     phoneNumber: "",
     profileImage: "",
     password: "",
-    password_confirmation: "",
   });
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [password_confirmation, setPasswordConfirm] = useState("");
 
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -51,126 +51,125 @@ const EditProfileModal = ({ show, handleClose, handleMsg }) => {
     setUserToEdit(result.user);
   }, [result.user]);
 
+  useEffect(() => {
+    setPasswordConfirm(userToEdit.password);
+  }, [userToEdit.password]);
+
   const isWhitespace = (str) => {
     return str.trim() === "";
   };
 
   const passwordMatchValidator = () => {
-    return userToEdit.password === userToEdit.password_confirmation;
+    return userToEdit.password === password_confirmation;
   };
 
   const handleEditProfil = async (event) => {
     event.preventDefault();
     await csrf();
+
+    const form = formRef.current;
+    if (
+      form.checkValidity() === false ||
+      isWhitespace(userToEdit.firstName) ||
+      isWhitespace(userToEdit.lastName) ||
+      !passwordMatchValidator() ||
+      isWhitespace(userToEdit.phoneNumber)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    setValidated(true);
+
+    const formData = new FormData();
+    formData.append("_method", "PUT");
+    formData.append("firstName", userToEdit.firstName);
+    formData.append("lastName", userToEdit.lastName);
+    formData.append("email", userToEdit.email);
+    formData.append("password", userToEdit.password);
+    formData.append("password_confirmation", password_confirmation);
+    formData.append("phoneNumber", userToEdit.phoneNumber);
+    formData.append("profileImage", userToEdit.profileImage);
+
     try {
-      const form = formRef.current;
-      if (
-        form.checkValidity() === false ||
-        isWhitespace(userToEdit.firstName) ||
-        isWhitespace(userToEdit.lastName) ||
-        !passwordMatchValidator() ||
-        isWhitespace(userToEdit.phoneNumber)
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-
-      setValidated(true);
-
-      const formData = new FormData();
-      formData.append("_method", "PUT");
-      formData.append("firstName", userToEdit.firstName);
-      formData.append("lastName", userToEdit.lastName);
-      formData.append("email", userToEdit.email);
-      formData.append("password", userToEdit.password);
-      formData.append(
-        "password_confirmation",
-        userToEdit.password_confirmation
-      );
-      formData.append("phoneNumber", userToEdit.phoneNumber);
-      formData.append("profileImage", userToEdit.profileImage);
-
-      try {
-        if (!localStorage.getItem("token")) {
-          const res = await axios.post(
-            `/api/edit-profile/${userToEdit.id}`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
-
-          if (res.data.message) {
-            //stock user in redux
-            dispatch(setUser(userToEdit));
-
-            Swal.fire({
-              icon: "success",
-              title: res.data.message,
-              showConfirmButton: false,
-              timer: 1500,
-            });
-
-            setUserToEdit({
-              email: "",
-              firstName: "",
-              id: "",
-              lastName: "",
-              phoneNumber: "",
-              profileImage: "",
-              password: "",
-              password_confirmation: "",
-            });
-            handleClose();
+      if (!localStorage.getItem("token")) {
+        const res = await axios.post(
+          `/api/edit-profile/${userToEdit.id}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           }
-        } else {
-          const headers = {
-            "Content-Type": "multipart/form-data",
-          };
+        );
 
-          const token = localStorage.getItem("token");
-          if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-          }
+        if (res.data.message) {
+          //stock user in redux
+          dispatch(setUser(userToEdit));
 
-          const response = await axios.post(
-            `/api/edit-profile/${userToEdit.id}`,
-            formData,
-            {
-              headers: headers,
-            }
-          );
+          Swal.fire({
+            icon: "success",
+            title: res.data.message,
+            showConfirmButton: false,
+            timer: 1500,
+          });
 
-          if (response.data.message) {
-            //stock user in redux
-            dispatch(setUser(userToEdit));
-
-            Swal.fire({
-              icon: "success",
-              title: response.data.message,
-              showConfirmButton: false,
-              timer: 1500,
-            });
-
-            setUserToEdit({
-              email: "",
-              firstName: "",
-              id: "",
-              lastName: "",
-              phoneNumber: "",
-              profileImage: "",
-              password: "",
-              password_confirmation: "",
-            });
-            handleClose();
-          }
+          setUserToEdit({
+            email: "",
+            firstName: "",
+            id: "",
+            lastName: "",
+            phoneNumber: "",
+            profileImage: "",
+            password: "",
+          });
+          setPasswordConfirm("");
+          handleClose();
         }
-      } catch (error) {
-        console.log("Error adding a new user :", error);
+      } else {
+        const headers = {
+          "Content-Type": "multipart/form-data",
+        };
+
+        const token = localStorage.getItem("token");
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const response = await axios.post(
+          `/api/edit-profile/${userToEdit.id}`,
+          formData,
+          {
+            headers: headers,
+          }
+        );
+
+        if (response.data.message) {
+          //stock user in redux
+          dispatch(setUser(userToEdit));
+
+          Swal.fire({
+            icon: "success",
+            title: response.data.message,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+
+          setUserToEdit({
+            email: "",
+            firstName: "",
+            id: "",
+            lastName: "",
+            phoneNumber: "",
+            profileImage: "",
+            password: "",
+          });
+          setPasswordConfirm("");
+          handleClose();
+        }
       }
     } catch (error) {
+      console.log("Error adding a new user :", error);
       if (error && error.response.status === 422) {
         handleError(error.response.data.message);
       }
@@ -288,126 +287,129 @@ const EditProfileModal = ({ show, handleClose, handleMsg }) => {
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Mot de passe</Form.Label>
-            <InputGroup className="mb-3">
-              <InputGroup.Text
-                id="inputGroup-sizing-default"
-                style={{ width: "100%" }}
-              >
-                <div className="input-group-prepend bg-transparent">
-                  <span className="input-group-text bg-transparent border-right-0">
-                    <i
-                      className="mdi mdi-lock-outline text-primary"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </span>
-                </div>
-                <div style={{ position: "relative", width: "100%" }}>
-                  <Form.Control
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Saisir votre mot de passe"
-                    value={userToEdit.password}
-                    onChange={(e) =>
-                      setUserToEdit((prevUser) => ({
-                        ...prevUser,
-                        password: e.target.value,
-                      }))
-                    }
-                    required
-                    minLength={8}
-                  />
-                  <button
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      right: "5px",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "18px",
-                    }}
-                    type="button"
-                    onClick={handleTogglePassword}
-                    className="text-primary"
+          {userToEdit.provider !== "google" && (
+            <>
+              <Form.Group className="mb-3">
+                <Form.Label>Mot de passe</Form.Label>
+                <InputGroup className="mb-3">
+                  <InputGroup.Text
+                    id="inputGroup-sizing-default"
+                    style={{ width: "100%" }}
                   >
-                    {showPassword ? (
-                      <i className="mdi mdi-eye-off" />
-                    ) : (
-                      <i className="mdi mdi-eye" />
-                    )}
-                  </button>
-                </div>
-              </InputGroup.Text>
-              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-              <Form.Control.Feedback type="invalid">
-                Veuillez saisir votre mot de passe qui doit comporter minimum 8
-                caractères !
-              </Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Confirmation de mot de passe</Form.Label>
-            <InputGroup className="mb-3">
-              <InputGroup.Text
-                id="inputGroup-sizing-default"
-                style={{ width: "100%" }}
-              >
-                <div className="input-group-prepend bg-transparent">
-                  <span className="input-group-text bg-transparent border-right-0">
-                    <i
-                      className="mdi mdi-lock-outline text-primary"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </span>
-                </div>
-                <div style={{ position: "relative", width: "100%" }}>
-                  <Form.Control
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirmez votre mot de passe"
-                    value={userToEdit.password_confirmation}
-                    onChange={(e) =>
-                      setUserToEdit((prevUser) => ({
-                        ...prevUser,
-                        password_confirmation: e.target.value,
-                      }))
-                    }
-                    required
-                    minLength={8}
-                  />
-                  <button
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      right: "5px",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "18px",
-                    }}
-                    type="button"
-                    onClick={handleToggleConfirmPassword}
-                    className="text-primary"
+                    <div className="input-group-prepend bg-transparent">
+                      <span className="input-group-text bg-transparent border-right-0">
+                        <i
+                          className="mdi mdi-lock-outline text-primary"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </span>
+                    </div>
+                    <div style={{ position: "relative", width: "100%" }}>
+                      <Form.Control
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Saisir votre mot de passe"
+                        value={userToEdit.password}
+                        onChange={(e) =>
+                          setUserToEdit((prevUser) => ({
+                            ...prevUser,
+                            password: e.target.value,
+                          }))
+                        }
+                        required
+                        minLength={8}
+                      />
+                      <button
+                        style={{
+                          position: "absolute",
+                          top: "50%",
+                          right: "5px",
+                          transform: "translateY(-50%)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          fontSize: "18px",
+                        }}
+                        type="button"
+                        onClick={handleTogglePassword}
+                        className="text-primary"
+                      >
+                        {showPassword ? (
+                          <i className="mdi mdi-eye-off" />
+                        ) : (
+                          <i className="mdi mdi-eye" />
+                        )}
+                      </button>
+                    </div>
+                  </InputGroup.Text>
+                  <Form.Control.Feedback>
+                    Cela semble bon !
+                  </Form.Control.Feedback>
+                  <Form.Control.Feedback type="invalid">
+                    Veuillez saisir votre mot de passe qui doit comporter
+                    minimum 8 caractères !
+                  </Form.Control.Feedback>
+                </InputGroup>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Confirmation de mot de passe</Form.Label>
+                <InputGroup className="mb-3">
+                  <InputGroup.Text
+                    id="inputGroup-sizing-default"
+                    style={{ width: "100%" }}
                   >
-                    {showConfirmPassword ? (
-                      <i className="mdi mdi-eye-off" />
-                    ) : (
-                      <i className="mdi mdi-eye" />
-                    )}
-                  </button>
-                </div>
-              </InputGroup.Text>
-              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-              <Form.Control.Feedback type="invalid">
-                Veuillez saisir votre mot de passe qui doit comporter minimum 8
-                caractères ! <br />
-                {!passwordMatchValidator() &&
-                  "Les deux mots de passe que vous avez saisis ne correspondent pas !"}
-              </Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group>
+                    <div className="input-group-prepend bg-transparent">
+                      <span className="input-group-text bg-transparent border-right-0">
+                        <i
+                          className="mdi mdi-lock-outline text-primary"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </span>
+                    </div>
+                    <div style={{ position: "relative", width: "100%" }}>
+                      <Form.Control
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirmez votre mot de passe"
+                        value={password_confirmation}
+                        onChange={(e) => setPasswordConfirm(e.target.value)}
+                        required
+                        minLength={8}
+                      />
+                      <button
+                        style={{
+                          position: "absolute",
+                          top: "50%",
+                          right: "5px",
+                          transform: "translateY(-50%)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          fontSize: "18px",
+                        }}
+                        type="button"
+                        onClick={handleToggleConfirmPassword}
+                        className="text-primary"
+                      >
+                        {showConfirmPassword ? (
+                          <i className="mdi mdi-eye-off" />
+                        ) : (
+                          <i className="mdi mdi-eye" />
+                        )}
+                      </button>
+                    </div>
+                  </InputGroup.Text>
+                  <Form.Control.Feedback>
+                    Cela semble bon !
+                  </Form.Control.Feedback>
+                  <Form.Control.Feedback type="invalid">
+                    Veuillez saisir votre mot de passe qui doit comporter
+                    minimum 8 caractères ! <br />
+                    {!passwordMatchValidator() &&
+                      "Les deux mots de passe que vous avez saisis ne correspondent pas !"}
+                  </Form.Control.Feedback>
+                </InputGroup>
+              </Form.Group>
+            </>
+          )}
           <Form.Group className="mb-3">
             <Form.Label>Numéro de Téléphone</Form.Label>
             <InputGroup className="mb-3">

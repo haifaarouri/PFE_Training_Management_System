@@ -121,3 +121,17 @@ export const assignRole = async (data) => {
     console.log("Error assigning role to user with this email :", error);
   }
 };
+
+export const editIsActive = async (id) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/change-is-active/${id}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`change-is-active/${id}`);
+      return response;
+    }
+  } catch (error) {
+    console.log("Error change isActiveof this user with this id :", error);
+  }
+};

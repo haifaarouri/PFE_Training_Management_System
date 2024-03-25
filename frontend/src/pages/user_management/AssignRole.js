@@ -3,8 +3,6 @@ import { assignRole, fetchAllUsers } from "../../services/UserServices";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../services/axios";
 import { Button, Form, InputGroup } from "react-bootstrap";
-import { useDispatch } from "react-redux";
-import { setMsg } from "../../store/slices/successMessageSlice";
 import Swal from "sweetalert2";
 
 function AssignRole() {
@@ -15,7 +13,6 @@ function AssignRole() {
   const [role, setRole] = useState("");
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
-  const dispatch = useDispatch();
   const [users, setUsers] = useState([]);
 
   const fetchData = async () => {
@@ -51,15 +48,9 @@ function AssignRole() {
 
       setValidated(true);
 
-      // const formData = new FormData();
-      // formData.append("_method", "PATCH");
-      // formData.append("email", email);
-      // formData.append("role", role);
-
       const res = await assignRole({email, role});
       console.log(res);
       if (res.message) {
-        dispatch(setMsg(res.message));
 
         Swal.fire({
           icon: "success",

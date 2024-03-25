@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { setUser } from "../../store/slices/authenticatedUserSlice";
 import Swal from "sweetalert2";
 import { fetchUserData } from "../../services/UserServices";
@@ -32,7 +32,6 @@ function GoogleCallback() {
             icon: "error",
             title: data.error,
             showConfirmButton: false,
-            timer: 2000,
           });
         }
         setLoading(false);
@@ -75,10 +74,10 @@ function GoogleCallback() {
 
   if (loading) {
     return <DisplayLoading />;
-  } else {
-    return !userAuth && <Navigate to="/login" replace />;
-  }
-  console.log(userAuth);
+  } 
+  // else {
+  //   return !userAuth && <Navigate to="/login" replace />;
+  // }
   // else {
   //   if (userAuth != null) {
   //     return <DisplayData data={userAuth} />;

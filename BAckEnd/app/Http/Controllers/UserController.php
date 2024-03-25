@@ -34,6 +34,18 @@ class UserController extends Controller
         }
     }
 
+    public function getUserByEmail($email)
+    {
+        $user = User::firstWhere('email', $email);
+
+
+        if (!$user) {
+            return response()->json(['error' => "Pas d'administrateur avec cet E-mail !"], 404);
+        }
+
+        return response()->json($user);
+    }
+
     public function index()
     {
         if (auth()->user()->role === 'SuperAdmin') {
@@ -205,6 +217,26 @@ class UserController extends Controller
             $request->user()->currentAccessToken()->delete();
 
             return response()->json(['message' => "Vous avez déconnecté avec succès !"]);
+        } else {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+    }
+
+    public function updateIsActive($id)
+    {
+        if (auth()->user()->role === 'SuperAdmin') {
+
+            $user = User::find($id);
+
+            if ($user->isActive) {
+                $user->isActive = 0;
+                $user->save();
+                return response()->json(['message' => 'Compte désactivé avec succès !']);
+            } else {
+                $user->isActive = 1;
+                $user->save();
+                return response()->json(['message' => 'Compte activé avec succès !']);
+            }
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }

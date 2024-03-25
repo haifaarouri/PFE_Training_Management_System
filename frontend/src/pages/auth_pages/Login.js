@@ -52,9 +52,22 @@ function Login() {
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
   const resendVerifLink = () => {
-    axios.post("/email/verification-notification").then((res) => {
-      console.log(res);
-    });
+    axios
+      .post("/email/verification-notification")
+      .then(() => {
+        Swal.fire({
+          icon: "success",
+          text: "E-mail de vérification de votre compte est envoyé !",
+        });
+        handleSuccess("E-mail de vérification de votre compte est envoyé !");
+      })
+      .catch(() => {
+        Swal.fire({
+          icon: "error",
+          text: "Erreur lors de l'envoi d'e-mail de vérification !",
+        });
+        handleError("Erreur lors de l'envoi d'e-mail de vérification !");
+      });
   };
 
   const handleLogIn = async (event) => {
@@ -136,6 +149,13 @@ function Login() {
             Swal.fire({
               icon: "error",
               title: error.response.data.error,
+              showConfirmButton: false,
+              timer: 2000,
+            });
+          } else if (error.response.status === 422) {
+            Swal.fire({
+              icon: "error",
+              title: error.response.data.message,
               showConfirmButton: false,
               timer: 2000,
             });

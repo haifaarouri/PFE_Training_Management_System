@@ -35,98 +35,97 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
   const handleAddUser = async (event) => {
     event.preventDefault();
     await csrf();
+
+    const form = formRef.current;
+    if (
+      form.checkValidity() === false ||
+      isWhitespace(firstName) ||
+      isWhitespace(lastName) ||
+      isWhitespace(phoneNumber)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    setValidated(true);
+
+    const formData = new FormData();
+    formData.append("firstName", firstName);
+    formData.append("lastName", lastName);
+    formData.append("email", email);
+    formData.append("phoneNumber", phoneNumber);
+    formData.append("profileImage", profileImage);
+    formData.append("role", role);
+
     try {
-      const form = formRef.current;
-      if (
-        form.checkValidity() === false ||
-        isWhitespace(firstName) ||
-        isWhitespace(lastName) ||
-        isWhitespace(phoneNumber)
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+      if (!localStorage.getItem("token")) {
+        const res = await axios.post("/api/send-email-add-user", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
 
-      setValidated(true);
-
-      const formData = new FormData();
-      formData.append("firstName", firstName);
-      formData.append("lastName", lastName);
-      formData.append("email", email);
-      formData.append("phoneNumber", phoneNumber);
-      formData.append("profileImage", profileImage);
-      formData.append("role", role);
-
-      try {
-        if (!localStorage.getItem("token")) {
-          const res = await axios.post("/api/send-email-add-user", formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
+        if (res.status === 200 && res.data.message) {
+          Swal.fire({
+            icon: "success",
+            title: res.data.message,
+            showConfirmButton: false,
+            timer: 1500,
           });
 
-          if (res.status === 200 && res.data.message) {
-            Swal.fire({
-              icon: "success",
-              title: res.data.message,
-              showConfirmButton: false,
-              timer: 1500,
-            });
+          setFirstName("");
+          setLastName("");
+          setEmail("");
+          setPhoneNumber("");
+          setProfileImage("");
+          setRole("");
 
-            setFirstName("");
-            setLastName("");
-            setEmail("");
-            setPhoneNumber("");
-            setProfileImage("");
-            setRole("");
-
-            handleClose();
-          }
-        } else {
-          const headers = {
-            "Content-Type": "multipart/form-data",
-          };
-
-          const token = localStorage.getItem("token");
-          if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-          }
-
-          const response = await axios.post(
-            "/api/send-email-add-user",
-            formData,
-            {
-              headers: headers,
-            }
-          );
-
-          if (response.status === 200 && response.data.message) {
-            Swal.fire({
-              icon: "success",
-              title: response.data.message,
-              showConfirmButton: false,
-              timer: 1500,
-            });
-
-            setFirstName("");
-            setLastName("");
-            setEmail("");
-            setPhoneNumber("");
-            setProfileImage("");
-            setRole("");
-
-            handleClose();
-          }
+          handleClose();
         }
-      } catch (error) {
-        console.log("Error adding a new user :", error);
+      } else {
+        const headers = {
+          "Content-Type": "multipart/form-data",
+        };
+
+        const token = localStorage.getItem("token");
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const response = await axios.post(
+          "/api/send-email-add-user",
+          formData,
+          {
+            headers: headers,
+          }
+        );
+
+        if (response.status === 200 && response.data.message) {
+          Swal.fire({
+            icon: "success",
+            title: response.data.message,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+
+          setFirstName("");
+          setLastName("");
+          setEmail("");
+          setPhoneNumber("");
+          setProfileImage("");
+          setRole("");
+
+          handleClose();
+        }
       }
     } catch (error) {
       if (error && error.response.status === 422) {
-        handleError(error.response.data.message);
+        Object.keys(error.response.data.errors).forEach((e) => {
+          handleError(error.response.data.errors[e][0]);
+        });
         Swal.fire({
           icon: "error",
-          title: "Oops...",
+          title: `Oops...!`,
           text: "Quelque chose s'est mal passé !",
         });
       }
@@ -145,42 +144,43 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
 
       setValidated(true);
 
-      const res = await axios.post("/forgot-password", { email });
-      console.log(res);
+      if (email) {
+        const u = await axios.get(`/api/user-email/${email}`);
+        if (u && u.data.provider === "google") { 
+          console.log("google");
+          Swal.fire({
+            icon: "error",
+            text:
+              "Vous ne pouvez pas réinitialiser votre mot de passe parce que vous utilisez Google comme méthode d'authentification !",
+          });
+        } else {
+          const res = await axios.post("/forgot-password", { email });
+          console.log(res);
 
-      // let timerInterval;
-      Swal.fire({
-        title: "E-mail est en cours d'envoit !",
-        html: "E-mail sera envoyé dans quelques <b></b> milliseconds.",
-        timer: 2000,
-        timerProgressBar: true,
-        // didOpen: () => {
-        //   Swal.showLoading();
-        //   const timer = Swal.getPopup().querySelector("b");
-        //   timerInterval = setInterval(() => {
-        //     timer.textContent = `${Swal.getTimerLeft()}`;
-        //   }, 100);
-        // },
-        // willClose: () => {
-        //   clearInterval(timerInterval);
-        // },
-      }).then((result) => {
-        if (result.dismiss === Swal.DismissReason.timer) {
-          console.log("I was closed by the timer");
+          Swal.fire({
+            title: "E-mail est en cours d'envoit !",
+            html: "E-mail sera envoyé dans quelques <b></b> milliseconds.",
+            timer: 2000,
+            timerProgressBar: true,
+          }).then((result) => {
+            if (result.dismiss === Swal.DismissReason.timer) {
+              console.log("I was closed by the timer");
+            }
+          });
+
+          if (res && res.data.status) {
+            Swal.fire({
+              title: "Bravo !",
+              text: "Vérifier votre boite d'e-mail !",
+              imageUrl: "/images/auth/emailImg.jpg",
+              imageWidth: 400,
+              imageHeight: 200,
+              imageAlt: "E-mail icon",
+            });
+            setEmail("");
+            handleClose();
+          }
         }
-      });
-
-      if (res && res.data.status) {
-        Swal.fire({
-          title: "Bravo !",
-          text: "Vérifier votre boite d'e-mail !",
-          imageUrl: "/images/auth/emailImg.jpg",
-          imageWidth: 400,
-          imageHeight: 200,
-          imageAlt: "E-mail icon",
-        });
-        setEmail("");
-        handleClose();
       }
     } catch (error) {
       if (error && error.response.status === 422) {

@@ -65,6 +65,11 @@ function Register() {
   const resendVerifLink = () => {
     axios.post("/email/verification-notification").then((res) => {
       console.log(res);
+      if (res) {
+        handleSuccess("E-mail de vérification de votre compte est envoyé !");
+      } else {
+        handleError("Erreur lors de l'envoi d'e-mail de vérification !");
+      }
     });
   };
 

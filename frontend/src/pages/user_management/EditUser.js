@@ -3,8 +3,6 @@ import { editUser, fetchUserById } from "../../services/UserServices";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../services/axios";
 import { Button, Form, InputGroup } from "react-bootstrap";
-import { useDispatch } from "react-redux";
-import { setMsg } from "../../store/slices/successMessageSlice";
 import Swal from "sweetalert2";
 
 function EditUser() {
@@ -22,7 +20,6 @@ function EditUser() {
   });
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
-  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -62,13 +59,12 @@ function EditUser() {
       const res = await editUser(id, formData);
 
       if (res.data.message) {
-        dispatch(setMsg(res.data.message));
 
         Swal.fire({
           icon: "success",
-          title: res.message,
+          title: res.data.message,
           showConfirmButton: false,
-          timer: 1500,
+          timer: 2000,
         });
 
         setUser({

@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('provider_id')->nullable();
             $table->string('provider_token', 255)->nullable();
             $table->string('role')->default("Admin");
+            $table->integer("isActive")->default(1);
             $table->rememberToken();
             $table->timestamps();
         });
