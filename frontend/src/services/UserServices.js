@@ -122,16 +122,30 @@ export const assignRole = async (data) => {
   }
 };
 
-export const editIsActive = async (id) => {
+export const editIsActive = async (id, causes) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.get(`/api/change-is-active/${id}`);
+      const response = await axios.post(
+        `/api/change-is-active/${id}`,
+        {
+          causes,
+        },
+        {
+          headers: {
+            ContentType: "multipart/form-data",
+          },
+        }
+      );
       return response.data;
     } else {
-      const response = await apiFetch(`change-is-active/${id}`);
+      const response = await apiFetch(`change-is-active/${id}`, {
+        method: "POST",
+        body: JSON.stringify(causes),
+        withCredentials: true,
+      });
       return response;
     }
   } catch (error) {
-    console.log("Error change isActiveof this user with this id :", error);
+    console.log("Error change isActive of this user with this id :", error);
   }
 };

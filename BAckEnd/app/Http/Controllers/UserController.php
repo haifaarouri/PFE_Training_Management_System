@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ChangeIsActiveEmail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -222,7 +224,7 @@ class UserController extends Controller
         }
     }
 
-    public function updateIsActive($id)
+    public function updateIsActive($id, Request $request)
     {
         if (auth()->user()->role === 'SuperAdmin') {
 
@@ -231,6 +233,7 @@ class UserController extends Controller
             if ($user->isActive) {
                 $user->isActive = 0;
                 $user->save();
+                Mail::to($user->email)->send(new ChangeIsActiveEmail($request->causes, $user));
                 return response()->json(['message' => 'Compte désactivé avec succès !']);
             } else {
                 $user->isActive = 1;

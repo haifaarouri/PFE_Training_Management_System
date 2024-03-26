@@ -15,11 +15,15 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): Response | JsonResponse
+    public function store(LoginRequest $request): Response|JsonResponse
     {
         $existingUser = User::where('email', $request->email)->first();
         if ($existingUser && $existingUser->provider == 'google') {
             return response()->json(['error' => 'Cet e-mail utilise une autre méthode d\'authentification'], 401);
+        }
+
+        if (!$existingUser->isActive) {
+            return response()->json(['error' => 'Ce compte n\'est pas actif ! Vous n\'avez pas d\'accès à notre application !'], 401);
         }
 
         $request->authenticate();

@@ -30,7 +30,7 @@ Route::middleware(['auth:sanctum', 'user-role:SuperAdmin', 'verified'])->group(f
     Route::put('/update-user/{id}', [UserController::class, 'update']);
     Route::post('/add-user', [UserController::class, 'store']);
     Route::delete('/delete-user/{id}', [UserController::class, 'destroy']);
-    Route::get('/change-is-active/{id}', [UserController::class, 'updateIsActive']);
+    Route::post('/change-is-active/{id}', [UserController::class, 'updateIsActive']);
 
     //Email route 
     Route::post('/send-email-add-user', [EmailController::class, 'sendEmailAddUser']);

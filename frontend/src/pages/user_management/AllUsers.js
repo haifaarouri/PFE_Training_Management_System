@@ -100,21 +100,31 @@ function AllUsers() {
     u();
   }, [showModal]);
 
-  const handleDeleteUser = async (id) => {
+  const handleEditIsActive = async (id, isActive) => {
+    var causes = "";
     Swal.fire({
       title: "Êtes-vous sûr?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Oui, désactiver ce compte !",
+      confirmButtonText: `Oui, ${
+        isActive ? "désactiver" : "activer"
+      } ce compte !`,
+      inputLabel: "Causes",
+      input: "textarea",
+      inputPlaceholder:
+        "Saisir les différentes causes liées à cette action ...",
+      preConfirm: (inputValue) => {
+        causes = inputValue;
+      },
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await editIsActive(id);
+          const res = await editIsActive(id, causes);
           Swal.fire({
-            title: "Désacivé avec succès!",
-            text: "Compte est Désacivé !",
+            title: `${isActive ? "Désactivé" : "Activé"} avec succès!`,
+            text: `Compte est ${isActive ? "Désactivé" : "Activé"} !`,
             icon: "success",
           });
           const d = await fetchData();
@@ -144,7 +154,7 @@ function AllUsers() {
       setCurrentPage(currentPage + 1);
     }
   };
-  console.log(filteredData);
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -234,6 +244,7 @@ function AllUsers() {
                       <th>Email</th>
                       <th>Numéro de Téléphone</th>
                       <th>Role</th>
+                      <th>Etat</th>
                       <th>Date de Création</th>
                       <th>Date de Modification</th>
                       <th>Date de Vérification de l'E-mail</th>
@@ -271,6 +282,35 @@ function AllUsers() {
                               <td>{u.email}</td>
                               <td>{u.phoneNumber}</td>
                               <td>{u.role}</td>
+                              <td>
+                                {u.isActive ? (
+                                  <Badge
+                                    pill
+                                    bg="success"
+                                    style={{
+                                      width: "100%",
+                                      height: "30px",
+                                      paddingTop: "6%",
+                                    }}
+                                  >
+                                    <i className="mdi mdi-email me-2"></i>
+                                    Compte actif
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    pill
+                                    bg="danger"
+                                    style={{
+                                      width: "100%",
+                                      height: "30px",
+                                      paddingTop: "6%",
+                                    }}
+                                  >
+                                    <i className="mdi mdi-email me-2"></i>
+                                    Compte désactivé
+                                  </Badge>
+                                )}
+                              </td>
                               <td>
                                 {dateCreated
                                   .format("dddd, MMMM Do YYYY, h:mm:ss a")
@@ -320,11 +360,13 @@ function AllUsers() {
                                   Modifier
                                 </Button>
                                 <Button
-                                  onClick={() => handleDeleteUser(u.id)}
+                                  onClick={() =>
+                                    handleEditIsActive(u.id, u.isActive)
+                                  }
                                   variant="outline-danger"
                                   className="btn btn-sm"
                                 >
-                                  Désactiver
+                                  {u.isActive ? "Désactiver" : "Activer"}
                                 </Button>
                               </td>
                             </tr>
@@ -365,6 +407,35 @@ function AllUsers() {
                               <td>{u.phoneNumber}</td>
                               <td>{u.role}</td>
                               <td>
+                                {u.isActive ? (
+                                  <Badge
+                                    pill
+                                    bg="success"
+                                    style={{
+                                      width: "100%",
+                                      height: "30px",
+                                      paddingTop: "6%",
+                                    }}
+                                  >
+                                    <i className="mdi mdi-email me-2"></i>
+                                    Compte actif
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    pill
+                                    bg="danger"
+                                    style={{
+                                      width: "100%",
+                                      height: "30px",
+                                      paddingTop: "6%",
+                                    }}
+                                  >
+                                    <i className="mdi mdi-email me-2"></i>
+                                    Compte désactivé
+                                  </Badge>
+                                )}
+                              </td>
+                              <td>
                                 {dateCreated
                                   .format("dddd, MMMM Do YYYY, h:mm:ss a")
                                   .replace(/am/g, "matin")
@@ -413,11 +484,15 @@ function AllUsers() {
                                   Modifier
                                 </Button>
                                 <Button
-                                  onClick={() => handleDeleteUser(u.id)}
-                                  variant="outline-danger"
+                                  onClick={() =>
+                                    handleEditIsActive(u.id, u.isActive)
+                                  }
+                                  variant={`outline-${
+                                    u.isActive ? "danger" : "success"
+                                  }`}
                                   className="btn btn-sm"
                                 >
-                                  Désactiver
+                                  {u.isActive ? "Désactiver" : "Activer"}
                                 </Button>
                               </td>
                             </tr>

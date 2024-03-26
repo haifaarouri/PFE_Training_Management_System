@@ -150,14 +150,12 @@ function Login() {
               icon: "error",
               title: error.response.data.error,
               showConfirmButton: false,
-              timer: 2000,
             });
           } else if (error.response.status === 422) {
             Swal.fire({
               icon: "error",
               title: error.response.data.message,
               showConfirmButton: false,
-              timer: 2000,
             });
           }
         });
