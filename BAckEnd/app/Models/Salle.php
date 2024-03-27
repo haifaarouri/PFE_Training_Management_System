@@ -15,7 +15,8 @@ class Salle extends Model
         'capacity',
         'disponibility',
         'disposition',
-        'image'
+        'image',
+        'state'
     ];
 
     protected $casts = [

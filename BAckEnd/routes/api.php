@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\materielController;
 use App\Http\Controllers\SalleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -54,3 +55,11 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 });
 
 Route::get('/user-email/{email}', [UserController::class, 'getUserByEmail']);
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/materiaux', [MaterielController::class, 'index']);
+    Route::get('/materiel-id/{id}', [MaterielController::class, 'show']);
+    // Route::put('/update-materiel/{id}', [MaterielController::class, 'update']);
+    Route::post('/add-materiel', [MaterielController::class, 'store']);
+    // Route::delete('/delete-materiel/{id}', [MaterielController::class, 'destroy']);
+});

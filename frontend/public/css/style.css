@@ -14250,6 +14250,19 @@ fieldset:disabled .btn {
   opacity: 0.5;
 }
 
+.my-special-modal-class .modal-content {
+  background-color: #6640b2;
+  color: #fff;
+}
+
+.my-special-modal-class.fade {
+  opacity: 0;
+}
+
+.my-special-modal-class.show {
+  opacity: 0.5;
+}
+
 .modal-header {
   display: flex;
   flex-shrink: 0;

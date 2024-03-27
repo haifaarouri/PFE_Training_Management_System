@@ -4,6 +4,8 @@
 /public/storage
 /public/profilePictures
 /public/sallePictures
+/public/MaterielPictures
+/public/MaterielDocs
 /storage/*.key
 /vendor
 .env

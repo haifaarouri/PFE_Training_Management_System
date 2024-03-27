@@ -84,13 +84,13 @@ function SideBar() {
             <span className="menu-title">Gestion des Salles</span>
           </Link>
         </li>
-        {/*<li className="nav-item">
-          <Link className="nav-link" to="pages/charts/chartjs.html">
-            <i className="mdi mdi-chart-pie menu-icon" />
-            <span className="menu-title">Charts</span>
+        <li className="nav-item">
+          <Link className="nav-link" to="/materiaux">
+            <i className="mdi mdi-laptop menu-icon" />
+            <span className="menu-title">Gestions des Materiaux</span>
           </Link>
         </li>
-        <li className="nav-item">
+        {/*<li className="nav-item">
           <Link className="nav-link" to="pages/tables/basic-table.html">
             <i className="mdi mdi-grid-large menu-icon" />
             <span className="menu-title">Tables</span>

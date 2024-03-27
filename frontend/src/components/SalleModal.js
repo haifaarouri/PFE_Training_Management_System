@@ -1,39 +1,40 @@
 import React, { useRef, useState } from "react";
 import { Modal, Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import "./datePicker.css";
+// import DatePicker from "react-datepicker";
+// import "react-datepicker/dist/react-datepicker.css";
+// import "./datePicker.css";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
-import { formatISO } from "date-fns";
+// import { formatISO } from "date-fns";
 
 const SalleModal = ({ show, handleClose }) => {
   const [name, setName] = useState("");
   const [capacity, setCapacity] = useState("");
-  const [disponibility, setDisponibility] = useState([
-    { startDate: null, endDate: null },
-  ]);
+  // const [disponibility, setDisponibility] = useState([
+  //   { startDate: null, endDate: null },
+  // ]);
   const [disposition, setDisposition] = useState("");
   const [image, setImage] = useState("");
+  const [state, setState] = useState("");
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
 
-  const handleDateChange = (dates, index) => {
-    const [start, end] = dates;
-    setDisponibility((current) =>
-      current?.map((range, i) =>
-        i === index ? { ...range, startDate: start, endDate: end } : range
-      )
-    );
-  };
+  // const handleDateChange = (dates, index) => {
+  //   const [start, end] = dates;
+  //   setDisponibility((current) =>
+  //     current?.map((range, i) =>
+  //       i === index ? { ...range, startDate: start, endDate: end } : range
+  //     )
+  //   );
+  // };
 
-  const addNewRange = () => {
-    setDisponibility((current) => [
-      ...current,
-      { startDate: null, endDate: null },
-    ]);
-  };
+  // const addNewRange = () => {
+  //   setDisponibility((current) => [
+  //     ...current,
+  //     { startDate: null, endDate: null },
+  //   ]);
+  // };
 
   const isWhitespace = (str) => {
     return str.trim() === "";
@@ -65,17 +66,18 @@ const SalleModal = ({ show, handleClose }) => {
 
       setValidated(true);
 
-      const formattedDisponibility = disponibility.map((range) => ({
-        startDate: formatISO(range.startDate, { representation: "date" }),
-        endDate: formatISO(range.endDate, { representation: "date" }),
-      }));
+      // const formattedDisponibility = disponibility.map((range) => ({
+      //   startDate: formatISO(range.startDate, { representation: "date" }),
+      //   endDate: formatISO(range.endDate, { representation: "date" }),
+      // }));
 
       const formData = new FormData();
       formData.append("name", name);
       formData.append("capacity", capacity);
       formData.append("disposition", disposition);
-      formData.append("disponibility", JSON.stringify(formattedDisponibility));
+      // formData.append("disponibility", JSON.stringify(formattedDisponibility));
       formData.append("image", image);
+      formData.append("state", state);
 
       try {
         if (!localStorage.getItem("token")) {
@@ -94,10 +96,11 @@ const SalleModal = ({ show, handleClose }) => {
             });
 
             setCapacity("");
-            setDisponibility([{ startDate: null, endDate: null }]);
+            // setDisponibility([{ startDate: null, endDate: null }]);
             setDisposition("");
             setImage("");
             setName("");
+            setState("");
 
             handleClose();
           }
@@ -124,10 +127,11 @@ const SalleModal = ({ show, handleClose }) => {
             });
 
             setCapacity("");
-            setDisponibility([{ startDate: null, endDate: null }]);
+            // setDisponibility([{ startDate: null, endDate: null }]);
             setDisposition("");
             setImage("");
             setName("");
+            setState("");
 
             handleClose();
           }
@@ -223,7 +227,7 @@ const SalleModal = ({ show, handleClose }) => {
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
-          <Form.Group className="mb-3">
+          {/* <Form.Group className="mb-3">
             <Form.Label>Disponibilité</Form.Label>
             <InputGroup className="mb-3">
               <InputGroup.Text id="inputGroup-sizing-default">
@@ -338,7 +342,7 @@ const SalleModal = ({ show, handleClose }) => {
                 Veuillez sélectionner la disponibilité de la salle !
               </Form.Control.Feedback>
             </InputGroup>
-          </Form.Group>
+          </Form.Group> */}
           <Form.Group className="mb-3">
             <Form.Label>Disposition</Form.Label>
             <InputGroup className="mb-3">
@@ -367,6 +371,35 @@ const SalleModal = ({ show, handleClose }) => {
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
                 Veuillez sélectionner la disposition de la salle !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Etat de la Salle</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <i
+                      className="mdi mdi-shape-plus text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Select
+                name="state"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                required
+              >
+                <option>Selectionner l'état de la salle</option>
+                <option value="USED">En utilisation</option>
+                <option value="CANCELED">Annulé</option>
+              </Form.Select>
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez sélectionner l'état de la salle !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>

@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import moment from "moment";
+// import moment from "moment";
 import { Card, Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import { deleteSalle, fetchAllSalles } from "../../services/SalleServices";
 import SalleModal from "../../components/SalleModal";
-import { DateRange } from "react-date-range";
+// import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import Carousel from "react-bootstrap/Carousel";
 import Swal from "sweetalert2";
-import DisponibilityModal from "../../components/DisponibilityModal";
+// import DisponibilityModal from "../../components/DisponibilityModal";
 require("moment/locale/fr");
 
 function AllSalles() {
   const [salles, setSalles] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [showDispoModal, setShowDispoModal] = useState(false);
+  // const [showDispoModal, setShowDispoModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const sallesPerPage = 2;
   const lastIndex = currentPage * sallesPerPage;
@@ -33,14 +33,18 @@ function AllSalles() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
-  const [modalDates, setModalDates] = useState(null);
-  const [otherFilters, setOtherFilters] = useState(false);
+  // const [modalDates, setModalDates] = useState(null);
+  // const [otherFilters, setOtherFilters] = useState(false);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
     setWordEntered(searchWord);
     if (columnName && columnName !== "Colonne") {
-      if (columnName === "name" || columnName === "disposition") {
+      if (
+        columnName === "name" ||
+        columnName === "disposition" ||
+        columnName === "state"
+      ) {
         const newFilter =
           salles.length > 0 &&
           salles.filter((salle) =>
@@ -67,7 +71,7 @@ function AllSalles() {
   const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
 
-  const handleCloseDispoModal = () => setShowDispoModal(false);
+  // const handleCloseDispoModal = () => setShowDispoModal(false);
 
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -171,42 +175,42 @@ function AllSalles() {
     setShowList(false);
   };
 
-  const handleCallback = (childData) => {
-    setModalDates(childData);
-    // Parse childData dates to moment for easier comparison
-    const modalRanges = childData.map((range) => ({
-      startDate: moment(range.startDate),
-      endDate: moment(range.endDate),
-    }));
+  // const handleCallback = (childData) => {
+  //   setModalDates(childData);
+  //   // Parse childData dates to moment for easier comparison
+  //   const modalRanges = childData.map((range) => ({
+  //     startDate: moment(range.startDate),
+  //     endDate: moment(range.endDate),
+  //   }));
 
-    // Function to check if two date ranges overlap (range 2 inculs dans range1)
-    const rangesOverlap = (range1, range2) => {
-      return (
-        range2.startDate.isBefore(range1.endDate) &&
-        range2.endDate.isBefore(range1.endDate) &&
-        range2.endDate.isAfter(range1.startDate) &&
-        range2.startDate.isAfter(range1.startDate)
-      );
-    };
+  //   // Function to check if two date ranges overlap (range 2 inculs dans range1)
+  //   const rangesOverlap = (range1, range2) => {
+  //     return (
+  //       range2.startDate.isBefore(range1.endDate) &&
+  //       range2.endDate.isBefore(range1.endDate) &&
+  //       range2.endDate.isAfter(range1.startDate) &&
+  //       range2.startDate.isAfter(range1.startDate)
+  //     );
+  //   };
 
-    // Compare each modal range with each salle's disponibility range
-    const overlappingSalles = salles.filter((salle) => {
-      return salle.disponibility.some((dispo) => {
-        const salleRange = {
-          startDate: moment(dispo.startDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
-          endDate: moment(dispo.endDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
-        };
-        return modalRanges.some((modalRange) =>
-          rangesOverlap(salleRange, modalRange)
-        );
-      });
-    });
+  //   // Compare each modal range with each salle's disponibility range
+  //   const overlappingSalles = salles.filter((salle) => {
+  //     return salle.disponibility.some((dispo) => {
+  //       const salleRange = {
+  //         startDate: moment(dispo.startDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
+  //         endDate: moment(dispo.endDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
+  //       };
+  //       return modalRanges.some((modalRange) =>
+  //         rangesOverlap(salleRange, modalRange)
+  //       );
+  //     });
+  //   });
 
-    overlappingSalles.length > 0
-      ? handleSuccess("Voici les salles disponibles !")
-      : handleError("Pas de salles disponibles !");
-    setFilteredData(overlappingSalles);
-  };
+  //   overlappingSalles.length > 0
+  //     ? handleSuccess("Voici les salles disponibles !")
+  //     : handleError("Pas de salles disponibles !");
+  //   setFilteredData(overlappingSalles);
+  // };
 
   return (
     <div className="content-wrapper">
@@ -256,11 +260,11 @@ function AllSalles() {
                                 style={{ border: "none" }}
                                 value={columnName}
                                 onChange={(e) => {
-                                  e.target.options[4].selected
-                                    ? setShowDispoModal(true)
-                                    : setShowDispoModal(false);
-                                  !e.target.options[4].selected &&
-                                    setOtherFilters(true);
+                                  // e.target.options[4].selected
+                                  //   ? setShowDispoModal(true)
+                                  //   : setShowDispoModal(false);
+                                  // !e.target.options[4].selected &&
+                                  //   setOtherFilters(true);
                                   return setColumnName(e.target.value);
                                 }}
                                 required
@@ -269,22 +273,23 @@ function AllSalles() {
                                 <option value="name">Nom</option>
                                 <option value="capacity">Capacité</option>
                                 <option value="disposition">Disposition</option>
-                                <option value="disponibility">
+                                <option value="state">Etat</option>
+                                {/* <option value="disponibility">
                                   Disponibilité
-                                </option>
+                                </option> */}
                               </Form.Select>
                             </InputGroup>
-                            <DisponibilityModal
+                            {/* <DisponibilityModal
                               show={showDispoModal}
                               handleClose={handleCloseDispoModal}
                               handleCallback={handleCallback}
-                            />
+                            /> */}
                           </Form.Group>
                         </div>
                         <div className="input-field second-wrap">
                           <Form.Group>
                             <InputGroup>
-                              {!showDispoModal && (
+                              {/* {!showDispoModal && ( */}
                                 <Form.Control
                                   id="search"
                                   type="text"
@@ -295,7 +300,7 @@ function AllSalles() {
                                   onChange={handleFilter}
                                   required
                                 />
-                              )}
+                              {/* )} */}
                             </InputGroup>
                           </Form.Group>
                         </div>
@@ -318,7 +323,7 @@ function AllSalles() {
                           </button>
                         </div>
                       </div>
-                      {modalDates && !otherFilters && (
+                      {/* {modalDates && !otherFilters && (
                         <Card className="shadow-lg p-3 mb-2 mt-3 rounded">
                           {modalDates.map((d, i) => (
                             <div
@@ -331,7 +336,7 @@ function AllSalles() {
                             </div>
                           ))}
                         </Card>
-                      )}
+                      )} */}
                     </Form>
                   </div>
                   <div className="table-responsive">
@@ -342,6 +347,7 @@ function AllSalles() {
                           <th>Nom de la Salle</th>
                           <th>Capacité</th>
                           <th>Disponibilité</th>
+                          <th>Etat</th>
                           <th>Disposition (Forme de la Salle)</th>
                           <th>Actions</th>
                         </tr>
@@ -367,7 +373,8 @@ function AllSalles() {
                                 </td>
                                 <td>{u.capacity}</td>
                                 <td>
-                                  {Array.isArray(u.disponibility) &&
+                                  {u.disponibility}
+                                  {/* {Array.isArray(u.disponibility) &&
                                     u.disponibility.map((d, i) => {
                                       const startDate = moment(d.startDate.date)
                                         .locale("fr")
@@ -384,8 +391,9 @@ function AllSalles() {
                                           <p>{`${startDate} - ${endDate}`}</p>
                                         </div>
                                       );
-                                    })}
+                                    })} */}
                                 </td>
+                                <td>{u.state}</td>
                                 <td>{u.disposition}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -433,7 +441,8 @@ function AllSalles() {
                                 </td>
                                 <td>{u.capacity}</td>
                                 <td>
-                                  {Array.isArray(u.disponibility) &&
+                                  {u.disponibility}
+                                  {/* {Array.isArray(u.disponibility) &&
                                     u.disponibility.map((d, i) => {
                                       const startDate = moment(d.startDate.date)
                                         .locale("fr")
@@ -450,8 +459,9 @@ function AllSalles() {
                                           <p>{`${startDate} - ${endDate}`}</p>
                                         </div>
                                       );
-                                    })}
+                                    })} */}
                                 </td>
+                                <td>{u.state}</td>
                                 <td>{u.disposition}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -519,17 +529,17 @@ function AllSalles() {
                 >
                   {salles.length > 0 &&
                     salles.map((s, i) => {
-                      let dispo = s.disponibility;
+                      // let dispo = s.disponibility;
 
-                      const object = {};
-                      dispo.forEach((obj, i) => {
-                        const key = `selection${i + 1}`;
-                        object[key] = {
-                          startDate: new Date(obj.startDate.date),
-                          endDate: new Date(obj.endDate.date),
-                          key: key,
-                        };
-                      });
+                      // const object = {};
+                      // dispo.forEach((obj, i) => {
+                      //   const key = `selection${i + 1}`;
+                      //   object[key] = {
+                      //     startDate: new Date(obj.startDate.date),
+                      //     endDate: new Date(obj.endDate.date),
+                      //     key: key,
+                      //   };
+                      // });
                       return (
                         <Carousel.Item key={i}>
                           <div
@@ -559,6 +569,7 @@ function AllSalles() {
                                   <div className="d-flex flex-column justify-content-center m-5">
                                     <h5>Capacité {s.capacity}</h5>
                                     <h5>Disposition {s.disposition}</h5>
+                                    <h5>Etat {s.state}</h5>
                                     <h5>Image</h5>
                                     <img
                                       src={`http://localhost:8000/sallePictures/${s.image}`}
@@ -572,17 +583,7 @@ function AllSalles() {
                                   </div>
                                   <div className="d-flex flex-column justify-content-center m-5">
                                     <h5>Disponibilité</h5>
-                                    <div style={{ position: "relative" }}>
-                                      {/* {Object.values(object).map((d) => (
-                                        <p key="hh">
-                                          {moment(d.startDate)
-                                            .locale("fr")
-                                            .format("LL")}{" "}
-                                          {moment(d.endDate)
-                                            .locale("fr")
-                                            .format("LL")}
-                                        </p>
-                                      ))} */}
+                                    {/* <div style={{ position: "relative" }}>
                                       <DateRange
                                         ranges={Object.values(object)}
                                         disabledDay={() => true}
@@ -600,7 +601,7 @@ function AllSalles() {
                                           left: 0,
                                         }}
                                       ></div>
-                                    </div>
+                                    </div> */}
                                   </div>
                                 </Card.Text>
                               </Card.Body>

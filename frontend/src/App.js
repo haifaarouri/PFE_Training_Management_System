@@ -16,6 +16,7 @@ import GoogleCallback from "./pages/auth_pages/GoogleCallback";
 import EmailVerification from "./pages/auth_pages/EmailVerification";
 import AllSalles from "./pages/salle_management/AllSalles";
 import EditSalle from "./pages/salle_management/EditSalle";
+import AllMateriels from "./pages/materiel_management/AllMateriels";
 
 function App() {
   return (
@@ -77,6 +78,25 @@ function App() {
                 ]}
               >
                 <EditSalle />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/materiaux"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <AllMateriels />
               </RequireAuth>
             }
           />

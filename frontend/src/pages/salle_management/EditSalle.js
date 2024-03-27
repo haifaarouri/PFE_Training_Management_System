@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import "../../components/datePicker.css";
+// import DatePicker from "react-datepicker";
+// import "react-datepicker/dist/react-datepicker.css";
+// import "../../components/datePicker.css";
 import axios from "../../services/axios";
 import Swal from "sweetalert2";
 import { useNavigate, useParams } from "react-router-dom";
 import { editSalle, fetchSalleById } from "../../services/SalleServices";
-import { formatISO } from "date-fns";
+// import { formatISO } from "date-fns";
 // import moment from "moment";
 // require("moment/locale/fr");
 
 const EditSalle = () => {
-  const [dates, setDates] = useState([{ startDate: null, endDate: null }]);
+  // const [dates, setDates] = useState([{ startDate: null, endDate: null }]);
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const navigate = useNavigate();
@@ -24,21 +24,23 @@ const EditSalle = () => {
     capacity: "",
     id: "",
     disposition: "",
-    disponibility: [],
+    // disponibility: [],
     image: "",
+    state: "",
   });
 
   useEffect(() => {
     const fetchSalle = async () => {
       const salleData = await fetchSalleById(id);
-      const initialDates = salleData.disponibility.map((dispo) => {
-        return {
-          startDate: dispo.startDate ? new Date(dispo.startDate.date) : null,
-          endDate: dispo.endDate ? new Date(dispo.endDate.date) : null,
-        };
-      });
-      setDates(initialDates);
-      setSalle({ ...salleData, disponibility: initialDates });
+      setSalle(salleData);
+      // const initialDates = salleData.disponibility.map((dispo) => {
+      //   return {
+      //     startDate: dispo.startDate ? new Date(dispo.startDate.date) : null,
+      //     endDate: dispo.endDate ? new Date(dispo.endDate.date) : null,
+      //   };
+      // });
+      // setDates(initialDates);
+      // setSalle({ ...salleData, disponibility: initialDates });
     };
 
     if (id) {
@@ -46,20 +48,20 @@ const EditSalle = () => {
     }
   }, [id]);
 
-  const handleDateChange = (dates, index) => {
-    const [start, end] = dates;
-    setDates((current) =>
-      current?.map((range, i) =>
-        i === index ? { ...range, startDate: start, endDate: end } : range
-      )
-    );
-    setSalle((prev) => ({ ...prev, disponibility: dates }));
-  };
+  // const handleDateChange = (dates, index) => {
+  //   const [start, end] = dates;
+  //   setDates((current) =>
+  //     current?.map((range, i) =>
+  //       i === index ? { ...range, startDate: start, endDate: end } : range
+  //     )
+  //   );
+  //   setSalle((prev) => ({ ...prev, disponibility: dates }));
+  // };
 
-  const addNewRange = () => {
-    setDates((current) => [...current, { startDate: null, endDate: null }]);
-    setSalle((prev) => ({ ...prev, disponibility: dates }));
-  };
+  // const addNewRange = () => {
+  //   setDates((current) => [...current, { startDate: null, endDate: null }]);
+  //   setSalle((prev) => ({ ...prev, disponibility: dates }));
+  // };
 
   const isWhitespace = (str) => {
     return str.trim() === "";
@@ -91,27 +93,28 @@ const EditSalle = () => {
 
       setValidated(true);
 
-      const formattedDisponibility = dates
-        .map((range) => ({
-          startDate: range.startDate
-            ? formatISO(range.startDate, { representation: "date" })
-            : null,
-          endDate: range.endDate
-            ? formatISO(range.endDate, { representation: "date" })
-            : null,
-        }))
-        .filter((range) => range.startDate && range.endDate);
+      // const formattedDisponibility = dates
+      //   .map((range) => ({
+      //     startDate: range.startDate
+      //       ? formatISO(range.startDate, { representation: "date" })
+      //       : null,
+      //     endDate: range.endDate
+      //       ? formatISO(range.endDate, { representation: "date" })
+      //       : null,
+      //   }))
+      //   .filter((range) => range.startDate && range.endDate);
 
       const formData = new FormData();
       formData.append("_method", "PUT");
       formData.append("name", salle.name);
       formData.append("capacity", salle.capacity);
       formData.append("disposition", salle.disposition);
-      formData.append("disponibility", JSON.stringify(formattedDisponibility));
+      // formData.append("disponibility", JSON.stringify(formattedDisponibility));
       formData.append("image", salle.image);
+      formData.append("state", salle.state);
 
       const res = await editSalle(id, formData);
-      console.log(res);
+
       if (res.status === 200) {
         Swal.fire({
           icon: "success",
@@ -125,8 +128,9 @@ const EditSalle = () => {
           capacity: "",
           id: "",
           disposition: "",
-          disponibility: [],
+          // disponibility: [],
           image: "",
+          state: "",
         });
         navigate("/salles");
       }
@@ -224,7 +228,7 @@ const EditSalle = () => {
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
-                <Form.Group className="mb-3">
+                {/* <Form.Group className="mb-3">
                   <Form.Label>Disponibilité</Form.Label>
                   <InputGroup className="mb-3">
                     <InputGroup.Text id="inputGroup-sizing-default">
@@ -237,23 +241,6 @@ const EditSalle = () => {
                         </span>
                       </div>
                     </InputGroup.Text>
-                    {/* {salle.disponibility.length > 0 &&
-                      Array.isArray(salle.disponibility) &&
-                      salle.disponibility.map((range, index) => {
-                        // Extract the date strings
-                        const startDateStr = range?.startDate;
-                        const endDateStr = range?.endDate;
-
-                        // Parse the date strings into Date objects
-                        const startDate = new Date(startDateStr);
-                        const endDate = new Date(endDateStr);
-                        return (
-                          <p key={index}>
-                            {moment(startDate).locale("fr")} -{" "}
-                            {moment(endDate).locale("fr")} 
-                          </p>
-                        );
-                      })} */}
                     {dates.length > 0 &&
                       Array.isArray(dates) &&
                       dates.map((range, index) => (
@@ -359,7 +346,7 @@ const EditSalle = () => {
                       Veuillez sélectionner la disponibilité de la salle !
                     </Form.Control.Feedback>
                   </InputGroup>
-                </Form.Group>
+                </Form.Group> */}
                 <Form.Group className="mb-3">
                   <Form.Label>Disposition</Form.Label>
                   <InputGroup className="mb-3">
@@ -399,6 +386,39 @@ const EditSalle = () => {
                     </Form.Control.Feedback>
                     <Form.Control.Feedback type="invalid">
                       Veuillez sélectionner la disposition de la salle !
+                    </Form.Control.Feedback>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Etat de la Salle</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i
+                            className="mdi mdi-shape-plus text-primary"
+                            style={{ fontSize: "1.5em" }}
+                          />
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Select
+                      name="state"
+                      value={salle.state}
+                      onChange={(e) =>
+                        setSalle((prev) => ({ ...prev, state: e.target.value }))
+                      }
+                      required
+                    >
+                      <option>Selectionner l'état de la salle</option>
+                      <option value="USED">En utilisation</option>
+                      <option value="CANCELED">Annulé</option>
+                    </Form.Select>
+                    <Form.Control.Feedback>
+                      Cela semble bon !
+                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      Veuillez sélectionner l'état de la salle !
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>

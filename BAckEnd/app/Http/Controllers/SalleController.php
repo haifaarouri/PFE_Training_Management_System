@@ -3,14 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Rules\DispositionRule;
-use DateTimeZone;
+use App\Rules\RoomStateRule;
+// use DateTimeZone;
 use Illuminate\Http\Request;
 use App\Models\Salle;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
-use App\Enums\DispositionEnum;
-use App\Types\Disponibility;
+// use App\Types\Disponibility;
 use DateTime;
 
 class SalleController extends Controller
@@ -41,8 +40,9 @@ class SalleController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'capacity' => 'required|integer',
-                'disponibility' => 'required',
+                // 'disponibility' => 'required',
                 'disposition' => ['required', new DispositionRule()],
+                'state'=>['required', new RoomStateRule()],
                 'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
 
@@ -54,18 +54,19 @@ class SalleController extends Controller
                 $fileName = time() . $request->file('image')->getClientOriginalName();
                 $request->image->move(public_path('sallePictures'), $fileName);
 
-                $salleDisponibilities = [];
-                foreach (json_decode($request->input('disponibility'), true) as $key => $value) {
-                    $startDate = new DateTime($value['startDate'], new DateTimeZone('UTC'));
-                    $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
-                    $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
-                }
+                // $salleDisponibilities = [];
+                // foreach (json_decode($request->input('disponibility'), true) as $key => $value) {
+                //     $startDate = new DateTime($value['startDate'], new DateTimeZone('UTC'));
+                //     $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
+                //     $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
+                // }
 
                 $salle = Salle::create([
                     'name' => $request->input('name'),
                     'capacity' => $request->input('capacity'),
-                    'disponibility' => $salleDisponibilities,
+                    // 'disponibility' => $salleDisponibilities,
                     'disposition' => $request->input('disposition'),
+                    'state' => $request->input('state'),
                     'image' => $fileName,
                 ]);
 
@@ -102,7 +103,8 @@ class SalleController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'capacity' => 'required|integer',
-                'disponibility' => 'required',
+                // 'disponibility' => 'required',
+                'state'=> ['required', new RoomStateRule()],
                 'disposition' => ['required', new DispositionRule()],
             ]);
 
@@ -120,32 +122,34 @@ class SalleController extends Controller
                 $fileName = time() . $request->file('image')->getClientOriginalName();
                 $request->image->move(public_path('sallePictures'), $fileName);
 
-                $salleDisponibilities = [];
-                foreach (json_decode($request->input('disponibility'), true) as $key => $value) {
-                    $startDate = new DateTime($value['startDate'], new DateTimeZone('UTC'));
-                    $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
-                    $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
-                }
+                // $salleDisponibilities = [];
+                // foreach (json_decode($request->input('disponibility'), true) as $key => $value) {
+                //     $startDate = new DateTime($value['startDate'], new DateTimeZone('UTC'));
+                //     $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
+                //     $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
+                // }
 
                 $salle->name = $request->input('name');
                 $salle->capacity = $request->input('capacity');
-                $salle->disponibility = $salleDisponibilities;
+                // $salle->disponibility = $salleDisponibilities;
+                $salle->state = $request->input('state');
                 $salle->disposition = $request->input('disposition');
                 $salle->image = $fileName;
 
                 $salle->save();
                 return response()->json($salle, 200);
             } else {
-                $salleDisponibilities = [];
-                foreach (json_decode($request->input('disponibility'), true) as $key => $value) {
-                    $startDate = new DateTime($value['startDate'], new DateTimeZone('UTC'));
-                    $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
-                    $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
-                }
+                // $salleDisponibilities = [];
+                // foreach (json_decode($request->input('disponibility'), true) as $key => $value) {
+                //     $startDate = new DateTime($value['startDate'], new DateTimeZone('UTC'));
+                //     $endDate = new DateTime($value['endDate'], new DateTimeZone('UTC'));
+                //     $salleDisponibilities[$key] = new Disponibility($startDate, $endDate);
+                // }
 
                 $salle->name = $request->input('name');
                 $salle->capacity = $request->input('capacity');
-                $salle->disponibility = $salleDisponibilities;
+                // $salle->disponibility = $salleDisponibilities;
+                $salle->state = $request->input('state');
                 $salle->disposition = $request->input('disposition');
                 $salle->image = $request->input('image');
 
