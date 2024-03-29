@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MaterielController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ProviderController;
 
@@ -22,3 +23,8 @@ require __DIR__.'/auth.php';
 
 Route::get('/auth/google/redirect', [ProviderController::class, 'redirect']);
 Route::get('/auth/google/callback', [ProviderController::class, 'callback']);
+
+Route::post('/upload-chunk', [MaterielController::class, 'uploadChunk']);
+Route::get('/test', function() {
+    dd(phpinfo());
+});

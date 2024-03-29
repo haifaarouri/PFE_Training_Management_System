@@ -22,7 +22,7 @@ class AuthenticatedSessionController extends Controller
             return response()->json(['error' => 'Cet e-mail utilise une autre méthode d\'authentification'], 401);
         }
 
-        if (!$existingUser->isActive) {
+        if ($existingUser && !$existingUser->isActive) {
             return response()->json(['error' => 'Ce compte n\'est pas actif ! Vous n\'avez pas d\'accès à notre application !'], 401);
         }
 

@@ -17,6 +17,7 @@ import EmailVerification from "./pages/auth_pages/EmailVerification";
 import AllSalles from "./pages/salle_management/AllSalles";
 import EditSalle from "./pages/salle_management/EditSalle";
 import AllMateriels from "./pages/materiel_management/AllMateriels";
+import EditMateriel from "./pages/materiel_management/EditMateriel";
 
 function App() {
   return (
@@ -97,6 +98,25 @@ function App() {
                 ]}
               >
                 <AllMateriels />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/edit-materiel/:id"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <EditMateriel />
               </RequireAuth>
             }
           />

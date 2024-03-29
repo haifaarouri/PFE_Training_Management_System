@@ -1,11 +1,23 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Card, Col, Form, InputGroup, Pagination, Row } from "react-bootstrap";
+import {
+  Accordion,
+  Card,
+  Col,
+  Form,
+  InputGroup,
+  Pagination,
+  Row,
+} from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import MaterielModal from "../../components/MaterielModal";
-import { fetchAllMateriaux } from "../../services/MaterielServices";
+import {
+  deleteMateriel,
+  fetchAllMateriaux,
+} from "../../services/MaterielServices";
+import FileModal from "../../components/FileModal";
 require("moment/locale/fr");
 
 function AllMateriels() {
@@ -16,16 +28,18 @@ function AllMateriels() {
   const materiauxPerPage = 2;
   const lastIndex = currentPage * materiauxPerPage;
   const firstIndex = lastIndex - materiauxPerPage;
-  const materiauxPage = materiaux.length > 0 && materiaux.slice(firstIndex, lastIndex);
+  const materiauxPage =
+    materiaux.length > 0 && materiaux.slice(firstIndex, lastIndex);
   const numberPages = Math.ceil(
     materiaux.length > 0 && materiaux.length / materiauxPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
-  const [wordEntered, setWordEntered] = useState("");
+  const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
+  const [showFileModal, setShowFileModal] = useState(false);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -33,29 +47,49 @@ function AllMateriels() {
     if (columnName && columnName !== "Colonne") {
       if (
         columnName === "name" ||
-        columnName === "disposition" ||
-        columnName === "state"
+        columnName === "type" ||
+        columnName === "status" ||
+        columnName === "supplier"
       ) {
         const newFilter =
           materiaux.length > 0 &&
-          materiaux.filter((salle) =>
-            salle[columnName].toLowerCase().includes(searchWord.toLowerCase())
+          materiaux.filter((materiel) =>
+            materiel[columnName]
+              .toLowerCase()
+              .includes(searchWord.toLowerCase())
           );
         setFilteredData(newFilter);
-      } else if (columnName === "capacity") {
-        const newFilter =
-          materiaux.length > 0 &&
-          materiaux.filter((salle) => salle[columnName] >= searchWord);
-        setFilteredData(newFilter);
+        if (
+          wordEntered &&
+          wordEntered.length > 3 &&
+          filteredData.length === 0
+        ) {
+          Swal.fire({
+            text: "Pas de résultat pour ce mot de recherche entré !",
+            icon: "error",
+            position: "top",
+            height: "10%",
+          });
+        }
       }
     } else {
       const newFilter =
         materiaux.length > 0 &&
-        materiaux.filter((salle) => {
-          const salleFields = Object.values(salle).join(" ").toLowerCase();
-          return salleFields.includes(searchWord);
+        materiaux.filter((materiel) => {
+          const materielFields = Object.values(materiel)
+            .join(" ")
+            .toLowerCase();
+          return materielFields.includes(searchWord);
         });
       setFilteredData(newFilter);
+      if (wordEntered && wordEntered.length > 3 && filteredData.length === 0) {
+        Swal.fire({
+          text: "Pas de résultat pour ce mot de recherche entré !",
+          icon: "error",
+          position: "top",
+          height: "100px",
+        });
+      }
     }
   };
 
@@ -87,7 +121,7 @@ function AllMateriels() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-salle/${id}`);
+    navigate(`/edit-materiel/${id}`);
   };
 
   const fetchData = async () => {
@@ -108,35 +142,35 @@ function AllMateriels() {
     u();
   }, [showModal]);
 
-  // const handleDeleteSalle = async (id) => {
-  //   Swal.fire({
-  //     title: "Êtes-vous sûr?",
-  //     text: "Vous ne pourrez pas revenir en arrière !",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#3085d6",
-  //     cancelButtonColor: "#d33",
-  //     confirmButtonText: "Oui, supprimer!",
-  //   }).then(async (result) => {
-  //     if (result.isConfirmed) {
-  //       try {
-  //         const res = await deleteSalle(id);
-  //         Swal.fire({
-  //           title: "Supprimé avec succès!",
-  //           text: "Salle est supprimée !",
-  //           icon: "success",
-  //         });
-  //         const d = await fetchData();
-  //         setMateriaux(d);
-  //         handleSuccess(res.message);
-  //       } catch (error) {
-  //         if (error && error.response.status === 422) {
-  //           handleError(error.response.data.message);
-  //         }
-  //       }
-  //     }
-  //   });
-  // };
+  const handleDeleteMateriel = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, supprimer!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await deleteMateriel(id);
+          Swal.fire({
+            title: "Supprimé avec succès!",
+            text: "Matériel est supprimé !",
+            icon: "success",
+          });
+          const d = await fetchData();
+          setMateriaux(d);
+          handleSuccess(res.message);
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
 
   const prevPage = () => {
     if (currentPage !== 1) {
@@ -163,6 +197,9 @@ function AllMateriels() {
     setShowCarousel(true);
     setShowList(false);
   };
+
+  const handleShowFileModal = () => setShowFileModal(true);
+  const handleCloseFileModal = () => setShowFileModal(false);
 
   return (
     <div className="content-wrapper">
@@ -221,9 +258,9 @@ function AllMateriels() {
                               >
                                 <option>Colonne</option>
                                 <option value="name">Nom</option>
-                                <option value="capacity">Capacité</option>
-                                <option value="disposition">Disposition</option>
-                                <option value="state">Etat</option>
+                                <option value="type">Type</option>
+                                <option value="status">Etat</option>
+                                <option value="supplier">Fournisseur</option>
                               </Form.Select>
                             </InputGroup>
                           </Form.Group>
@@ -292,18 +329,34 @@ function AllMateriels() {
                                     alt={u.iamge}
                                     style={{
                                       borderRadius: "8px",
-                                      width: "100%",
-                                      height: "100%",
+                                      width: "80%",
+                                      height: "80%",
                                     }}
                                   />
                                 </td>
                                 <td>
                                   <h6>{u.name}</h6>
                                 </td>
-                                <td>{u.capacity}</td>
-                                <td>{u.disponibility}</td>
-                                <td>{u.state}</td>
-                                <td>{u.disposition}</td>
+                                <td>{u.type}</td>
+                                <td>{u.quantityAvailable}</td>
+                                <td>{u.status}</td>
+                                <td>{u.cost} DT</td>
+                                <td>{u.purchaseDate}</td>
+                                <td>{u.supplier}</td>
+                                <td style={{ width: "10%" }}>
+                                  {u.technicalSpecifications && (
+                                    <Button
+                                      onClick={handleShowFileModal}
+                                      className="btn btn-inverse-primary"
+                                    >
+                                      <span>Ouvrir</span>
+                                      <i
+                                        className="mdi mdi-eye"
+                                        style={{ fontSize: "1.5em" }}
+                                      />
+                                    </Button>
+                                  )}
+                                </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -315,7 +368,7 @@ function AllMateriels() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      // onClick={() => handleDeleteSalle(u.id)}
+                                      onClick={() => handleDeleteMateriel(u.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -324,10 +377,16 @@ function AllMateriels() {
                                     </Button>
                                   </div>
                                 </td>
+                                <FileModal
+                                  show={showFileModal}
+                                  handleClose={handleCloseFileModal}
+                                  selectedFile={u.technicalSpecifications}
+                                />
                               </tr>
                             );
                           })
-                        ) : filteredData.length === 0 && materiaux.length === 0 ? (
+                        ) : filteredData.length === 0 &&
+                          materiaux.length === 0 ? (
                           <></>
                         ) : (
                           materiaux.length > 0 &&
@@ -354,7 +413,20 @@ function AllMateriels() {
                                 <td>{u.cost} DT</td>
                                 <td>{u.purchaseDate}</td>
                                 <td>{u.supplier}</td>
-                                <td>{u.technicalSpecifications}</td>
+                                <td style={{ width: "10%" }}>
+                                  {u.technicalSpecifications && (
+                                    <Button
+                                      onClick={handleShowFileModal}
+                                      className="btn btn-inverse-primary"
+                                    >
+                                      <span>Ouvrir</span>
+                                      <i
+                                        className="mdi mdi-eye"
+                                        style={{ fontSize: "1.5em" }}
+                                      />
+                                    </Button>
+                                  )}
+                                </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -366,7 +438,7 @@ function AllMateriels() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      // onClick={() => handleDeleteSalle(u.id)}
+                                      onClick={() => handleDeleteMateriel(u.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -375,6 +447,11 @@ function AllMateriels() {
                                     </Button>
                                   </div>
                                 </td>
+                                <FileModal
+                                  show={showFileModal}
+                                  handleClose={handleCloseFileModal}
+                                  selectedFile={u.technicalSpecifications}
+                                />
                               </tr>
                             );
                           })
@@ -416,21 +493,58 @@ function AllMateriels() {
               )}
               {showCarousel && (
                 <Row xs={1} md={2} className="g-4">
-                  {Array.from({ length: 4 }).map((_, idx) => (
-                    <Col key={idx}>
-                      <Card border="primary">
-                        <Card.Img variant="top" src="holder.js/100px160" />
-                        <Card.Body>
-                          <Card.Title>Card title</Card.Title>
-                          <Card.Text>
-                            This is a longer card with supporting text below as
-                            a natural lead-in to additional content. This
-                            content is a little bit longer.
-                          </Card.Text>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
+                  {materiaux.length > 0 &&
+                    materiaux.map((m, idx) => (
+                      <Col key={idx}>
+                        <Card
+                          border="primary"
+                          className="shadow-lg p-3 mb-5 bg-white rounded"
+                        >
+                          <Card.Body>
+                            <Card.Title>{m.name}</Card.Title>
+                            <Card.Img
+                              variant="top"
+                              src={`http://localhost:8000/materielPictures/${m.image}`}
+                              style={{ width: "50%", height: "60%" }}
+                            />
+                            <Card.Text>
+                              <p>Type : {m.type}</p>
+                              <p>
+                                Cout : {m.cost} DT Date d'achat :{" "}
+                                {m.purchaseDate}
+                              </p>
+                              <p>Fournisseur : {m.supplier}</p>
+                              <p>Quantité disponible : {m.quantityAvailable}</p>
+                              <p>Etat : {m.status}</p>
+                              <Accordion>
+                                <Accordion.Item eventKey="0">
+                                  <Accordion.Header>
+                                    {/* <Button
+                                      className="btn btn-inverse-primary"
+                                    >
+                                      <span>Ouvrir</span>
+                                      <i
+                                        className="mdi mdi-eye"
+                                        style={{ fontSize: "1.5em" }}
+                                      />
+                                    </Button>{" "} */}
+                                    Spécifications techniques
+                                  </Accordion.Header>
+                                  <Accordion.Body>
+                                    <iframe
+                                      src={`http://localhost:8000/materielDocs/${m.technicalSpecifications}`}
+                                      width="100%"
+                                      height="600px"
+                                      title="PDF Viewer"
+                                    ></iframe>
+                                  </Accordion.Body>
+                                </Accordion.Item>
+                              </Accordion>
+                            </Card.Text>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
                 </Row>
               )}
             </div>

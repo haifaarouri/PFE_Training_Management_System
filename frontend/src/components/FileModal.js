@@ -49,7 +49,20 @@ const FileModal = ({ show, handleClose, selectedFile, urlFile }) => {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="row">
-        <DocViewer documents={docs} pluginRenderers={DocViewerRenderers} />
+        {!urlFile ? (
+          <iframe
+            src={`http://localhost:8000/materielDocs/${selectedFile}`}
+            width="100%"
+            height="600px"
+            title="PDF Viewer"
+          ></iframe>
+        ) : (
+          <DocViewer
+            prefetchMethod="GET"
+            documents={docs}
+            pluginRenderers={DocViewerRenderers}
+          />
+        )}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose}>

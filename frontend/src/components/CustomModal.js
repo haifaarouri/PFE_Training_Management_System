@@ -145,45 +145,53 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
       setValidated(true);
 
       if (email) {
-        const u = await axios.get(`/api/user-email/${email}`);
-        if (u && u.data.provider === "google") { 
-          console.log("google");
-          Swal.fire({
-            icon: "error",
-            text:
-              "Vous ne pouvez pas réinitialiser votre mot de passe parce que vous utilisez Google comme méthode d'authentification !",
-          });
-        } else {
-          const res = await axios.post("/forgot-password", { email });
-          console.log(res);
+        await axios
+          .get(`/api/user-email/${email}`)
+          .then(async (u) => {
+            if (u && u.data.provider === "google") {
+              console.log("google");
+              Swal.fire({
+                icon: "error",
+                text: "Vous ne pouvez pas réinitialiser votre mot de passe parce que vous utilisez Google comme méthode d'authentification !",
+              });
+            } else if (u && !u.data.provider) {
+              const res = await axios.post("/forgot-password", { email });
 
-          Swal.fire({
-            title: "E-mail est en cours d'envoit !",
-            html: "E-mail sera envoyé dans quelques <b></b> milliseconds.",
-            timer: 2000,
-            timerProgressBar: true,
-          }).then((result) => {
-            if (result.dismiss === Swal.DismissReason.timer) {
-              console.log("I was closed by the timer");
+              Swal.fire({
+                title: "E-mail est en cours d'envoit !",
+                html: "E-mail sera envoyé dans quelques <b></b> milliseconds.",
+                timer: 2000,
+                timerProgressBar: true,
+              }).then((result) => {
+                if (result.dismiss === Swal.DismissReason.timer) {
+                  console.log("I was closed by the timer");
+                }
+              });
+
+              if (res && res.data.status) {
+                Swal.fire({
+                  title: "Bravo !",
+                  text: "Vérifier votre boite d'e-mail !",
+                  imageUrl: "/images/auth/emailImg.jpg",
+                  imageWidth: 400,
+                  imageHeight: 200,
+                  imageAlt: "E-mail icon",
+                });
+                setEmail("");
+                handleClose();
+              }
+            }
+          })
+          .catch((e) => {
+            if (e.response.status === 404) {
+              handleError(e.response.data.error);
             }
           });
-
-          if (res && res.data.status) {
-            Swal.fire({
-              title: "Bravo !",
-              text: "Vérifier votre boite d'e-mail !",
-              imageUrl: "/images/auth/emailImg.jpg",
-              imageWidth: 400,
-              imageHeight: 200,
-              imageAlt: "E-mail icon",
-            });
-            setEmail("");
-            handleClose();
-          }
-        }
       }
     } catch (error) {
       if (error && error.response.status === 422) {
+        handleError(error.response.data.message);
+      } else {
         handleError(error.response.data.message);
       }
     }
