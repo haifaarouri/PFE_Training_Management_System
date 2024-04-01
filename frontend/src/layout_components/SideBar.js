@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { GiTeacher } from "react-icons/gi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
@@ -90,13 +91,16 @@ function SideBar() {
             <span className="menu-title">Gestions des Materiaux</span>
           </Link>
         </li>
-        {/*<li className="nav-item">
-          <Link className="nav-link" to="pages/tables/basic-table.html">
-            <i className="mdi mdi-grid-large menu-icon" />
-            <span className="menu-title">Tables</span>
+        <li className="nav-item">
+          <Link className="nav-link" to="/formateurs">
+            <i className="mdi menu-icon">
+              {" "}
+              <GiTeacher />
+            </i>
+            <span className="menu-title">Gestion des Formateurs</span>
           </Link>
         </li>
-        <li className="nav-item">
+        {/*<li className="nav-item">
           <Link className="nav-link" to="pages/icons/mdi.html">
             <i className="mdi mdi-emoticon menu-icon" />
             <span className="menu-title">Icons</span>

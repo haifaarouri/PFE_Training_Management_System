@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import {
-  Accordion,
   Card,
   Carousel,
   Form,
@@ -11,26 +10,26 @@ import {
 } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
-import MaterielModal from "../../components/MaterielModal";
-import {
-  deleteMateriel,
-  fetchAllMateriaux,
-} from "../../services/MaterielServices";
-import FileModal from "../../components/FileModal";
+// import formateurModal from "../../components/formateurModal";
+import { fetchAllFormateurs } from "../../services/FormateurServices";
+import FormateurModal from "../../components/FormateurModal";
+import CertifModal from "../../components/CertifModel";
+import { LiaCertificateSolid } from "react-icons/lia";
+import { MdOutlineOpenInNew } from "react-icons/md";
 require("moment/locale/fr");
 
-function AllMateriels() {
-  const [materiaux, setMateriaux] = useState([]);
+function AllFormateurs() {
+  const [formateurs, setFormateurs] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const materiauxPerPage = 2;
-  const lastIndex = currentPage * materiauxPerPage;
-  const firstIndex = lastIndex - materiauxPerPage;
-  const materiauxPage =
-    materiaux.length > 0 && materiaux.slice(firstIndex, lastIndex);
+  const formateursPerPage = 2;
+  const lastIndex = currentPage * formateursPerPage;
+  const firstIndex = lastIndex - formateursPerPage;
+  const formateursPage =
+    formateurs.length > 0 && formateurs.slice(firstIndex, lastIndex);
   const numberPages = Math.ceil(
-    materiaux.length > 0 && materiaux.length / materiauxPerPage
+    formateurs.length > 0 && formateurs.length / formateursPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
@@ -38,7 +37,17 @@ function AllMateriels() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
-  const [showFileModal, setShowFileModal] = useState(false);
+  const [showCertificat, setShowCertificat] = useState(false);
+  const [certifToShow, setCertifToShow] = useState(null);
+
+  useEffect(() => {
+    const u = async () => {
+      const d = await fetchData();
+      setFormateurs(d);
+    };
+
+    u();
+  }, []);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -51,9 +60,9 @@ function AllMateriels() {
         columnName === "supplier"
       ) {
         const newFilter =
-          materiaux.length > 0 &&
-          materiaux.filter((materiel) =>
-            materiel[columnName]
+          formateurs.length > 0 &&
+          formateurs.filter((formateur) =>
+            formateur[columnName]
               .toLowerCase()
               .includes(searchWord.toLowerCase())
           );
@@ -73,12 +82,12 @@ function AllMateriels() {
       }
     } else {
       const newFilter =
-        materiaux.length > 0 &&
-        materiaux.filter((materiel) => {
-          const materielFields = Object.values(materiel)
+        formateurs.length > 0 &&
+        formateurs.filter((formateur) => {
+          const formateurFields = Object.values(formateur)
             .join(" ")
             .toLowerCase();
-          return materielFields.includes(searchWord);
+          return formateurFields.includes(searchWord);
         });
       setFilteredData(newFilter);
       if (wordEntered && wordEntered.length > 3 && filteredData.length === 0) {
@@ -120,56 +129,57 @@ function AllMateriels() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-materiel/${id}`);
+    navigate(`/edit-formateur/${id}`);
   };
 
   const fetchData = async () => {
     try {
-      const response = await fetchAllMateriaux();
+      const response = await fetchAllFormateurs();
+
       return response;
     } catch (error) {
-      console.log("Error fetching materiaux :", error);
+      console.log("Error fetching formateurs :", error);
     }
   };
 
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setMateriaux(d);
+      setFormateurs(d);
     };
 
     u();
   }, [showModal]);
 
-  const handleDeleteMateriel = async (id) => {
-    Swal.fire({
-      title: "Êtes-vous sûr?",
-      text: "Vous ne pourrez pas revenir en arrière !",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Oui, supprimer!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const res = await deleteMateriel(id);
-          Swal.fire({
-            title: "Supprimé avec succès!",
-            text: "Matériel est supprimé !",
-            icon: "success",
-          });
-          const d = await fetchData();
-          setMateriaux(d);
-          handleSuccess(res.message);
-        } catch (error) {
-          if (error && error.response.status === 422) {
-            handleError(error.response.data.message);
-          }
-        }
-      }
-    });
-  };
+  //   const handleDeleteformateur = async (id) => {
+  //     Swal.fire({
+  //       title: "Êtes-vous sûr?",
+  //       text: "Vous ne pourrez pas revenir en arrière !",
+  //       icon: "warning",
+  //       showCancelButton: true,
+  //       confirmButtonColor: "#3085d6",
+  //       cancelButtonColor: "#d33",
+  //       confirmButtonText: "Oui, supprimer!",
+  //     }).then(async (result) => {
+  //       if (result.isConfirmed) {
+  //         try {
+  //           const res = await deleteformateur(id);
+  //           Swal.fire({
+  //             title: "Supprimé avec succès!",
+  //             text: "Matériel est supprimé !",
+  //             icon: "success",
+  //           });
+  //           const d = await fetchData();
+  //           setFormateurs(d);
+  //           handleSuccess(res.message);
+  //         } catch (error) {
+  //           if (error && error.response.status === 422) {
+  //             handleError(error.response.data.message);
+  //           }
+  //         }
+  //       }
+  //     });
+  //   };
 
   const prevPage = () => {
     if (currentPage !== 1) {
@@ -197,8 +207,12 @@ function AllMateriels() {
     setShowList(false);
   };
 
-  const handleShowFileModal = () => setShowFileModal(true);
-  const handleCloseFileModal = () => setShowFileModal(false);
+  const handleCloseCertifModal = () => setShowCertificat(false);
+
+  const handleCertifClick = (certif) => {
+    setCertifToShow(certif);
+    setShowCertificat(true);
+  };
 
   return (
     <div className="content-wrapper">
@@ -209,14 +223,14 @@ function AllMateriels() {
               <ToastContainer />
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
-                  Liste de tous les matériaux
+                  Liste de tous les formateurs
                 </h4>
                 <Button
                   variant="outline-success"
                   className="btn btn-sm m-3 mt-1"
                   onClick={handleShowAddModal}
                 >
-                  Ajouter un Matériel
+                  Ajouter un Formateur
                 </Button>
               </div>
               <div className="d-flex justify-content-end px-3 py-3">
@@ -235,7 +249,7 @@ function AllMateriels() {
                   </Button>
                 </div>
               </div>
-              <MaterielModal
+              <FormateurModal
                 show={showModal}
                 handleClose={handleCloseAddModal}
               />
@@ -255,7 +269,7 @@ function AllMateriels() {
                                 }}
                                 required
                               >
-                                <option>Colonne</option>
+                                <option value="">Colonne</option>
                                 <option value="name">Nom</option>
                                 <option value="type">Type</option>
                                 <option value="status">Etat</option>
@@ -305,69 +319,62 @@ function AllMateriels() {
                     <table className="table table-striped table-hover">
                       <thead>
                         <tr>
-                          <th>Image</th>
                           <th>Nom</th>
+                          <th>Prénom</th>
+                          <th>E-mail</th>
+                          <th>Numéro de téléphone</th>
+                          <th>Nombre d'année d'expérience</th>
                           <th>Type</th>
-                          <th>Quatité disponible</th>
-                          <th>Etat</th>
-                          <th>Cout</th>
-                          <th>Date d'achat</th>
-                          <th>Fournisseur</th>
-                          <th>Spécifications Techniques</th>
+                          <th>Spécialité(s)</th>
+                          <th>Certificats</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredData.length > 0 ? (
-                          filteredData.map((u, index) => {
+                          filteredData.map((f, index) => {
                             return (
-                              <tr key={index}>
-                                <td style={{ width: "25%" }}>
-                                  <img
-                                    src={`http://localhost:8000/materielPictures/${u.image}`}
-                                    alt={u.iamge}
-                                    style={{
-                                      borderRadius: "8px",
-                                      width: "80%",
-                                      height: "80%",
-                                    }}
-                                  />
+                              <tr key={index} className="text-center">
+                                <td>
+                                  <h6>{f.lastName}</h6>
                                 </td>
                                 <td>
-                                  <h6>{u.name}</h6>
+                                  <h6>{f.firstName}</h6>
                                 </td>
-                                <td>{u.type}</td>
-                                <td>{u.quantityAvailable}</td>
-                                <td>{u.status}</td>
-                                <td>{u.cost} DT</td>
-                                <td>{u.purchaseDate}</td>
-                                <td>{u.supplier}</td>
-                                <td style={{ width: "10%" }}>
-                                  {u.technicalSpecifications && (
-                                    <Button
-                                      onClick={handleShowFileModal}
-                                      className="btn btn-inverse-primary"
-                                    >
-                                      <span>Ouvrir</span>
-                                      <i
-                                        className="mdi mdi-eye"
-                                        style={{ fontSize: "1.5em" }}
-                                      />
-                                    </Button>
-                                  )}
+                                <td>{f.email}</td>
+                                <td>{f.phoneNumber}</td>
+                                <td style={{ width: "5%" }}>{f.experience}</td>
+                                <td>{f.type}</td>
+                                <td>{f.speciality}</td>
+                                <td style={{ width: "15%" }}>
+                                  <div className="d-flex flex-column justify-content-center">
+                                    {f.certificats.map((c, i) => (
+                                      <Button
+                                        onClick={() => handleCertifClick(c)}
+                                        className="btn btn-inverse-success btn-sm mb-2"
+                                        key={i}
+                                      >
+                                        {c.name}{" "}
+                                        <i
+                                          className="mdi mdi-certificate"
+                                          style={{ fontSize: "1.2em" }}
+                                        />{" "}
+                                      </Button>
+                                    ))}
+                                  </div>
                                 </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       variant="outline-primary"
-                                      onClick={() => handleButtonEdit(u.id)}
+                                      onClick={() => handleButtonEdit(f.id)}
                                       className="btn btn-sm mb-2"
                                     >
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      onClick={() => handleDeleteMateriel(u.id)}
+                                      //   onClick={() => handleDeleteformateur(u.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -376,68 +383,59 @@ function AllMateriels() {
                                     </Button>
                                   </div>
                                 </td>
-                                <FileModal
-                                  show={showFileModal}
-                                  handleClose={handleCloseFileModal}
-                                  selectedFile={u.technicalSpecifications}
-                                />
                               </tr>
                             );
                           })
                         ) : filteredData.length === 0 &&
-                          materiaux.length === 0 ? (
+                          formateurs.length === 0 ? (
                           <></>
                         ) : (
-                          materiaux.length > 0 &&
-                          materiauxPage.map((u, index) => {
+                          formateurs.length > 0 &&
+                          formateursPage.map((f, index) => {
                             return (
-                              <tr key={index}>
-                                <td style={{ width: "25%" }}>
-                                  <img
-                                    src={`http://localhost:8000/materielPictures/${u.image}`}
-                                    alt={u.iamge}
-                                    style={{
-                                      borderRadius: "8px",
-                                      width: "80%",
-                                      height: "80%",
-                                    }}
-                                  />
+                              <tr key={index} className="text-center">
+                                <td>
+                                  <h6>{f.lastName}</h6>
                                 </td>
                                 <td>
-                                  <h6>{u.name}</h6>
+                                  <h6>{f.firstName}</h6>
                                 </td>
-                                <td>{u.type}</td>
-                                <td>{u.quantityAvailable}</td>
-                                <td>{u.status}</td>
-                                <td>{u.cost} DT</td>
-                                <td>{u.purchaseDate}</td>
-                                <td>{u.supplier}</td>
-                                <td style={{ width: "10%" }}>
-                                  {u.technicalSpecifications && (
-                                    <Button
-                                      onClick={handleShowFileModal}
-                                      className="btn btn-inverse-primary"
-                                    >
-                                      <span>Ouvrir</span>
-                                      <i
-                                        className="mdi mdi-eye"
-                                        style={{ fontSize: "1.5em" }}
-                                      />
-                                    </Button>
-                                  )}
+                                <td>{f.email}</td>
+                                <td>{f.phoneNumber}</td>
+                                <td style={{ width: "5%" }}>{f.experience}</td>
+                                <td>{f.type}</td>
+                                <td>{f.speciality}</td>
+                                <td style={{ width: "15%" }}>
+                                  <div className="d-flex flex-column justify-content-center">
+                                    {f.certificats.map((c, i) => {
+                                      return (
+                                        <Button
+                                          onClick={() => handleCertifClick(c)}
+                                          className="btn btn-inverse-success btn-sm mb-2"
+                                          key={i}
+                                        >
+                                          {c.name}{" "}
+                                          <i
+                                            className="mdi mdi-certificate"
+                                            style={{ fontSize: "1.2em" }}
+                                          />{" "}
+                                        </Button>
+                                      );
+                                    })}
+                                  </div>
                                 </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       variant="outline-primary"
-                                      onClick={() => handleButtonEdit(u.id)}
+                                      onClick={() => handleButtonEdit(f.id)}
                                       className="btn btn-sm mb-2"
                                     >
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      onClick={() => handleDeleteMateriel(u.id)}
+                                      //   onClick={() => handleDeleteformateur(u.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -446,11 +444,6 @@ function AllMateriels() {
                                     </Button>
                                   </div>
                                 </td>
-                                <FileModal
-                                  show={showFileModal}
-                                  handleClose={handleCloseFileModal}
-                                  selectedFile={u.technicalSpecifications}
-                                />
                               </tr>
                             );
                           })
@@ -488,6 +481,11 @@ function AllMateriels() {
                       />
                     </Pagination.Next>
                   </Pagination>
+                  <CertifModal
+                    show={showCertificat}
+                    handleClose={handleCloseCertifModal}
+                    certif={certifToShow}
+                  />
                 </>
               )}
               {showCarousel && (
@@ -495,21 +493,21 @@ function AllMateriels() {
                   style={{ backgroundColor: "#D2D8EB" }}
                   className="shadow-lg p-5 mb-5 rounded"
                 >
-                  {materiaux.length > 0 &&
-                    materiaux.map((m, idx) => (
+                  {formateurs.length > 0 &&
+                    formateurs.map((f, idx) => (
                       <Carousel.Item key={idx}>
                         <div
                           className="d-flex justify-content-end"
                           style={{ marginRight: "5%" }}
                         >
                           <Button
-                            onClick={() => handleButtonEdit(m.id)}
+                            onClick={() => handleButtonEdit(f.id)}
                             className="btn btn-sm m-1 btn-dark btn-rounded"
                           >
                             Modifier <i className="mdi mdi-tooltip-edit"></i>
                           </Button>
                           <Button
-                            onClick={() => handleDeleteMateriel(m.id)}
+                            // onClick={() => handleDeleteformateur(f.id)}
                             className="btn btn-sm m-1 btn-rounded"
                           >
                             Supprimer <i className="mdi mdi-delete"></i>
@@ -519,70 +517,93 @@ function AllMateriels() {
                           <Card className="shadow-lg p-3 rounded">
                             <Card.Body>
                               <Card.Title>
-                                <h2>{m.name}</h2>
+                                <h2>
+                                  {f.firstName} {f.lastName}
+                                </h2>
                               </Card.Title>
                               <Card.Text className="d-flex justify-content-evenly">
                                 <div className="mt-5">
-                                  <Card.Img
-                                    variant="top"
-                                    src={`http://localhost:8000/materielPictures/${m.image}`}
-                                    style={{
-                                      width: "250px",
-                                      marginBottom: "20%",
-                                    }}
-                                  />
+                                  <p>
+                                    <span className="text-primary fw-bold">
+                                      Adresse E-mail :
+                                    </span>{" "}
+                                    {f.email}
+                                  </p>
+                                  <p>
+                                    <span className="text-primary fw-bold">
+                                      Numéro de téléphone :
+                                    </span>{" "}
+                                    {f.phoneNumber}
+                                  </p>
+                                  <p>
+                                    <span className="text-primary fw-bold">
+                                      Nombre d'année d'expérience :
+                                    </span>{" "}
+                                    {f.experience}
+                                  </p>
                                   <p>
                                     <span className="text-primary fw-bold">
                                       Type :
                                     </span>{" "}
-                                    {m.type}
+                                    {f.type}
                                   </p>
                                   <p>
                                     <span className="text-primary fw-bold">
-                                      Cout :{" "}
-                                    </span>
-                                    {m.cost} DT
-                                  </p>
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Date d'achat :
+                                      Spécialité(s) :
                                     </span>{" "}
-                                    {m.purchaseDate}
-                                  </p>
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Fournisseur :
-                                    </span>{" "}
-                                    {m.supplier}
-                                  </p>
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Quantité disponible :
-                                    </span>{" "}
-                                    {m.quantityAvailable}
-                                  </p>
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Etat :
-                                    </span>{" "}
-                                    {m.status}
+                                    {f.speciality}
                                   </p>
                                 </div>
-                                <Accordion defaultActiveKey="0">
-                                  <Accordion.Item eventKey="0">
-                                    <Accordion.Header>
-                                      Spécifications techniques
-                                    </Accordion.Header>
-                                    <Accordion.Body>
-                                      <iframe
-                                        src={`http://localhost:8000/materielDocs/${m.technicalSpecifications}`}
-                                        width="100%"
-                                        height="600px"
-                                        title="PDF Viewer"
-                                      ></iframe>
-                                    </Accordion.Body>
-                                  </Accordion.Item>
-                                </Accordion>
+                                <div className="solution_cards_box">
+                                  {f.certificats.length>0 && 
+                                    f.certificats.map((certif) => (<div className="solution_card">
+                                      <div className="hover_color_bubble"></div>
+                                      <div className="solu_title d-flex justify-content-between">
+                                        <h3>{certif.name}</h3>
+                                        <LiaCertificateSolid
+                                          style={{ fontSize: "4em" }}
+                                        />
+                                      </div>
+                                      <div className="solu_description">
+                                        <p>
+                                          Oraganisme de délivrance :{" "}
+                                          {certif.organisme}
+                                        </p>
+                                        <p>
+                                          Date d'obtention :{" "}
+                                          {certif.obtainedDate}
+                                        </p>
+                                        {certif.idCertificat && (
+                                          <p>
+                                            ID du certficat :{" "}
+                                            <button
+                                              onClick={() =>
+                                                (window.location.href =
+                                                  certif.idCertificat)
+                                              }
+                                            >
+                                              Afficher l'ID{" "}
+                                              <MdOutlineOpenInNew />
+                                            </button>{" "}
+                                          </p>
+                                        )}
+                                        {certif.urlCertificat && (
+                                          <p>
+                                            URL du certificat :{" "}
+                                            <button
+                                              onClick={() =>
+                                                (window.location.href =
+                                                  certif.urlCertificat)
+                                              }
+                                            >
+                                              Afficher l'URL{" "}
+                                              <MdOutlineOpenInNew />
+                                            </button>{" "}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>))}
+                                </div>
                               </Card.Text>
                             </Card.Body>
                           </Card>
@@ -599,4 +620,4 @@ function AllMateriels() {
   );
 }
 
-export default AllMateriels;
+export default AllFormateurs;

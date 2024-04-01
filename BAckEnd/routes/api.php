@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FormateurController;
 use App\Http\Controllers\materielController;
 use App\Http\Controllers\SalleController;
 use App\Http\Controllers\UserController;
@@ -62,4 +63,12 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-materiel/{id}', [MaterielController::class, 'update']);
     Route::post('/add-materiel', [MaterielController::class, 'store']);
     Route::delete('/delete-materiel/{id}', [MaterielController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/formateurs', [FormateurController::class, 'index']);
+    // Route::get('/formateur-id/{id}', [FormateurController::class, 'show']);
+    // Route::put('/update-formateur/{id}', [FormateurController::class, 'update']);
+    Route::post('/add-formateur', [FormateurController::class, 'store']);
+    // Route::delete('/delete-formateur/{id}', [FormateurController::class, 'destroy']);
 });
