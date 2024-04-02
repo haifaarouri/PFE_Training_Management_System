@@ -19,10 +19,9 @@ return new class extends Migration {
             $table->date('obtainedDate');
             $table->string('idCertificat')->nullable();
             $table->string('urlCertificat')->nullable();
-            $table->foreignId('formateur_id')->constrained()->onDelete('cascade');
-            // $table->foreignId('formateur_id')->constrained();
-            // $table->unsignedBigInteger('formateur_id');
-            // $table->foreign('formateur_id')->references('id')->on('formateurs')->onDelete('cascade');
+            $table->unsignedBigInteger('formateur_id')->nullable();
+            $table->foreign('formateur_id')->references('id')->on('formateurs')->onDelete('cascade');
+            $table->engine = 'InnoDB';
             $table->timestamps();
         });
     }

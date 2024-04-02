@@ -20,7 +20,7 @@ class Certificat extends Model
 
     public function formateur()
     {
-        return $this->belongsTo(Formateur::class);
+        return $this->belongsTo(Formateur::class, 'formateur_id', 'id');
     }
 
 }

@@ -31,11 +31,6 @@ const FormateurModal = ({ show, handleClose }) => {
   const [experience, setExperience] = useState("");
   const [type, setType] = useState("");
   const [speciality, setSpeciality] = useState("");
-  //   const [name, setName] = useState("");
-  //   const [organisme, setOrganisme] = useState("");
-  //   const [obtainedDate, setObtainedDate] = useState("");
-  //   const [idCertificat, setIdCertificat] = useState("");
-  //   const [urlCertificat, setUrlCertificat] = useState("");
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const [showCertif, setShowCertif] = useState(false);
@@ -136,11 +131,6 @@ const FormateurModal = ({ show, handleClose }) => {
       formData.append("experience", experience);
       formData.append("type", type);
       formData.append("speciality", speciality);
-      //   formData.append("name", name);
-      //   formData.append("organisme", organisme);
-      //   formData.append("obtainedDate", obtainedDate);
-      //   formData.append("idCertificat", idCertificat);
-      //   formData.append("urlCertificat", urlCertificat);
       certificates.forEach((certificate, index) => {
         Object.keys(certificate).forEach((key) => {
           formData.append(`certificates[${index}][${key}]`, certificate[key]);
@@ -169,11 +159,7 @@ const FormateurModal = ({ show, handleClose }) => {
           setExperience("");
           setType("");
           setSpeciality("");
-          //   setName("");
-          //   setOrganisme("");
-          //   setObtainedDate("");
-          //   setIdCertificat("");
-          //   setUrlCertificat("");
+          setCertificates([]);
           // setDisponibility([{ startDate: null, endDate: null }]);
 
           handleClose();
@@ -207,11 +193,6 @@ const FormateurModal = ({ show, handleClose }) => {
           setExperience("");
           setType("");
           setSpeciality("");
-          //   setName("");
-          //   setOrganisme("");
-          //   setObtainedDate("");
-          //   setIdCertificat("");
-          //   setUrlCertificat("");
           // setDisponibility([{ startDate: null, endDate: null }]);
 
           handleClose();

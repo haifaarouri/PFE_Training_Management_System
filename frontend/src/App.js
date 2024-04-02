@@ -19,6 +19,7 @@ import EditSalle from "./pages/salle_management/EditSalle";
 import AllMateriels from "./pages/materiel_management/AllMateriels";
 import EditMateriel from "./pages/materiel_management/EditMateriel";
 import AllFormateurs from "./pages/formateur_management/AllFormateurs";
+import EditFormateur from "./pages/formateur_management/EditFormateur";
 
 function App() {
   return (
@@ -137,6 +138,25 @@ function App() {
                 ]}
               >
                 <AllFormateurs />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/edit-formateur/:id"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <EditFormateur />
               </RequireAuth>
             }
           />

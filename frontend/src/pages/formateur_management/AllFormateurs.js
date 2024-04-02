@@ -1,17 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import {
-  Card,
-  Carousel,
-  Form,
-  InputGroup,
-  Pagination,
-} from "react-bootstrap";
+import { Card, Carousel, Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
-// import formateurModal from "../../components/formateurModal";
-import { fetchAllFormateurs } from "../../services/FormateurServices";
+import {
+  deleteFormateur,
+  fetchAllFormateurs,
+} from "../../services/FormateurServices";
 import FormateurModal from "../../components/FormateurModal";
 import CertifModal from "../../components/CertifModel";
 import { LiaCertificateSolid } from "react-icons/lia";
@@ -53,33 +49,12 @@ function AllFormateurs() {
     const searchWord = event.target.value.toLowerCase();
     setWordEntered(searchWord);
     if (columnName && columnName !== "Colonne") {
-      if (
-        columnName === "name" ||
-        columnName === "type" ||
-        columnName === "status" ||
-        columnName === "supplier"
-      ) {
-        const newFilter =
-          formateurs.length > 0 &&
-          formateurs.filter((formateur) =>
-            formateur[columnName]
-              .toLowerCase()
-              .includes(searchWord.toLowerCase())
-          );
-        setFilteredData(newFilter);
-        if (
-          wordEntered &&
-          wordEntered.length > 3 &&
-          filteredData.length === 0
-        ) {
-          Swal.fire({
-            text: "Pas de résultat pour ce mot de recherche entré !",
-            icon: "error",
-            position: "top",
-            height: "10%",
-          });
-        }
-      }
+      const newFilter =
+        formateurs.length > 0 &&
+        formateurs.filter((formateur) =>
+          formateur[columnName].toLowerCase().includes(searchWord.toLowerCase())
+        );
+      setFilteredData(newFilter);
     } else {
       const newFilter =
         formateurs.length > 0 &&
@@ -90,14 +65,6 @@ function AllFormateurs() {
           return formateurFields.includes(searchWord);
         });
       setFilteredData(newFilter);
-      if (wordEntered && wordEntered.length > 3 && filteredData.length === 0) {
-        Swal.fire({
-          text: "Pas de résultat pour ce mot de recherche entré !",
-          icon: "error",
-          position: "top",
-          height: "100px",
-        });
-      }
     }
   };
 
@@ -151,35 +118,35 @@ function AllFormateurs() {
     u();
   }, [showModal]);
 
-  //   const handleDeleteformateur = async (id) => {
-  //     Swal.fire({
-  //       title: "Êtes-vous sûr?",
-  //       text: "Vous ne pourrez pas revenir en arrière !",
-  //       icon: "warning",
-  //       showCancelButton: true,
-  //       confirmButtonColor: "#3085d6",
-  //       cancelButtonColor: "#d33",
-  //       confirmButtonText: "Oui, supprimer!",
-  //     }).then(async (result) => {
-  //       if (result.isConfirmed) {
-  //         try {
-  //           const res = await deleteformateur(id);
-  //           Swal.fire({
-  //             title: "Supprimé avec succès!",
-  //             text: "Matériel est supprimé !",
-  //             icon: "success",
-  //           });
-  //           const d = await fetchData();
-  //           setFormateurs(d);
-  //           handleSuccess(res.message);
-  //         } catch (error) {
-  //           if (error && error.response.status === 422) {
-  //             handleError(error.response.data.message);
-  //           }
-  //         }
-  //       }
-  //     });
-  //   };
+  const handleDeleteFormateur = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, supprimer!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await deleteFormateur(id);
+          Swal.fire({
+            title: "Supprimé avec succès!",
+            text: "Formateur est supprimé !",
+            icon: "success",
+          });
+          const d = await fetchData();
+          setFormateurs(d);
+          handleSuccess(res.message);
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
 
   const prevPage = () => {
     if (currentPage !== 1) {
@@ -270,10 +237,11 @@ function AllFormateurs() {
                                 required
                               >
                                 <option value="">Colonne</option>
-                                <option value="name">Nom</option>
+                                <option value="lastName">Nom</option>
+                                <option value="firstName">Prénom</option>
+                                <option value="email">E-mail</option>
                                 <option value="type">Type</option>
-                                <option value="status">Etat</option>
-                                <option value="supplier">Fournisseur</option>
+                                <option value="speciality">Spécialité</option>
                               </Form.Select>
                             </InputGroup>
                           </Form.Group>
@@ -374,7 +342,9 @@ function AllFormateurs() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      //   onClick={() => handleDeleteformateur(u.id)}
+                                      onClick={() =>
+                                        handleDeleteFormateur(f.id)
+                                      }
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -435,7 +405,9 @@ function AllFormateurs() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      //   onClick={() => handleDeleteformateur(u.id)}
+                                      onClick={() =>
+                                        handleDeleteFormateur(f.id)
+                                      }
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -507,7 +479,7 @@ function AllFormateurs() {
                             Modifier <i className="mdi mdi-tooltip-edit"></i>
                           </Button>
                           <Button
-                            // onClick={() => handleDeleteformateur(f.id)}
+                            onClick={() => handleDeleteFormateur(f.id)}
                             className="btn btn-sm m-1 btn-rounded"
                           >
                             Supprimer <i className="mdi mdi-delete"></i>
@@ -555,54 +527,56 @@ function AllFormateurs() {
                                   </p>
                                 </div>
                                 <div className="solution_cards_box">
-                                  {f.certificats.length>0 && 
-                                    f.certificats.map((certif) => (<div className="solution_card">
-                                      <div className="hover_color_bubble"></div>
-                                      <div className="solu_title d-flex justify-content-between">
-                                        <h3>{certif.name}</h3>
-                                        <LiaCertificateSolid
-                                          style={{ fontSize: "4em" }}
-                                        />
-                                      </div>
-                                      <div className="solu_description">
-                                        <p>
-                                          Oraganisme de délivrance :{" "}
-                                          {certif.organisme}
-                                        </p>
-                                        <p>
-                                          Date d'obtention :{" "}
-                                          {certif.obtainedDate}
-                                        </p>
-                                        {certif.idCertificat && (
+                                  {f.certificats.length > 0 &&
+                                    f.certificats.map((certif) => (
+                                      <div className="solution_card">
+                                        <div className="hover_color_bubble"></div>
+                                        <div className="solu_title d-flex justify-content-between">
+                                          <h3>{certif.name}</h3>
+                                          <LiaCertificateSolid
+                                            style={{ fontSize: "4em" }}
+                                          />
+                                        </div>
+                                        <div className="solu_description">
                                           <p>
-                                            ID du certficat :{" "}
-                                            <button
-                                              onClick={() =>
-                                                (window.location.href =
-                                                  certif.idCertificat)
-                                              }
-                                            >
-                                              Afficher l'ID{" "}
-                                              <MdOutlineOpenInNew />
-                                            </button>{" "}
+                                            Oraganisme de délivrance :{" "}
+                                            {certif.organisme}
                                           </p>
-                                        )}
-                                        {certif.urlCertificat && (
                                           <p>
-                                            URL du certificat :{" "}
-                                            <button
-                                              onClick={() =>
-                                                (window.location.href =
-                                                  certif.urlCertificat)
-                                              }
-                                            >
-                                              Afficher l'URL{" "}
-                                              <MdOutlineOpenInNew />
-                                            </button>{" "}
+                                            Date d'obtention :{" "}
+                                            {certif.obtainedDate}
                                           </p>
-                                        )}
+                                          {certif.idCertificat && (
+                                            <p>
+                                              ID du certficat :{" "}
+                                              <button
+                                                onClick={() =>
+                                                  (window.location.href =
+                                                    certif.idCertificat)
+                                                }
+                                              >
+                                                Afficher l'ID{" "}
+                                                <MdOutlineOpenInNew />
+                                              </button>{" "}
+                                            </p>
+                                          )}
+                                          {certif.urlCertificat && (
+                                            <p>
+                                              URL du certificat :{" "}
+                                              <button
+                                                onClick={() =>
+                                                  (window.location.href =
+                                                    certif.urlCertificat)
+                                                }
+                                              >
+                                                Afficher l'URL{" "}
+                                                <MdOutlineOpenInNew />
+                                              </button>{" "}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>))}
+                                    ))}
                                 </div>
                               </Card.Text>
                             </Card.Body>

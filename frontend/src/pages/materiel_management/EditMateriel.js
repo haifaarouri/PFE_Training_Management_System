@@ -561,6 +561,11 @@ const EditMateriel = () => {
                         required
                         className="input-technicalSpecifications"
                       />
+                      <Form.Text
+                        style={{ color: "#dc3545", fontWeight: "bold" }}
+                      >
+                        Taille maximale du fichier est 2MB
+                      </Form.Text>
                       <Form.Control.Feedback>
                         Cela semble bon !
                       </Form.Control.Feedback>

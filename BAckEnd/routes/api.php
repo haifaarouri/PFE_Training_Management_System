@@ -67,8 +67,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/formateurs', [FormateurController::class, 'index']);
-    // Route::get('/formateur-id/{id}', [FormateurController::class, 'show']);
-    // Route::put('/update-formateur/{id}', [FormateurController::class, 'update']);
+    Route::get('/formateur-id/{id}', [FormateurController::class, 'show']);
+    Route::put('/update-formateur/{id}', [FormateurController::class, 'update']);
     Route::post('/add-formateur', [FormateurController::class, 'store']);
-    // Route::delete('/delete-formateur/{id}', [FormateurController::class, 'destroy']);
+    Route::delete('/delete-formateur/{id}', [FormateurController::class, 'destroy']);
 });

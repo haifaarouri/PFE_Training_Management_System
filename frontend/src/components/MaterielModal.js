@@ -619,6 +619,9 @@ const MaterielModal = ({ show, handleClose }) => {
                   required
                   className="input-technicalSpecifications"
                 />
+                <Form.Text style={{ color: "#dc3545", fontWeight: "bold" }}>
+                  Taille maximale du fichier est 2MB
+                </Form.Text>
                 <MdCloudUpload color="#1475cf" size={60} />
                 <p>Sélectionner les specifications techniques de matériel</p>
               </div>
