@@ -6,6 +6,8 @@ use App\Models\Formateur;
 use App\Rules\TypeFormateurRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use DateTimeZone;
+use DateTime;
 
 class FormateurController extends Controller
 {
@@ -20,7 +22,7 @@ class FormateurController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $formateurs = Formateur::with('certificats')->get();
+            $formateurs = Formateur::with('certificats', 'disponibilities')->get();
             return response()->json($formateurs);
         } else {
             // User does not have access, return a 403 response
@@ -32,6 +34,7 @@ class FormateurController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
             try {
+
                 $validator = Validator::make($request->all(), [
                     'firstName' => 'required|string|max:255',
                     'lastName' => 'required|string|max:255',
@@ -39,12 +42,27 @@ class FormateurController extends Controller
                     'phoneNumber' => 'required|string|max:255|min:8',
                     'experience' => 'required|integer',
                     'type' => ['required', new TypeFormateurRule()],
-                    'speciality' => 'required|string|max:255'
+                    'cv' => 'required|file|mimes:pdf,jpeg,png,jpg|max:2048'
                 ]);
 
                 if ($validator->fails()) {
                     return response()->json(['error' => $validator->errors()], 400);
                 }
+
+                $cvName = null;
+                if ($request->hasFile('cv')) {
+                    $cvName = time() . $request->file('cv')->getClientOriginalName();
+                    $request->cv->move(public_path('TrainersCV'), $cvName);
+                } else {
+                    return response()->json(['error' => 'File not provided or missing.'], 400);
+                }
+
+                $specialities = [];
+                foreach (json_decode($request->input('specialities'), true) as $key => $value) {
+                    $specialities[$key] = $value;
+                }
+
+                $specialitiesStr = implode(',', $specialities);
 
                 $formateur = Formateur::create([
                     'firstName' => $request->input('firstName'),
@@ -53,8 +71,30 @@ class FormateurController extends Controller
                     'phoneNumber' => $request->input('phoneNumber'),
                     'experience' => $request->input('experience'),
                     'type' => $request->input('type'),
-                    'speciality' => $request->input('speciality'),
+                    'speciality' => $specialitiesStr,
+                    'cv' => $cvName
                 ]);
+
+                if ($request->has('disponibility') && is_array($request->input('disponibility'))) {
+                    $disponibilities = [];
+                    foreach ($request->input('disponibility') as $disponibility) {
+                        $validator = Validator::make($disponibility, [
+                            'startDate' => 'required|date',
+                            'endDate' => 'required|date'
+                        ]);
+
+                        if ($validator->fails()) {
+                            return response()->json(['error' => $validator->errors()], 400);
+                        }
+
+                        $disponibilities[] = [
+                            'startDate' => new DateTime($disponibility['startDate'], new DateTimeZone('UTC')),
+                            'endDate' => new DateTime($disponibility['endDate'], new DateTimeZone('UTC'))
+                        ];
+                    }
+
+                    $formateur->disponibilities()->createMany($disponibilities);
+                }
 
                 if ($request->has('certificates') && is_array($request->input('certificates'))) {
                     $certificatesData = [];
@@ -86,7 +126,6 @@ class FormateurController extends Controller
                 return response()->json($formateur, 201);
             } catch (\Exception $e) {
                 \Log::error('Error uploading file: ' . $e->getMessage());
-
                 return response()->json(['error' => 'Erreur lors de l\'ajout du formateur !'], 500);
             }
         } else {
@@ -98,7 +137,7 @@ class FormateurController extends Controller
     public function show($id)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
-            $formateur = Formateur::with('certificats')->find($id);
+            $formateur = Formateur::with('certificats', 'disponibilities')->find($id);
             if (!$formateur) {
                 return response()->json(['error' => 'Formateur avec cette ID non trouvé !'], 404);
             }
@@ -126,7 +165,6 @@ class FormateurController extends Controller
                     'phoneNumber' => 'required|string|max:255|min:8',
                     'experience' => 'required|integer',
                     'type' => ['required', new TypeFormateurRule()],
-                    'speciality' => 'required|string|max:255'
                 ]);
 
                 if ($validator->fails()) {
@@ -148,31 +186,65 @@ class FormateurController extends Controller
                             return response()->json(['error' => $validator->errors()], 400);
                         }
 
-                        $certificatesData[] = [
-                            'name' => $certificate['name'],
-                            'organisme' => $certificate['organisme'],
-                            'obtainedDate' => $certificate['obtainedDate'],
-                            'idCertificat' => !empty($certificate['idCertificat']) ? $certificate['idCertificat'] : null,
-                            'urlCertificat' => !empty($certificate['urlCertificat']) ? $certificate['urlCertificat'] : null,
-                        ];
+                        $certificate = $formateur->certificats()->updateOrCreate(
+                            ['idCertificat' => $certificate['idCertificat'] ?? null],
+                            $certificate
+                        );
                     }
-
-                    $formateur->certificats()->createMany($certificatesData);
                 }
-                
+
+                if ($request->has('disponibility') && is_array($request->input('disponibility'))) {
+
+                    $disponibilitiesArray = $request->disponibility;
+                    $disponibilitiesObjects = array_map(function ($disponibility) {
+                        return (object) $disponibility;
+                    }, $disponibilitiesArray);
+
+                    foreach ($disponibilitiesObjects as $disponibility) {
+
+                        $identifier = [
+                            'formateur_id' => $formateur->id,
+                            'startDate' => $disponibility->startDate,
+                            'endDate' => $disponibility->endDate,
+                        ];
+
+                        $disponibility = $formateur->disponibilities()->updateOrCreate(
+                            $identifier,
+                            [
+                                'startDate' => new DateTime($disponibility->startDate, new DateTimeZone('UTC')),
+                                'endDate' => new DateTime($disponibility->endDate, new DateTimeZone('UTC'))
+                            ]
+                        );
+                    }
+                }
+
+                $cvName = null;
+                if ($request->hasFile('cv')) {
+                    $cvName = time() . $request->file('cv')->getClientOriginalName();
+                    $request->cv->move(public_path('TrainersCV'), $cvName);
+                }
+
+                $specialities = [];
+                foreach (json_decode($request->input('specialities'), true) as $key => $value) {
+                    $specialities[$key] = $value;
+                }
+
+                $specialitiesStr = implode(',', $specialities);
+
                 $formateur->firstName = $request->input('firstName');
                 $formateur->lastName = $request->input('lastName');
                 $formateur->email = $request->input('email');
                 $formateur->type = $request->input('type');
                 $formateur->phoneNumber = $request->input('phoneNumber');
                 $formateur->experience = $request->input('experience');
-                $formateur->speciality = $request->input('speciality');
+                $formateur->speciality = $specialitiesStr;
+                $formateur->cv = !empty($cvName) ? $cvName : $request->input('cv');
                 $formateur->save();
 
                 return response()->json($formateur, 200);
             } catch (\Exception $e) {
                 \Log::error('Error uploading file: ' . $e->getMessage());
-
+                dd($e->getMessage());
                 return response()->json(['error' => 'Erreur lors de la mise à jour du formateur !'], 500);
             }
         } else {

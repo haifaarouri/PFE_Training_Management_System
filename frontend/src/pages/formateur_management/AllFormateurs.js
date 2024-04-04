@@ -12,6 +12,11 @@ import FormateurModal from "../../components/FormateurModal";
 import CertifModal from "../../components/CertifModel";
 import { LiaCertificateSolid } from "react-icons/lia";
 import { MdOutlineOpenInNew } from "react-icons/md";
+import { FaAddressCard } from "react-icons/fa";
+import CVModal from "../../components/CVModal";
+import moment from "moment";
+import { DateRange } from "react-date-range";
+import DisponibilityModal from "../../components/DisponibilityModal";
 require("moment/locale/fr");
 
 function AllFormateurs() {
@@ -35,6 +40,50 @@ function AllFormateurs() {
   const [showCarousel, setShowCarousel] = useState(false);
   const [showCertificat, setShowCertificat] = useState(false);
   const [certifToShow, setCertifToShow] = useState(null);
+  const [showCV, setShowCV] = useState(false);
+  const [cvToShow, setCVToShow] = useState(null);
+  const [showDispoModal, setShowDispoModal] = useState(false);
+  const [modalDates, setModalDates] = useState(null);
+  const [otherFilters, setOtherFilters] = useState(false);
+
+  const handleCloseDispoModal = () => setShowDispoModal(false);
+
+  const handleCallback = (childData) => {
+    setModalDates(childData);
+    // Parse childData dates to moment for easier comparison
+    const modalRanges = childData.map((range) => ({
+      startDate: moment(range.startDate),
+      endDate: moment(range.endDate),
+    }));
+
+    // Function to check if two date ranges overlap (range 2 inculs dans range1)
+    const rangesOverlap = (range1, range2) => {
+      return (
+        range2.startDate.isBefore(range1.endDate) &&
+        range2.endDate.isBefore(range1.endDate) &&
+        range2.endDate.isAfter(range1.startDate) &&
+        range2.startDate.isAfter(range1.startDate)
+      );
+    };
+
+    // Compare each modal range with each formateur's disponibility range
+    const overlappingFormateurs = formateurs.filter((formateur) => {
+      return formateur.disponibility.some((dispo) => {
+        const formateurRange = {
+          startDate: moment(dispo.startDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
+          endDate: moment(dispo.endDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
+        };
+        return modalRanges.some((modalRange) =>
+          rangesOverlap(formateurRange, modalRange)
+        );
+      });
+    });
+
+    overlappingFormateurs.length > 0
+      ? handleSuccess("Voici les Formateurs disponibles !")
+      : handleError("Pas de Formateurs disponibles !");
+    setFilteredData(overlappingFormateurs);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -181,6 +230,13 @@ function AllFormateurs() {
     setShowCertificat(true);
   };
 
+  const handleCloseCVModal = () => setShowCV(false);
+
+  const handleCVClick = (cv) => {
+    setCVToShow(cv);
+    setShowCV(true);
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -232,6 +288,11 @@ function AllFormateurs() {
                                 style={{ border: "none" }}
                                 value={columnName}
                                 onChange={(e) => {
+                                  e.target.options[5].selected
+                                    ? setShowDispoModal(true)
+                                    : setShowDispoModal(false);
+                                  !e.target.options[5].selected &&
+                                    setOtherFilters(true);
                                   return setColumnName(e.target.value);
                                 }}
                                 required
@@ -242,23 +303,33 @@ function AllFormateurs() {
                                 <option value="email">E-mail</option>
                                 <option value="type">Type</option>
                                 <option value="speciality">Spécialité</option>
+                                <option value="disponibility">
+                                  Disponibilité
+                                </option>
                               </Form.Select>
                             </InputGroup>
+                            <DisponibilityModal
+                              show={showDispoModal}
+                              handleClose={handleCloseDispoModal}
+                              handleCallback={handleCallback}
+                            />
                           </Form.Group>
                         </div>
                         <div className="input-field second-wrap">
                           <Form.Group>
                             <InputGroup>
-                              <Form.Control
-                                id="search"
-                                type="text"
-                                placeholder="Recherchez des administareurs ..."
-                                size="lg"
-                                name=""
-                                value={wordEntered}
-                                onChange={handleFilter}
-                                required
-                              />
+                              {!showDispoModal && (
+                                <Form.Control
+                                  id="search"
+                                  type="text"
+                                  placeholder="Recherchez des administareurs ..."
+                                  size="lg"
+                                  name=""
+                                  value={wordEntered}
+                                  onChange={handleFilter}
+                                  required
+                                />
+                              )}
                             </InputGroup>
                           </Form.Group>
                         </div>
@@ -281,6 +352,20 @@ function AllFormateurs() {
                           </button>
                         </div>
                       </div>
+                      {modalDates && !otherFilters && (
+                        <Card className="shadow-lg p-3 mb-2 mt-3 rounded">
+                          {modalDates.map((d, i) => (
+                            <div
+                              pill
+                              className="badge badge-outline-success badge-pill mb-2"
+                              key={i}
+                            >
+                              {moment(d.startDate).locale("fr").format("LL")} -{" "}
+                              {moment(d.endDate).locale("fr").format("LL")}
+                            </div>
+                          ))}
+                        </Card>
+                      )}
                     </Form>
                   </div>
                   <div className="table-responsive">
@@ -295,6 +380,8 @@ function AllFormateurs() {
                           <th>Type</th>
                           <th>Spécialité(s)</th>
                           <th>Certificats</th>
+                          <th>CV</th>
+                          <th>Disponibilité(s)</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -330,6 +417,39 @@ function AllFormateurs() {
                                       </Button>
                                     ))}
                                   </div>
+                                </td>
+                                <td style={{ width: "15%" }}>
+                                  <div className="d-flex flex-column justify-content-center">
+                                    <Button
+                                      onClick={() => handleCVClick(f.cv)}
+                                      className="btn btn-inverse-info btn-sm mb-2"
+                                    >
+                                      Fichier CV
+                                      <FaAddressCard
+                                        style={{ fontSize: "1.2em" }}
+                                      />
+                                    </Button>
+                                  </div>
+                                </td>
+                                <td>
+                                  {Array.isArray(f.disponibilities) &&
+                                    f.disponibilities.map((d, i) => {
+                                      const startDate = moment(d.startDate)
+                                        .locale("fr")
+                                        .format("LL");
+                                      const endDate = moment(d.endDate)
+                                        .locale("fr")
+                                        .format("LL");
+                                      return (
+                                        <div
+                                          pill
+                                          className="badge badge-outline-success badge-pill mb-2"
+                                          key={i}
+                                        >
+                                          <p>{`${startDate} - ${endDate}`}</p>
+                                        </div>
+                                      );
+                                    })}
                                 </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -397,6 +517,42 @@ function AllFormateurs() {
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
+                                      onClick={() => handleCVClick(f.cv)}
+                                      className="btn btn-inverse-info btn-sm"
+                                    >
+                                      Fichier CV
+                                      <FaAddressCard
+                                        style={{
+                                          fontSize: "1.2em",
+                                          marginLeft: "5%",
+                                        }}
+                                      />
+                                    </Button>
+                                  </div>
+                                </td>
+                                <td>
+                                  {Array.isArray(f.disponibilities) &&
+                                    f.disponibilities.map((d, i) => {
+                                      const startDate = moment(d.startDate)
+                                        .locale("fr")
+                                        .format("LL");
+                                      const endDate = moment(d.endDate)
+                                        .locale("fr")
+                                        .format("LL");
+                                      return (
+                                        <div
+                                          pill
+                                          className="badge badge-outline-success badge-pill mb-2"
+                                          key={i}
+                                        >
+                                          <p>{`${startDate} - ${endDate}`}</p>
+                                        </div>
+                                      );
+                                    })}
+                                </td>
+                                <td style={{ width: "15%" }}>
+                                  <div className="d-flex flex-column justify-content-center">
+                                    <Button
                                       variant="outline-primary"
                                       onClick={() => handleButtonEdit(f.id)}
                                       className="btn btn-sm mb-2"
@@ -458,6 +614,11 @@ function AllFormateurs() {
                     handleClose={handleCloseCertifModal}
                     certif={certifToShow}
                   />
+                  <CVModal
+                    show={showCV}
+                    handleClose={handleCloseCVModal}
+                    cv={cvToShow}
+                  />
                 </>
               )}
               {showCarousel && (
@@ -466,124 +627,176 @@ function AllFormateurs() {
                   className="shadow-lg p-5 mb-5 rounded"
                 >
                   {formateurs.length > 0 &&
-                    formateurs.map((f, idx) => (
-                      <Carousel.Item key={idx}>
-                        <div
-                          className="d-flex justify-content-end"
-                          style={{ marginRight: "5%" }}
-                        >
-                          <Button
-                            onClick={() => handleButtonEdit(f.id)}
-                            className="btn btn-sm m-1 btn-dark btn-rounded"
+                    formateurs.map((f, idx) => {
+                      let dispo = f.disponibilities;
+                      const object = {};
+                      dispo.forEach((obj, i) => {
+                        const key = `selection${i + 1}`;
+                        object[key] = {
+                          startDate: new Date(obj.startDate),
+                          endDate: new Date(obj.endDate),
+                          key: key,
+                        };
+                      });
+                      return (
+                        <Carousel.Item key={idx} className="row">
+                          <div
+                            className="d-flex justify-content-end row"
+                            style={{ marginRight: "5%" }}
                           >
-                            Modifier <i className="mdi mdi-tooltip-edit"></i>
-                          </Button>
-                          <Button
-                            onClick={() => handleDeleteFormateur(f.id)}
-                            className="btn btn-sm m-1 btn-rounded"
-                          >
-                            Supprimer <i className="mdi mdi-delete"></i>
-                          </Button>
-                        </div>
-                        <div className="m-5">
-                          <Card className="shadow-lg p-3 rounded">
-                            <Card.Body>
-                              <Card.Title>
-                                <h2>
-                                  {f.firstName} {f.lastName}
-                                </h2>
-                              </Card.Title>
-                              <Card.Text className="d-flex justify-content-evenly">
-                                <div className="mt-5">
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Adresse E-mail :
-                                    </span>{" "}
-                                    {f.email}
-                                  </p>
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Numéro de téléphone :
-                                    </span>{" "}
-                                    {f.phoneNumber}
-                                  </p>
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Nombre d'année d'expérience :
-                                    </span>{" "}
-                                    {f.experience}
-                                  </p>
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Type :
-                                    </span>{" "}
-                                    {f.type}
-                                  </p>
-                                  <p>
-                                    <span className="text-primary fw-bold">
-                                      Spécialité(s) :
-                                    </span>{" "}
-                                    {f.speciality}
-                                  </p>
-                                </div>
-                                <div className="solution_cards_box">
-                                  {f.certificats.length > 0 &&
-                                    f.certificats.map((certif) => (
+                            <Button
+                              onClick={() => handleButtonEdit(f.id)}
+                              className="btn btn-sm m-1 btn-dark btn-rounded col-lg-2 col-xs-12"
+                            >
+                              Modifier <i className="mdi mdi-tooltip-edit"></i>
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteFormateur(f.id)}
+                              className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
+                            >
+                              Supprimer <i className="mdi mdi-delete"></i>
+                            </Button>
+                          </div>
+                          <div className="m-lg-5 m-md-5 m-sm-0 m-xs-0 p-sm-0 p-xs-0">
+                            <Card className="shadow-lg p-3 rounded">
+                              <Card.Body>
+                                <Card.Title>
+                                  <h2>
+                                    {f.firstName} {f.lastName}
+                                  </h2>
+                                </Card.Title>
+                                <Card.Text className="d-flex justify-content-evenly row">
+                                  <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Adresse E-mail :
+                                      </span>{" "}
+                                      {f.email}
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Numéro de téléphone :
+                                      </span>{" "}
+                                      {f.phoneNumber}
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Nombre d'année d'expérience :
+                                      </span>{" "}
+                                      {f.experience}
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Type :
+                                      </span>{" "}
+                                      {f.type}
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Spécialité(s) :
+                                      </span>{" "}
+                                      {f.speciality}
+                                    </p>
+                                    <div className="d-flex flex-column justify-content-center m-5">
+                                      <h5>Disponibilité</h5>
+                                      <div style={{ position: "relative" }}>
+                                        <DateRange
+                                          ranges={Object.values(object)}
+                                          disabledDay={() => true}
+                                          editableDateInputs={true}
+                                          moveRangeOnFirstSelection={false}
+                                        />
+                                        <div
+                                          style={{
+                                            pointerEvents: "none",
+                                            opacity: 0.5,
+                                            position: "absolute",
+                                            top: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            left: 0,
+                                          }}
+                                        ></div>
+                                      </div>
+                                    </div>
+                                    <div className="solution_cards_box">
+                                      {f.certificats.length > 0 &&
+                                        f.certificats.map((certif) => (
+                                          <div className="solution_card">
+                                            <div className="hover_color_bubble"></div>
+                                            <div className="solu_title d-flex justify-content-between">
+                                              <h3>{certif.name}</h3>
+                                              <LiaCertificateSolid
+                                                style={{ fontSize: "4em" }}
+                                              />
+                                            </div>
+                                            <div className="solu_description">
+                                              <p>
+                                                Oraganisme de délivrance :{" "}
+                                                {certif.organisme}
+                                              </p>
+                                              <p>
+                                                Date d'obtention :{" "}
+                                                {certif.obtainedDate}
+                                              </p>
+                                              {certif.idCertificat && (
+                                                <p>
+                                                  ID du certficat :{" "}
+                                                  <button
+                                                    onClick={() =>
+                                                      (window.location.href =
+                                                        certif.idCertificat)
+                                                    }
+                                                  >
+                                                    Afficher l'ID{" "}
+                                                    <MdOutlineOpenInNew />
+                                                  </button>{" "}
+                                                </p>
+                                              )}
+                                              {certif.urlCertificat && (
+                                                <p>
+                                                  URL du certificat :{" "}
+                                                  <button
+                                                    onClick={() =>
+                                                      (window.location.href =
+                                                        certif.urlCertificat)
+                                                    }
+                                                  >
+                                                    Afficher l'URL{" "}
+                                                    <MdOutlineOpenInNew />
+                                                  </button>{" "}
+                                                </p>
+                                              )}
+                                            </div>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </div>
+                                  <div className="solution_cards_box col-sm-12 col-md-12 col-lg-6">
+                                    {f.cv && (
                                       <div className="solution_card">
                                         <div className="hover_color_bubble"></div>
                                         <div className="solu_title d-flex justify-content-between">
-                                          <h3>{certif.name}</h3>
-                                          <LiaCertificateSolid
-                                            style={{ fontSize: "4em" }}
-                                          />
+                                          <h3>{f.cv.slice(13)}</h3>
                                         </div>
                                         <div className="solu_description">
-                                          <p>
-                                            Oraganisme de délivrance :{" "}
-                                            {certif.organisme}
-                                          </p>
-                                          <p>
-                                            Date d'obtention :{" "}
-                                            {certif.obtainedDate}
-                                          </p>
-                                          {certif.idCertificat && (
-                                            <p>
-                                              ID du certficat :{" "}
-                                              <button
-                                                onClick={() =>
-                                                  (window.location.href =
-                                                    certif.idCertificat)
-                                                }
-                                              >
-                                                Afficher l'ID{" "}
-                                                <MdOutlineOpenInNew />
-                                              </button>{" "}
-                                            </p>
-                                          )}
-                                          {certif.urlCertificat && (
-                                            <p>
-                                              URL du certificat :{" "}
-                                              <button
-                                                onClick={() =>
-                                                  (window.location.href =
-                                                    certif.urlCertificat)
-                                                }
-                                              >
-                                                Afficher l'URL{" "}
-                                                <MdOutlineOpenInNew />
-                                              </button>{" "}
-                                            </p>
-                                          )}
+                                          <iframe
+                                            src={`http://localhost:8000/TrainersCV/${f.cv}`}
+                                            width="100%"
+                                            height="600px"
+                                            title="PDF Viewer"
+                                          ></iframe>
                                         </div>
                                       </div>
-                                    ))}
-                                </div>
-                              </Card.Text>
-                            </Card.Body>
-                          </Card>
-                        </div>
-                      </Carousel.Item>
-                    ))}
+                                    )}
+                                  </div>
+                                </Card.Text>
+                              </Card.Body>
+                            </Card>
+                          </div>
+                        </Carousel.Item>
+                      );
+                    })}
                 </Carousel>
               )}
             </div>

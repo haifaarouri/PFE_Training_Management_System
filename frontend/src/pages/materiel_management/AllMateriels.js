@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import {
   Accordion,
+  Badge,
   Card,
   Carousel,
   Form,
@@ -141,35 +142,35 @@ function AllMateriels() {
     u();
   }, [showModal]);
 
-  const handleDeleteMateriel = async (id) => {
-    Swal.fire({
-      title: "Êtes-vous sûr?",
-      text: "Vous ne pourrez pas revenir en arrière !",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Oui, supprimer!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const res = await deleteMateriel(id);
-          Swal.fire({
-            title: "Supprimé avec succès!",
-            text: "Matériel est supprimé !",
-            icon: "success",
-          });
-          const d = await fetchData();
-          setMateriaux(d);
-          handleSuccess(res.message);
-        } catch (error) {
-          if (error && error.response.status === 422) {
-            handleError(error.response.data.message);
-          }
-        }
-      }
-    });
-  };
+  // const handleDeleteMateriel = async (id) => {
+  //   Swal.fire({
+  //     title: "Êtes-vous sûr?",
+  //     text: "Vous ne pourrez pas revenir en arrière !",
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonColor: "#3085d6",
+  //     cancelButtonColor: "#d33",
+  //     confirmButtonText: "Oui, supprimer!",
+  //   }).then(async (result) => {
+  //     if (result.isConfirmed) {
+  //       try {
+  //         const res = await deleteMateriel(id);
+  //         Swal.fire({
+  //           title: "Supprimé avec succès!",
+  //           text: "Matériel est supprimé !",
+  //           icon: "success",
+  //         });
+  //         const d = await fetchData();
+  //         setMateriaux(d);
+  //         handleSuccess(res.message);
+  //       } catch (error) {
+  //         if (error && error.response.status === 422) {
+  //           handleError(error.response.data.message);
+  //         }
+  //       }
+  //     }
+  //   });
+  // };
 
   const prevPage = () => {
     if (currentPage !== 1) {
@@ -338,7 +339,13 @@ function AllMateriels() {
                                 </td>
                                 <td>{u.type}</td>
                                 <td>{u.quantityAvailable}</td>
-                                <td>{u.status}</td>
+                                <td>
+                                  {u.status === "HorsService" ? (
+                                    <Badge bg="danger">{u.status}</Badge>
+                                  ) : (
+                                    <Badge bg="success">{u.status}</Badge>
+                                  )}
+                                </td>
                                 <td>{u.cost} DT</td>
                                 <td>{u.purchaseDate}</td>
                                 <td>{u.supplier}</td>
@@ -366,14 +373,14 @@ function AllMateriels() {
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
-                                    <Button
+                                    {/* <Button
                                       onClick={() => handleDeleteMateriel(u.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
-                                    </Button>
+                                    </Button> */}
                                   </div>
                                 </td>
                                 <FileModal
@@ -408,7 +415,17 @@ function AllMateriels() {
                                 </td>
                                 <td>{u.type}</td>
                                 <td>{u.quantityAvailable}</td>
-                                <td>{u.status}</td>
+                                <td>
+                                  {u.status === "HorsService" ? (
+                                    <Badge bg="danger" pill style={{fontSize: "1rem"}}>
+                                      {u.status}
+                                    </Badge>
+                                  ) : (
+                                    <Badge bg="success" pill style={{fontSize: "1rem"}}>
+                                      {u.status}
+                                    </Badge>
+                                  )}
+                                </td>
                                 <td>{u.cost} DT</td>
                                 <td>{u.purchaseDate}</td>
                                 <td>{u.supplier}</td>
@@ -436,14 +453,14 @@ function AllMateriels() {
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
-                                    <Button
+                                    {/* <Button
                                       onClick={() => handleDeleteMateriel(u.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
-                                    </Button>
+                                    </Button> */}
                                   </div>
                                 </td>
                                 <FileModal
@@ -508,12 +525,12 @@ function AllMateriels() {
                           >
                             Modifier <i className="mdi mdi-tooltip-edit"></i>
                           </Button>
-                          <Button
+                          {/* <Button
                             onClick={() => handleDeleteMateriel(m.id)}
                             className="btn btn-sm m-1 btn-rounded"
                           >
                             Supprimer <i className="mdi mdi-delete"></i>
-                          </Button>
+                          </Button> */}
                         </div>
                         <div className="m-5">
                           <Card className="shadow-lg p-3 rounded">
@@ -565,7 +582,11 @@ function AllMateriels() {
                                     <span className="text-primary fw-bold">
                                       Etat :
                                     </span>{" "}
-                                    {m.status}
+                                    {m.status === "HorsService" ? (
+                                      <Badge bg="danger">{m.status}</Badge>
+                                    ) : (
+                                      <Badge bg="success">{m.status}</Badge>
+                                    )}
                                   </p>
                                 </div>
                                 <Accordion defaultActiveKey="0">

@@ -1,12 +1,12 @@
 import React, { useRef, useState } from "react";
-import { Modal, Button, Form, InputGroup } from "react-bootstrap";
+import { Modal, Button, Form, InputGroup, Alert } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
-// import DatePicker from "react-datepicker";
-// import "react-datepicker/dist/react-datepicker.css";
-// import "./datePicker.css";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "./datePicker.css";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
-// import { formatISO } from "date-fns";
+import { formatISO } from "date-fns";
 import { FaChalkboardTeacher, FaPhoneAlt, FaPlusCircle } from "react-icons/fa";
 import { TfiEmail } from "react-icons/tfi";
 import {
@@ -19,22 +19,42 @@ import { LiaCertificateSolid } from "react-icons/lia";
 import { GrOrganization } from "react-icons/gr";
 import { GiDiploma } from "react-icons/gi";
 import { PiCertificate } from "react-icons/pi";
+import { MdCloudUpload, MdDelete } from "react-icons/md";
+import { AiFillFileImage } from "react-icons/ai";
+import FileModal from "./FileModal";
 
 const FormateurModal = ({ show, handleClose }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  // const [disponibility, setDisponibility] = useState([
-  //   { startDate: null, endDate: null },
-  // ]);
+  const [disponibility, setDisponibility] = useState([
+    { startDate: null, endDate: null },
+  ]);
   const [experience, setExperience] = useState("");
   const [type, setType] = useState("");
-  const [speciality, setSpeciality] = useState("");
+  const [cv, setCv] = useState(null);
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const [showCertif, setShowCertif] = useState(false);
   const [certificates, setCertificates] = useState([]);
+  const [urlFile, setURLfile] = useState(null);
+  const [fileName, setFileName] = useState("");
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [specialities, setSpecialities] = useState([""]);
+
+  const handleShowFileModal = () => setShowFileModal(true);
+  const handleCloseFileModal = () => setShowFileModal(false);
+
+  const convertToBase64 = (file, callback) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => callback(reader.result);
+    reader.onerror = (error) => {
+      console.error("Error converting file to base64:", error);
+    };
+  };
 
   // Function to handle adding a new certificate
   const addCertificate = () => {
@@ -64,21 +84,29 @@ const FormateurModal = ({ show, handleClose }) => {
     setCertificates(newCertificates);
   };
 
-  // const handleDateChange = (dates, index) => {
-  //   const [start, end] = dates;
-  //   setDisponibility((current) =>
-  //     current?.map((range, i) =>
-  //       i === index ? { ...range, startDate: start, endDate: end } : range
-  //     )
-  //   );
-  // };
+  const handleDateChange = (dates, index) => {
+    const [start, end] = dates;
+    setDisponibility((current) =>
+      current?.map((range, i) =>
+        i === index ? { ...range, startDate: start, endDate: end } : range
+      )
+    );
+  };
 
-  // const addNewRange = () => {
-  //   setDisponibility((current) => [
-  //     ...current,
-  //     { startDate: null, endDate: null },
-  //   ]);
-  // };
+  const addNewRange = () => {
+    setDisponibility((current) => [
+      ...current,
+      { startDate: null, endDate: null },
+    ]);
+  };
+
+  const removeDisponibility = (index) => {
+    if (index !== 0) {
+      const newDisponibilities = [...disponibility];
+      newDisponibilities.splice(index, 1);
+      setDisponibility(newDisponibilities);
+    }
+  };
 
   const isWhitespace = (str) => {
     return str.trim() === "";
@@ -108,19 +136,23 @@ const FormateurModal = ({ show, handleClose }) => {
         isWhitespace(firstName) ||
         isWhitespace(lastName) ||
         isWhitespace(phoneNumber) ||
-        isWhitespace(speciality) ||
-        isWhitespace(firstName)
+        isWhitespace(email) ||
+        cv.size > 2000000
       ) {
         event.preventDefault();
         event.stopPropagation();
+        handleError("Fichier est trop volumineux !");
+        setErrorMsg(
+          "Fichier est trop volumineux ! La taille maximale est 2MB !"
+        );
       }
 
       setValidated(true);
 
-      // const formattedDisponibility = disponibility.map((range) => ({
-      //   startDate: formatISO(range.startDate, { representation: "date" }),
-      //   endDate: formatISO(range.endDate, { representation: "date" }),
-      // }));
+      const formattedDisponibility = disponibility.map((range) => ({
+        startDate: formatISO(range.startDate, { representation: "date" }),
+        endDate: formatISO(range.endDate, { representation: "date" }),
+      }));
 
       const formData = new FormData();
       formData.append("firstName", firstName);
@@ -130,12 +162,18 @@ const FormateurModal = ({ show, handleClose }) => {
       // formData.append("disponibility", JSON.stringify(formattedDisponibility));
       formData.append("experience", experience);
       formData.append("type", type);
-      formData.append("speciality", speciality);
+      formData.append("cv", cv);
       certificates.forEach((certificate, index) => {
         Object.keys(certificate).forEach((key) => {
           formData.append(`certificates[${index}][${key}]`, certificate[key]);
         });
       });
+      formattedDisponibility.forEach((d, index) => {
+        Object.keys(d).forEach((key) => {
+          formData.append(`disponibility[${index}][${key}]`, d[key]);
+        });
+      });
+      formData.append("specialities", JSON.stringify(specialities));
 
       if (!localStorage.getItem("token")) {
         const res = await axios.post("/api/add-formateur", formData, {
@@ -158,9 +196,10 @@ const FormateurModal = ({ show, handleClose }) => {
           setPhoneNumber("");
           setExperience("");
           setType("");
-          setSpeciality("");
+          setCv("");
           setCertificates([]);
-          // setDisponibility([{ startDate: null, endDate: null }]);
+          setSpecialities([""]);
+          setDisponibility([{ startDate: null, endDate: null }]);
 
           handleClose();
         }
@@ -192,8 +231,10 @@ const FormateurModal = ({ show, handleClose }) => {
           setPhoneNumber("");
           setExperience("");
           setType("");
-          setSpeciality("");
-          // setDisponibility([{ startDate: null, endDate: null }]);
+          setCv("");
+          setCertificates([]);
+          setSpecialities([""]);
+          setDisponibility([{ startDate: null, endDate: null }]);
 
           handleClose();
         }
@@ -216,6 +257,24 @@ const FormateurModal = ({ show, handleClose }) => {
         });
       }
     }
+  };
+
+  const addSpeciality = () => {
+    setSpecialities([...specialities, ""]);
+  };
+
+  const removeSpeciality = (index) => {
+    if (index !== 0) {
+      const newSpecialities = [...specialities];
+      newSpecialities.splice(index, 1);
+      setSpecialities(newSpecialities);
+    }
+  };
+
+  const handleSpecialityChange = (index, event) => {
+    const newSpecialities = [...specialities];
+    newSpecialities[index] = event.target.value;
+    setSpecialities(newSpecialities);
   };
 
   return (
@@ -350,22 +409,22 @@ const FormateurModal = ({ show, handleClose }) => {
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
-          {/* <Form.Group className="mb-3">
+          <Form.Group className="mb-3">
             <Form.Label>Disponibilité</Form.Label>
-            <InputGroup className="mb-3">
-              <InputGroup.Text id="inputGroup-sizing-default">
-                <div className="input-group-prepend bg-transparent">
-                  <span className="input-group-text bg-transparent border-right-0">
-                    <i
-                      className="mdi mdi-calendar-multiple-check text-primary"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </span>
-                </div>
-              </InputGroup.Text>
-              {disponibility.length > 0 &&
-                Array.isArray(disponibility) &&
-                disponibility.map((range, index) => (
+            {disponibility.length > 0 &&
+              Array.isArray(disponibility) &&
+              disponibility.map((range, index) => (
+                <InputGroup className="mb-3">
+                  <InputGroup.Text id="inputGroup-sizing-default">
+                    <div className="input-group-prepend bg-transparent">
+                      <span className="input-group-text bg-transparent border-right-0">
+                        <i
+                          className="mdi mdi-calendar-multiple-check text-primary"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </span>
+                    </div>
+                  </InputGroup.Text>
                   <DatePicker
                     name="disponibility"
                     customInput={
@@ -374,7 +433,7 @@ const FormateurModal = ({ show, handleClose }) => {
                           padding: "10px",
                           border: "none",
                           borderRadius: "4px",
-                          width: "600px",
+                          width: "590px",
                           height: "64px",
                         }}
                       />
@@ -388,7 +447,7 @@ const FormateurModal = ({ show, handleClose }) => {
                     isClearable
                     showYearDropdown
                     scrollableMonthYearDropdown
-                    placeholderText="Séléctionner les intervalles des dates de disponibilité de cette salle"
+                    placeholderText="Séléctionner les intervalles des dates de disponibilité de ce formateur"
                     monthsShown={2}
                     dateFormat="dd/MM/yyyy"
                     renderCustomHeader={({
@@ -453,19 +512,31 @@ const FormateurModal = ({ show, handleClose }) => {
                       </div>
                     )}
                   />
-                ))}
+                  <Form.Control.Feedback>
+                    Cela semble bon !
+                  </Form.Control.Feedback>
+                  <Form.Control.Feedback type="invalid">
+                    Veuillez sélectionner la disponibilité du formateur !
+                  </Form.Control.Feedback>
+                  {index !== 0 && (
+                    <Button
+                      onClick={() => removeDisponibility(index)}
+                      className="btn btn-info btn-rounded btn-inverse-danger"
+                    >
+                      <MdDeleteForever size={30} />
+                    </Button>
+                  )}
+                </InputGroup>
+              ))}
+            <div className="d-flex justify-content-end">
               <Button
-                className="btn btn-inverse-primary btn-rounded btn-icon"
+                className="mb-3 mt-0 btn btn-info btn-rounded btn-inverse-info"
                 onClick={addNewRange}
               >
-                <i className="mdi mdi-calendar-plus"></i>
+                Ajouter un intervalle <FaPlusCircle size={25} />
               </Button>
-              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-              <Form.Control.Feedback type="invalid">
-                Veuillez sélectionner la disponibilité de la salle !
-              </Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group> */}
+            </div>
+          </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Nombre d'année d'expérience</Form.Label>
             <InputGroup className="mb-3">
@@ -524,31 +595,154 @@ const FormateurModal = ({ show, handleClose }) => {
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Spécialité(s)</Form.Label>
-            <InputGroup className="mb-3">
-              <InputGroup.Text id="inputGroup-sizing-default">
-                <div className="input-group-prepend bg-transparent">
-                  <span className="input-group-text bg-transparent border-right-0">
-                    <MdWork
-                      className="text-primary"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </span>
-                </div>
-              </InputGroup.Text>
-              <Form.Control
-                name="speciality"
-                type="text"
-                placeholder="Saisir la ou les Spécialité(s)"
-                value={speciality}
-                onChange={(e) => setSpeciality(e.target.value)}
-                required
-              />
+            {specialities.map((speciality, index) => (
+              <InputGroup className="mb-3" key={index}>
+                <InputGroup.Text id="inputGroup-sizing-default">
+                  <div className="input-group-prepend bg-transparent">
+                    <span className="input-group-text bg-transparent border-right-0">
+                      <MdWork
+                        className="text-primary"
+                        style={{ fontSize: "1.5em" }}
+                      />
+                    </span>
+                  </div>
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="Saisir la spécialité"
+                  value={speciality}
+                  onChange={(e) => handleSpecialityChange(index, e)}
+                  required
+                />
+                <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid">
+                  Veuillez saisir la ou les Spécialité(s) du formateur !
+                </Form.Control.Feedback>
+                {index !== 0 && (
+                  <Button
+                    onClick={() => removeSpeciality(index)}
+                    className="btn btn-info btn-rounded btn-inverse-danger"
+                  >
+                    <MdDeleteForever size={30} />
+                  </Button>
+                )}
+              </InputGroup>
+            ))}
+          </Form.Group>
+          <div className="d-flex justify-content-end">
+            <Button
+              className="mb-3 mt-0 btn btn-info btn-rounded btn-inverse-info"
+              onClick={addSpeciality}
+            >
+              Ajouter une spécialité <FaPlusCircle size={25} />
+            </Button>
+          </div>
+          <Form.Group className="mb-3">
+            <Form.Label>CV</Form.Label>
+            <InputGroup className="mb-3 d-flex justify-content-center">
+              <div
+                className="d-flex flex-column justify-content-center align-items-center"
+                style={{
+                  border: "2px dashed #1475cf",
+                  cursor: "pointer",
+                  borderRadius: "5px",
+                  height: "150px",
+                  width: "100%",
+                }}
+                onClick={() => document.querySelector(".input-cv").click()}
+              >
+                <Form.Control
+                  hidden
+                  name="cv"
+                  type="file"
+                  accept=".pdf,.png,.jpeg,.jpg"
+                  placeholder="Sélectionner le cv"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setFileName(file.name);
+                      setCv(file);
+                      convertToBase64(file, (base64) => {
+                        setURLfile({ imgUpload: base64, fileType: file.type });
+                      });
+                      if (file.size > 2000000) {
+                        handleError("Fichier est trop volumineux !");
+                      }
+                    }
+                  }}
+                  required
+                  className="input-cv"
+                />
+                <Form.Text style={{ color: "#dc3545", fontWeight: "bold" }}>
+                  Taille maximale du fichier est 2MB
+                </Form.Text>
+                <MdCloudUpload color="#1475cf" size={60} />
+                <p>
+                  Sélectionner le CV du formateur au format pdf, png, jpeg ou
+                  jpg !
+                </p>
+              </div>
+              <section
+                className="d-flex justify-content-between align-items-center"
+                style={{
+                  margin: "10px 0",
+                  padding: "15px 20px",
+                  borderRadius: "5px",
+                  backgroundColor: "#e9f0ff",
+                }}
+              >
+                <AiFillFileImage color="#1475cf" />
+                <span>
+                  {fileName} -
+                  <MdDelete
+                    className="text-primary"
+                    style={{ fontSize: "1.2em" }}
+                    onClick={() => {
+                      setFileName("Aucun fichier sélectionné");
+                      setCv(null);
+                    }}
+                  />
+                </span>
+              </section>
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
-                Veuillez saisir la ou les Spécialité(s) du formateur !
+                Veuillez sélectionner les Spécifications Techniques du matériel
+                au format PDF !
               </Form.Control.Feedback>
+              <Button
+                onClick={handleShowFileModal}
+                className="btn btn-inverse-info btn-icon mt-3 mx-3"
+              >
+                <i
+                  className="mdi mdi-eye text-primary"
+                  style={{ fontSize: "1.5em" }}
+                />
+              </Button>
+              {errorMsg && <Alert variant="danger">{errorMsg}</Alert>}
             </InputGroup>
+            <div
+              style={{ display: "none", height: "25px" }}
+              className="progress mt-3"
+            >
+              <div
+                className="progress-bar progress-bar-striped progress-bar-animated"
+                role="progressbar"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style={{ width: "0%", height: "100%" }}
+              >
+                0%
+              </div>
+            </div>
           </Form.Group>
+          <FileModal
+            show={showFileModal}
+            handleClose={handleCloseFileModal}
+            selectedFile={cv}
+            urlFile={urlFile}
+            fileContent="CV"
+          />
           <Button
             className="mt-3 btn-icon-text btn-icon-prepend btn-info"
             style={{ color: "white" }}

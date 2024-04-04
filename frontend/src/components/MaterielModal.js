@@ -50,18 +50,6 @@ const MaterielModal = ({ show, handleClose }) => {
       theme: "light",
     });
 
-  const handleSuccess = (msg) =>
-    toast.success(msg, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-
   // This function converts a file to a base64 string
   const convertToBase64 = (file, callback) => {
     const reader = new FileReader();

@@ -17,6 +17,7 @@ class Formateur extends Model
         'speciality',
         'experience',
         'type',
+        'cv'
     ];
 
     protected static function boot()
@@ -34,4 +35,8 @@ class Formateur extends Model
         return $this->hasMany(Certificat::class, 'formateur_id', 'id');
     }
 
+    public function disponibilities()
+    {
+        return $this->hasMany(Disponibility::class, 'formateur_id', 'id');
+    }
 }

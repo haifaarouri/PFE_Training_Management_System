@@ -13,16 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('formateurs', function (Blueprint $table) {
+        Schema::create('disponibilities', function (Blueprint $table) {
             $table->id();
-            $table->string('firstName');
-            $table->string('lastName');
-            $table->string('email')->unique();
-            $table->string('phoneNumber');
-            $table->string('speciality');
-            $table->integer('experience');
-            $table->string('type');
-            $table->string('cv');
+            $table->date('startDate');
+            $table->date('endDate');
+            $table->unsignedBigInteger('formateur_id')->nullable();
+            $table->foreign('formateur_id')->references('id')->on('formateurs')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -34,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('formateurs');
+        Schema::dropIfExists('disponibilities');
     }
 };

@@ -2,7 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
 
-const FileModal = ({ show, handleClose, selectedFile, urlFile }) => {
+const FileModal = ({
+  show,
+  handleClose,
+  selectedFile,
+  urlFile,
+  fileContent,
+}) => {
   const [docs, setDocs] = useState([
     {
       uri: "",
@@ -17,6 +23,24 @@ const FileModal = ({ show, handleClose, selectedFile, urlFile }) => {
       switch (urlFile.fileType) {
         case "application/pdf":
           fileTypeResult = "pdf";
+          break;
+        case "application/doc":
+          fileTypeResult = "doc";
+          break;
+        case "application/docx":
+          fileTypeResult = "docx";
+          break;
+        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+          fileTypeResult = "docx";
+          break;
+        case "image/png":
+          fileTypeResult = "png";
+          break;
+        case "image/jpeg":
+          fileTypeResult = "jpeg";
+          break;
+        case "image/jpg":
+          fileTypeResult = "jpg";
           break;
         default:
           fileTypeResult = "unknown";
@@ -44,7 +68,9 @@ const FileModal = ({ show, handleClose, selectedFile, urlFile }) => {
       <Modal.Header closeButton>
         <Modal.Title>
           <h5 className="modal-title">
-            Fichier sélectionné pour les spécifications techniques du matériel
+            {fileContent === "CV"
+              ? "CV du formateur"
+              : "Fichier sélectionné pour les spécifications techniques du matériel"}
           </h5>
         </Modal.Title>
       </Modal.Header>
