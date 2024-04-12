@@ -104,7 +104,7 @@ const EditFormateur = () => {
       formateurData.certificats.length > 0 &&
         setCertificates(formateurData.certificats);
       setSpecialities(formateurData.speciality.split(","));
-      console.log(formateurData);
+      setCv(formateurData.cv);
     };
 
     if (id) {

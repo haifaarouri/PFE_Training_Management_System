@@ -20,6 +20,7 @@ import AllMateriels from "./pages/materiel_management/AllMateriels";
 import EditMateriel from "./pages/materiel_management/EditMateriel";
 import AllFormateurs from "./pages/formateur_management/AllFormateurs";
 import EditFormateur from "./pages/formateur_management/EditFormateur";
+import AllCommandes from "./pages/commande_management/AllCommandes";
 
 function App() {
   return (
@@ -157,6 +158,25 @@ function App() {
                 ]}
               >
                 <EditFormateur />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/commandes"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <AllCommandes />
               </RequireAuth>
             }
           />

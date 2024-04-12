@@ -100,12 +100,12 @@ function SideBar() {
             <span className="menu-title">Gestion des Formateurs</span>
           </Link>
         </li>
-        {/*<li className="nav-item">
-          <Link className="nav-link" to="pages/icons/mdi.html">
-            <i className="mdi mdi-emoticon menu-icon" />
-            <span className="menu-title">Icons</span>
+        <li className="nav-item">
+          <Link className="nav-link" to="/commandes">
+            <i className="mdi mdi-cart menu-icon" />
+            <span className="menu-title">Gestions des commandes</span>
           </Link>
-        </li> */}
+        </li>
         {/* <li className="nav-item sidebar-category">
           <p>Pages</p>
           <span />

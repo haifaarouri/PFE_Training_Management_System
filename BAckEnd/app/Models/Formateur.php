@@ -24,9 +24,10 @@ class Formateur extends Model
     {
         parent::boot();
 
-        // Before deleting a Formateur model, delete all related Certificat models
+        // Before deleting a Formateur model, delete all related Certificat models and disponibilities
         static::deleting(function ($formateur) {
             $formateur->certificats()->delete();
+            $formateur->disponibilities()->delete();
         });
     }
 

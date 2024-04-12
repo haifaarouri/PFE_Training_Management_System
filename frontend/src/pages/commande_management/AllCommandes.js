@@ -4,33 +4,22 @@ import Button from "react-bootstrap/Button";
 import { Card, Carousel, Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
-import {
-  deleteFormateur,
-  fetchAllFormateurs,
-} from "../../services/FormateurServices";
-import FormateurModal from "../../components/FormateurModal";
-import CertifModal from "../../components/CertifModel";
-import { LiaCertificateSolid } from "react-icons/lia";
-import { MdOutlineOpenInNew } from "react-icons/md";
-import { FaAddressCard } from "react-icons/fa";
-import CVModal from "../../components/CVModal";
-import moment from "moment";
-import { DateRange } from "react-date-range";
-import DisponibilityModal from "../../components/DisponibilityModal";
+import CommandeModal from "../../components/CommandeModal";
+import { fetchAllCommandes } from "../../services/CommandeServices";
 require("moment/locale/fr");
 
-function AllFormateurs() {
-  const [formateurs, setFormateurs] = useState([]);
+function AllCommandes() {
+  const [commandes, setCommandes] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const formateursPerPage = 2;
-  const lastIndex = currentPage * formateursPerPage;
-  const firstIndex = lastIndex - formateursPerPage;
-  const formateursPage =
-    formateurs.length > 0 && formateurs.slice(firstIndex, lastIndex);
+  const commandesPerPage = 2;
+  const lastIndex = currentPage * commandesPerPage;
+  const firstIndex = lastIndex - commandesPerPage;
+  const commandesPage =
+    commandes.length > 0 && commandes.slice(firstIndex, lastIndex);
   const numberPages = Math.ceil(
-    formateurs.length > 0 && formateurs.length / formateursPerPage
+    commandes.length > 0 && commandes.length / commandesPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
@@ -38,57 +27,11 @@ function AllFormateurs() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
-  const [showCertificat, setShowCertificat] = useState(false);
-  const [certifToShow, setCertifToShow] = useState(null);
-  const [showCV, setShowCV] = useState(false);
-  const [cvToShow, setCVToShow] = useState(null);
-  const [showDispoModal, setShowDispoModal] = useState(false);
-  const [modalDates, setModalDates] = useState(null);
-  const [otherFilters, setOtherFilters] = useState(false);
-
-  const handleCloseDispoModal = () => setShowDispoModal(false);
-
-  const handleCallback = (childData) => {
-    setModalDates(childData);
-    // Parse childData dates to moment for easier comparison
-    const modalRanges = childData.map((range) => ({
-      startDate: moment(range.startDate),
-      endDate: moment(range.endDate),
-    }));
-
-    // Function to check if two date ranges overlap (range 2 inculs dans range1)
-    const rangesOverlap = (range1, range2) => {
-      return (
-        range2.startDate.isBefore(range1.endDate) &&
-        range2.endDate.isBefore(range1.endDate) &&
-        range2.endDate.isAfter(range1.startDate) &&
-        range2.startDate.isAfter(range1.startDate)
-      );
-    };
-
-    // Compare each modal range with each formateur's disponibility range
-    const overlappingFormateurs = formateurs.filter((formateur) => {
-      return formateur.disponibilities.some((dispo) => {
-        const formateurRange = {
-          startDate: moment(dispo.startDate, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
-          endDate: moment(dispo.endDate, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
-        };
-        return modalRanges.some((modalRange) =>
-          rangesOverlap(formateurRange, modalRange)
-        );
-      });
-    });
-
-    overlappingFormateurs.length > 0
-      ? handleSuccess("Voici les Formateurs disponibles !")
-      : handleError("Pas de Formateurs disponibles !");
-    setFilteredData(overlappingFormateurs);
-  };
-
+console.log(commandes);
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setFormateurs(d);
+      setCommandes(d);
     };
 
     u();
@@ -99,19 +42,19 @@ function AllFormateurs() {
     setWordEntered(searchWord);
     if (columnName && columnName !== "Colonne") {
       const newFilter =
-        formateurs.length > 0 &&
-        formateurs.filter((formateur) =>
-          formateur[columnName].toLowerCase().includes(searchWord.toLowerCase())
+        commandes.length > 0 &&
+        commandes.filter((Commande) =>
+          Commande[columnName].toLowerCase().includes(searchWord.toLowerCase())
         );
       setFilteredData(newFilter);
     } else {
       const newFilter =
-        formateurs.length > 0 &&
-        formateurs.filter((formateur) => {
-          const formateurFields = Object.values(formateur)
+        commandes.length > 0 &&
+        commandes.filter((Commande) => {
+          const CommandeFields = Object.values(Commande)
             .join(" ")
             .toLowerCase();
-          return formateurFields.includes(searchWord);
+          return CommandeFields.includes(searchWord);
         });
       setFilteredData(newFilter);
     }
@@ -145,57 +88,57 @@ function AllFormateurs() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-formateur/${id}`);
+    navigate(`/edit-Commande/${id}`);
   };
 
   const fetchData = async () => {
     try {
-      const response = await fetchAllFormateurs();
+      const response = await fetchAllCommandes();
 
       return response;
     } catch (error) {
-      console.log("Error fetching formateurs :", error);
+      console.log("Error fetching Commandes :", error);
     }
   };
 
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setFormateurs(d);
+      setCommandes(d);
     };
 
     u();
   }, [showModal]);
 
-  const handleDeleteFormateur = async (id) => {
-    Swal.fire({
-      title: "Êtes-vous sûr?",
-      text: "Vous ne pourrez pas revenir en arrière !",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Oui, supprimer!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const res = await deleteFormateur(id);
-          Swal.fire({
-            title: "Supprimé avec succès!",
-            text: "Formateur est supprimé !",
-            icon: "success",
-          });
-          const d = await fetchData();
-          setFormateurs(d);
-          handleSuccess(res.message);
-        } catch (error) {
-          if (error && error.response.status === 422) {
-            handleError(error.response.data.message);
-          }
-        }
-      }
-    });
-  };
+  //   const handleDeleteCommande = async (id) => {
+  //     Swal.fire({
+  //       title: "Êtes-vous sûr?",
+  //       text: "Vous ne pourrez pas revenir en arrière !",
+  //       icon: "warning",
+  //       showCancelButton: true,
+  //       confirmButtonColor: "#3085d6",
+  //       cancelButtonColor: "#d33",
+  //       confirmButtonText: "Oui, supprimer!",
+  //     }).then(async (result) => {
+  //       if (result.isConfirmed) {
+  //         try {
+  //           const res = await deleteCommande(id);
+  //           Swal.fire({
+  //             title: "Supprimé avec succès!",
+  //             text: "Commande est supprimé !",
+  //             icon: "success",
+  //           });
+  //           const d = await fetchData();
+  //           setCommandes(d);
+  //           handleSuccess(res.message);
+  //         } catch (error) {
+  //           if (error && error.response.status === 422) {
+  //             handleError(error.response.data.message);
+  //           }
+  //         }
+  //       }
+  //     });
+  //   };
 
   const prevPage = () => {
     if (currentPage !== 1) {
@@ -223,20 +166,6 @@ function AllFormateurs() {
     setShowList(false);
   };
 
-  const handleCloseCertifModal = () => setShowCertificat(false);
-
-  const handleCertifClick = (certif) => {
-    setCertifToShow(certif);
-    setShowCertificat(true);
-  };
-
-  const handleCloseCVModal = () => setShowCV(false);
-
-  const handleCVClick = (cv) => {
-    setCVToShow(cv);
-    setShowCV(true);
-  };
-
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -246,14 +175,14 @@ function AllFormateurs() {
               <ToastContainer />
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
-                  Liste de tous les formateurs
+                  Liste de toutes les commandes
                 </h4>
                 <Button
                   variant="outline-success"
                   className="btn btn-sm m-3 mt-1"
                   onClick={handleShowAddModal}
                 >
-                  Ajouter un Formateur
+                  Ajouter une Commande
                 </Button>
               </div>
               <div className="d-flex justify-content-end px-3 py-3">
@@ -272,7 +201,7 @@ function AllFormateurs() {
                   </Button>
                 </div>
               </div>
-              <FormateurModal
+              <CommandeModal
                 show={showModal}
                 handleClose={handleCloseAddModal}
               />
@@ -288,13 +217,6 @@ function AllFormateurs() {
                                 style={{ border: "none" }}
                                 value={columnName}
                                 onChange={(e) => {
-                                  if (e.target.options[6].selected) {
-                                    setShowDispoModal(true);
-                                    setOtherFilters(false);
-                                  } else {
-                                    setShowDispoModal(false);
-                                    setOtherFilters(true);
-                                  }
                                   return setColumnName(e.target.value);
                                 }}
                                 required
@@ -309,29 +231,6 @@ function AllFormateurs() {
                                   Disponibilité
                                 </option>
                               </Form.Select>
-                            </InputGroup>
-                            <DisponibilityModal
-                              show={showDispoModal}
-                              handleClose={handleCloseDispoModal}
-                              handleCallback={handleCallback}
-                            />
-                          </Form.Group>
-                        </div>
-                        <div className="input-field second-wrap">
-                          <Form.Group>
-                            <InputGroup>
-                              {!showDispoModal && (
-                                <Form.Control
-                                  id="search"
-                                  type="text"
-                                  placeholder="Recherchez des administareurs ..."
-                                  size="lg"
-                                  name=""
-                                  value={wordEntered}
-                                  onChange={handleFilter}
-                                  required
-                                />
-                              )}
                             </InputGroup>
                           </Form.Group>
                         </div>
@@ -354,101 +253,46 @@ function AllFormateurs() {
                           </button>
                         </div>
                       </div>
-                      {modalDates && !otherFilters && (
-                        <Card className="shadow-lg p-3 mb-2 mt-3 rounded">
-                          {modalDates.map((d, i) => (
-                            <div
-                              pill
-                              className="badge badge-outline-success badge-pill mb-2"
-                              key={i}
-                            >
-                              {moment(d.startDate).locale("fr").format("LL")} -{" "}
-                              {moment(d.endDate).locale("fr").format("LL")}
-                            </div>
-                          ))}
-                        </Card>
-                      )}
                     </Form>
                   </div>
                   <div className="table-responsive">
                     <table className="table table-striped table-hover">
                       <thead>
                         <tr>
-                          <th>Nom</th>
-                          <th>Prénom</th>
-                          <th>E-mail</th>
-                          <th>Numéro de téléphone</th>
-                          <th>Nombre d'année d'expérience</th>
-                          <th>Type</th>
-                          <th>Spécialité(s)</th>
-                          <th>Certificats</th>
-                          <th>CV</th>
-                          <th>Disponibilité(s)</th>
+                          <th>Date</th>
+                          <th>Etat</th>
+                          <th>Quantité</th>
+                          <th>Mode de Paiement</th>
+                          <th>Total</th>
+                          <th>Produits</th>
+                          <th>Furnisseurs</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      {/* <tbody>
                         {filteredData.length > 0 ? (
-                          filteredData.map((f, index) => {
+                          filteredData.map((c, index) => {
                             return (
                               <tr key={index} className="text-center">
                                 <td>
-                                  <h6>{f.lastName}</h6>
+                                  <h6>{c.date}</h6>
                                 </td>
                                 <td>
-                                  <h6>{f.firstName}</h6>
+                                  <h6>{c.status}</h6>
                                 </td>
-                                <td>{f.email}</td>
-                                <td>{f.phoneNumber}</td>
-                                <td style={{ width: "5%" }}>{f.experience}</td>
-                                <td>{f.type}</td>
-                                <td>{f.speciality}</td>
-                                <td style={{ width: "15%" }}>
-                                  <div className="d-flex flex-column justify-content-center">
-                                    {f.certificats.map((c, i) => (
-                                      <Button
-                                        onClick={() => handleCertifClick(c)}
-                                        className="btn btn-inverse-success btn-sm mb-2"
-                                        key={i}
-                                      >
-                                        {c.name}{" "}
-                                        <i
-                                          className="mdi mdi-certificate"
-                                          style={{ fontSize: "1.2em" }}
-                                        />{" "}
-                                      </Button>
-                                    ))}
-                                  </div>
-                                </td>
-                                <td style={{ width: "15%" }}>
-                                  <div className="d-flex flex-column justify-content-center">
-                                    <Button
-                                      onClick={() => handleCVClick(f.cv)}
-                                      className="btn btn-inverse-info btn-sm mb-2"
-                                    >
-                                      Fichier CV
-                                      <FaAddressCard
-                                        style={{ fontSize: "1.2em" }}
-                                      />
-                                    </Button>
-                                  </div>
-                                </td>
+                                <td>{c.quantity}</td>
+                                <td>{c.payementMethod}</td>
+                                <td>{c.total}</td>
                                 <td>
-                                  {Array.isArray(f.disponibilities) &&
-                                    f.disponibilities.map((d, i) => {
-                                      const startDate = moment(d.startDate)
-                                        .locale("fr")
-                                        .format("LL");
-                                      const endDate = moment(d.endDate)
-                                        .locale("fr")
-                                        .format("LL");
+                                   {Array.isArray(c.produits) &&
+                                    c.produits.map((d, i) => {
                                       return (
                                         <div
                                           pill
                                           className="badge badge-outline-success badge-pill mb-2"
                                           key={i}
                                         >
-                                          <p>{`${startDate} - ${endDate}`}</p>
+                                           <p>{`${startDate} - ${endDate}`}</p>
                                         </div>
                                       );
                                     })}
@@ -457,16 +301,16 @@ function AllFormateurs() {
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       variant="outline-primary"
-                                      onClick={() => handleButtonEdit(f.id)}
+                                      onClick={() => handleButtonEdit(c.id)}
                                       className="btn btn-sm mb-2"
                                     >
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      onClick={() =>
-                                        handleDeleteFormateur(f.id)
-                                      }
+                                      //   onClick={
+                                      // handleDeleteCommande(c.id)
+                                      //   }
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -479,79 +323,32 @@ function AllFormateurs() {
                             );
                           })
                         ) : filteredData.length === 0 &&
-                          formateurs.length === 0 ? (
+                          commandes.length === 0 ? (
                           <></>
                         ) : (
-                          formateurs.length > 0 &&
-                          formateursPage.map((f, index) => {
+                          commandes.length > 0 &&
+                          commandesPage.map((c, index) => {
                             return (
                               <tr key={index} className="text-center">
                                 <td>
-                                  <h6>{f.lastName}</h6>
+                                  <h6>{c.date}</h6>
                                 </td>
                                 <td>
-                                  <h6>{f.firstName}</h6>
+                                  <h6>{c.status}</h6>
                                 </td>
-                                <td>{f.email}</td>
-                                <td>{f.phoneNumber}</td>
-                                <td style={{ width: "5%" }}>{f.experience}</td>
-                                <td>{f.type}</td>
-                                <td>{f.speciality}</td>
-                                <td style={{ width: "15%" }}>
-                                  <div className="d-flex flex-column justify-content-center">
-                                    {f.certificats.map((c, i) => {
-                                      return (
-                                        <Button
-                                          onClick={() => handleCertifClick(c)}
-                                          className="btn btn-inverse-success btn-sm mb-2"
-                                          key={i}
-                                        >
-                                          {c.name}{" "}
-                                          <i
-                                            className="mdi mdi-certificate"
-                                            style={{ fontSize: "1.2em" }}
-                                          />{" "}
-                                        </Button>
-                                      );
-                                    })}
-                                  </div>
-                                </td>
-                                <td style={{ width: "15%" }}>
-                                  <div className="d-flex flex-column justify-content-center">
-                                    {f.cv !== null ? (
-                                      <Button
-                                        onClick={() => handleCVClick(f.cv)}
-                                        className="btn btn-inverse-info btn-sm"
-                                      >
-                                        Fichier CV
-                                        <FaAddressCard
-                                          style={{
-                                            fontSize: "1.2em",
-                                            marginLeft: "5%",
-                                          }}
-                                        />
-                                      </Button>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </div>
-                                </td>
+                                <td>{c.quantity}</td>
+                                <td>{c.payementMethod}</td>
+                                <td>{c.total}</td>
                                 <td>
-                                  {Array.isArray(f.disponibilities) &&
-                                    f.disponibilities.map((d, i) => {
-                                      const startDate = moment(d.startDate)
-                                        .locale("fr")
-                                        .format("LL");
-                                      const endDate = moment(d.endDate)
-                                        .locale("fr")
-                                        .format("LL");
+                                {Array.isArray(c.produits) &&
+                                    c.produits.map((d, i) => {
                                       return (
                                         <div
                                           pill
                                           className="badge badge-outline-success badge-pill mb-2"
                                           key={i}
                                         >
-                                          <p>{`${startDate} - ${endDate}`}</p>
+                                           <p>{`${startDate} - ${endDate}`}</p>
                                         </div>
                                       );
                                     })}
@@ -560,16 +357,16 @@ function AllFormateurs() {
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       variant="outline-primary"
-                                      onClick={() => handleButtonEdit(f.id)}
+                                      onClick={() => handleButtonEdit(c.id)}
                                       className="btn btn-sm mb-2"
                                     >
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      onClick={() =>
-                                        handleDeleteFormateur(f.id)
-                                      }
+                                      //   onClick={
+                                      // handleDeleteCommande(c.id)
+                                      //   }
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -582,7 +379,7 @@ function AllFormateurs() {
                             );
                           })
                         )}
-                      </tbody>
+                      </tbody> */}
                     </table>
                   </div>
                   <Pagination className="d-flex justify-content-center mt-5">
@@ -615,25 +412,15 @@ function AllFormateurs() {
                       />
                     </Pagination.Next>
                   </Pagination>
-                  <CertifModal
-                    show={showCertificat}
-                    handleClose={handleCloseCertifModal}
-                    certif={certifToShow}
-                  />
-                  <CVModal
-                    show={showCV}
-                    handleClose={handleCloseCVModal}
-                    cv={cvToShow}
-                  />
                 </>
               )}
-              {showCarousel && (
+              {/* {showCarousel && (
                 <Carousel
                   style={{ backgroundColor: "#D2D8EB" }}
                   className="shadow-lg p-5 mb-5 rounded"
                 >
-                  {formateurs.length > 0 &&
-                    formateurs.map((f, idx) => {
+                  {commandes.length > 0 &&
+                    commandes.map((f, idx) => {
                       let dispo = f.disponibilities;
                       const object = {};
                       dispo.forEach((obj, i) => {
@@ -657,7 +444,7 @@ function AllFormateurs() {
                               Modifier <i className="mdi mdi-tooltip-edit"></i>
                             </Button>
                             <Button
-                              onClick={() => handleDeleteFormateur(f.id)}
+                            //   onClick={() => handleDeleteCommande(f.id)}
                               className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
                             >
                               Supprimer <i className="mdi mdi-delete"></i>
@@ -804,7 +591,7 @@ function AllFormateurs() {
                       );
                     })}
                 </Carousel>
-              )}
+              )} */}
             </div>
           </div>
         </div>
@@ -813,4 +600,4 @@ function AllFormateurs() {
   );
 }
 
-export default AllFormateurs;
+export default AllCommandes;

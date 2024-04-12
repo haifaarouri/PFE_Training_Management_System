@@ -45,13 +45,14 @@ export const editFormateur = async (id, formData) => {
     } else {
       const headers = {
         "Content-Type": "multipart/form-data",
+        Accept: "application/json",
+        withCredentials: true,
       };
 
       const token = localStorage.getItem("token");
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
-
       const response = await axios.post(
         `/api/update-formateur/${id}`,
         formData,

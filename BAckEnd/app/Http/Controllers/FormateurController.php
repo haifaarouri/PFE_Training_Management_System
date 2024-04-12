@@ -172,7 +172,6 @@ class FormateurController extends Controller
                 }
 
                 if ($request->has('certificates') && is_array($request->input('certificates'))) {
-                    $certificatesData = [];
                     foreach ($request->input('certificates') as $certificate) {
                         $validator = Validator::make($certificate, [
                             'name' => 'required|string|max:255',
@@ -186,35 +185,46 @@ class FormateurController extends Controller
                             return response()->json(['error' => $validator->errors()], 400);
                         }
 
-                        $certificate = $formateur->certificats()->updateOrCreate(
-                            ['idCertificat' => $certificate['idCertificat'] ?? null],
-                            $certificate
-                        );
+                        // Update certificates
+                        $incomingCertificates = $request->input('certificates', []);
+                        $currentCertificates = $formateur->certificats()->get()->keyBy('id');
+
+                        foreach ($incomingCertificates as $certificateData) {
+                            $certificateId = $certificateData['id'] ?? null;
+                            if ($certificateId && $currentCertificates->has($certificateId)) {
+                                // Update existing certificate
+                                $currentCertificates[$certificateId]->update($certificateData);
+                                $currentCertificates->forget($certificateId); // Remove from the collection to avoid deleting later
+                            } else {
+                                // Create new certificate
+                                $formateur->certificats()->create($certificateData);
+                            }
+                        }
+
+                        // Delete any certificates not included in the incoming data
+                        foreach ($currentCertificates as $certificate) {
+                            $certificate->delete();
+                        }
                     }
                 }
 
                 if ($request->has('disponibility') && is_array($request->input('disponibility'))) {
 
-                    $disponibilitiesArray = $request->disponibility;
-                    $disponibilitiesObjects = array_map(function ($disponibility) {
-                        return (object) $disponibility;
-                    }, $disponibilitiesArray);
+                    $incomingDisponibilities = $request->input('disponibility', []);
+                    $currentDisponibilities = $formateur->disponibilities()->get()->keyBy('id');
 
-                    foreach ($disponibilitiesObjects as $disponibility) {
+                    foreach ($incomingDisponibilities as $disponibilityData) {
+                        $disponibilityId = $disponibilityData['id'] ?? null;
+                        if ($disponibilityId && $currentDisponibilities->has($disponibilityId)) {
+                            $currentDisponibilities[$disponibilityId]->update($disponibilityData);
+                            $currentDisponibilities->forget($disponibilityId);
+                        } else {
+                            $formateur->disponibilities()->create($disponibilityData);
+                        }
+                    }
 
-                        $identifier = [
-                            'formateur_id' => $formateur->id,
-                            'startDate' => $disponibility->startDate,
-                            'endDate' => $disponibility->endDate,
-                        ];
-
-                        $disponibility = $formateur->disponibilities()->updateOrCreate(
-                            $identifier,
-                            [
-                                'startDate' => new DateTime($disponibility->startDate, new DateTimeZone('UTC')),
-                                'endDate' => new DateTime($disponibility->endDate, new DateTimeZone('UTC'))
-                            ]
-                        );
+                    foreach ($currentDisponibilities as $disponibility) {
+                        $disponibility->delete();
                     }
                 }
 
