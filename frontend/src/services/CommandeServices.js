@@ -15,6 +15,34 @@ export const fetchAllCommandes = async () => {
   }
 };
 
+export const fetchAllProducts = async () => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get("/api/products");
+      return response.data;
+    } else {
+      const response = await apiFetch("products");
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching Products :", error);
+  }
+};
+
+export const fetchAllSuppliers = async () => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get("/api/suppliers");
+      return response.data;
+    } else {
+      const response = await apiFetch("suppliers");
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching suppliers :", error);
+  }
+};
+
 // export const fetchCommandeById = async (id) => {
 //   try {
 //     if (!localStorage.getItem("token")) {

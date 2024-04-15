@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
             $table->date('date');
-            $table->string('status');
+            $table->string('status')->default("Brouillon");
             $table->integer('quantity');
             $table->string('paymentMethod');
             $table->double('total');

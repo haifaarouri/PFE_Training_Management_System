@@ -21,8 +21,12 @@ import EditMateriel from "./pages/materiel_management/EditMateriel";
 import AllFormateurs from "./pages/formateur_management/AllFormateurs";
 import EditFormateur from "./pages/formateur_management/EditFormateur";
 import AllCommandes from "./pages/commande_management/AllCommandes";
+import EditCommande from "./pages/commande_management/EditCommande"
 
 function App() {
+  const persistRootData = localStorage.getItem("persist:root");
+  const storedUser = persistRootData ? JSON.parse(persistRootData).user : null;
+
   return (
     <div className="App">
       <Routes>
@@ -180,6 +184,25 @@ function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="/edit-commande/:id"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <EditCommande />
+              </RequireAuth>
+            }
+          />
           <Route path="/super-admin">
             <Route
               path="users"
@@ -227,7 +250,11 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Navigate to="/login" />} />
+          {storedUser ? (
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          ) : (
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          )}
           <Route path="/password-reset/:token" element={<ResetPassword />} />
         </Route>
         <Route
@@ -241,6 +268,7 @@ function App() {
           element={<EmailVerification />}
         />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
+        <Route path="*" element={<Unauthorized status="404" />} />
       </Routes>
     </div>
   );

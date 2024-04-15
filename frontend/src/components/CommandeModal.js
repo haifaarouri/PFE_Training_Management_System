@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Modal, Button, Form, InputGroup, Row, Col } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "../services/axios";
@@ -21,10 +21,9 @@ import { FcRules } from "react-icons/fc";
 import { SiBandsintown, SiOpenstreetmap } from "react-icons/si";
 import { PiFileZipDuotone } from "react-icons/pi";
 import { BsFillPinMapFill } from "react-icons/bs";
+import { fetchAllSuppliers } from "../services/CommandeServices";
 
 const CommandeModal = ({ show, handleClose }) => {
-  const [date, setDate] = useState("");
-  const [status, setStatus] = useState("");
   const [quantity, setQuantity] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [validated, setValidated] = useState(false);
@@ -32,6 +31,41 @@ const CommandeModal = ({ show, handleClose }) => {
   const [produits, setProduits] = useState([]);
   const [total, setTotal] = useState([""]);
   const [showProduct, setShowProduct] = useState(false);
+  var curr = new Date();
+  curr.setDate(curr.getDate());
+  var date = curr.toISOString().substring(0, 10);
+  const [addSupplier, setAddSupplier] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetchAllSuppliers();
+      return response;
+    } catch (error) {
+      console.log("Error fetching suppliers :", error);
+    }
+  };
+
+  useEffect(() => {
+    const u = async () => {
+      const d = await fetchData();
+      setSuppliers(d);
+    };
+
+    u();
+  }, []);
+
+  const handleSuccess = (msg) =>
+    toast.success(msg, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
 
   // Function to handle adding a new product
   const addProduct = () => {
@@ -42,7 +76,7 @@ const CommandeModal = ({ show, handleClose }) => {
         price: "",
         category: "",
         supplierName: "",
-        supplierEmail: "",
+        email: "",
         supplierPhoneNumber: "",
         supplierPaymentConditions: "",
         numero_rue: "",
@@ -51,6 +85,7 @@ const CommandeModal = ({ show, handleClose }) => {
         code_postal: "",
         pays: "",
         region: "",
+        supplierEmailFromDB: "",
       },
     ]);
   };
@@ -97,7 +132,6 @@ const CommandeModal = ({ show, handleClose }) => {
 
       const formData = new FormData();
       formData.append("date", date);
-      formData.append("status", status);
       formData.append("quantity", quantity);
       formData.append("paymentMethod", paymentMethod);
       formData.append("total", total);
@@ -115,6 +149,7 @@ const CommandeModal = ({ show, handleClose }) => {
         });
 
         if (res.status === 201) {
+          handleSuccess("Commande créée !");
           Swal.fire({
             icon: "success",
             title: "Commande ajoutée avec succès !",
@@ -122,10 +157,8 @@ const CommandeModal = ({ show, handleClose }) => {
             timer: 1500,
           });
 
-          setDate("");
           setPaymentMethod("");
           setQuantity("");
-          setStatus("");
           setTotal("");
           setProduits([]);
 
@@ -144,7 +177,6 @@ const CommandeModal = ({ show, handleClose }) => {
         const response = await axios.post("/api/add-commande", formData, {
           headers: headers,
         });
-        console.log(response);
 
         if (response.status === 201) {
           Swal.fire({
@@ -154,10 +186,8 @@ const CommandeModal = ({ show, handleClose }) => {
             timer: 2000,
           });
 
-          setDate("");
           setPaymentMethod("");
           setQuantity("");
-          setStatus("");
           setTotal("");
           setProduits([]);
 
@@ -165,19 +195,18 @@ const CommandeModal = ({ show, handleClose }) => {
         }
       }
     } catch (error) {
-      if (error) {
-        if (error.response.data.error) {
-          Object.values(error.response.data.error).forEach((element) => {
-            handleError(element[0]);
-          });
-        }
-        handleError(error.response.data.message);
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Quelque chose s'est mal passé !",
+      console.log(error);
+      if (error.response.data.error) {
+        Object.values(error.response.data.error).forEach((element) => {
+          handleError(element[0]);
         });
       }
+      error.response.data.message && handleError(error.response.data.message);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Quelque chose s'est mal passé !",
+      });
     }
   };
 
@@ -204,7 +233,7 @@ const CommandeModal = ({ show, handleClose }) => {
           onSubmit={handleAddCommande}
         >
           <Form.Group className="mb-3">
-            <Form.Label>Date</Form.Label>
+            <Form.Label>Date de la création de la commande</Form.Label>
             <InputGroup className="mb-3">
               <InputGroup.Text id="inputGroup-sizing-default">
                 <div className="input-group-prepend bg-transparent">
@@ -213,49 +242,9 @@ const CommandeModal = ({ show, handleClose }) => {
                   </span>
                 </div>
               </InputGroup.Text>
-              <Form.Control
-                name="date"
-                type="date"
-                placeholder="Saisir la date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-              <Form.Control.Feedback type="invalid">
-                Veuillez saisir la date de la commande !
-              </Form.Control.Feedback>
+              <Form.Control name="date" type="date" defaultValue={date} />
             </InputGroup>
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Etat de la commande</Form.Label>
-            <InputGroup className="mb-3">
-              <InputGroup.Text id="inputGroup-sizing-default">
-                <div className="input-group-prepend bg-transparent">
-                  <span className="input-group-text bg-transparent border-right-0">
-                    <i className="mdi mdi-ev-station text-primary" />
-                  </span>
-                </div>
-              </InputGroup.Text>
-              <Form.Select
-                name="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                required
-              >
-                <option>Selectionner l'état de la commande</option>
-                <option value="Brouillon">Brouillon</option>
-                <option value="EnCours">EnCours</option>
-                <option value="Confirmé">Confirmé</option>
-                <option value="Annulé">Annulé</option>
-                <option value="Réceptionné">Réceptionné</option>
-                <option value="Consommé">Consommé</option>
-              </Form.Select>
-              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-              <Form.Control.Feedback type="invalid">
-                Veuillez sélectionner l'état de la commande !
-              </Form.Control.Feedback>
-            </InputGroup>
+            <Form.Text>C'est la date d'aujourd'hui par défaut.</Form.Text>
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Quantité</Form.Label>
@@ -419,7 +408,9 @@ const CommandeModal = ({ show, handleClose }) => {
                         onChange={(e) => handleProductChange(index, e)}
                         required
                       >
-                        <option value="">Selectionner l'état de la commande</option>
+                        <option value="">
+                          Selectionner la catégorie de ce produit
+                        </option>
                         <option value="Alimentaire">Alimentaire</option>
                         <option value="Pharmaceutique">Pharmaceutique</option>
                         <option value="TicketRestaurant">
@@ -434,247 +425,298 @@ const CommandeModal = ({ show, handleClose }) => {
                       </Form.Control.Feedback>
                     </InputGroup>
                   </Form.Group>
-                  <div className="shadow-lg p-3 mb-5 mt-5 bg-white rounded">
+                  {!addSupplier && (
                     <Form.Group className="mb-3">
-                      <Form.Label>Nom du fournisseur</Form.Label>
+                      <Form.Label>Fournisseur</Form.Label>
                       <InputGroup className="mb-3">
                         <InputGroup.Text id="inputGroup-sizing-default">
                           <div className="input-group-prepend bg-transparent">
                             <span className="input-group-text bg-transparent border-right-0">
-                              <IoPerson
-                                className="text-primary"
+                              <i
+                                className="mdi mdi-email-outline text-primary"
                                 style={{ fontSize: "1.5em" }}
                               />
                             </span>
                           </div>
                         </InputGroup.Text>
-                        <Form.Control
-                          name="supplierName"
-                          type="text"
-                          placeholder="Saisir le nom"
-                          value={product.supplierName}
+                        <Form.Select
+                          name="supplierEmailFromDB"
+                          value={product.supplierEmailFromDB}
                           onChange={(e) => handleProductChange(index, e)}
                           required
-                        />
+                        >
+                          <option value="">
+                            Selectionner un fournisseur existant dans la base de
+                            donnée
+                          </option>
+                          {suppliers.length > 0 &&
+                            suppliers.map((f) => (
+                              <option key={f.id} value={f.email}>
+                                {f.email}
+                              </option>
+                            ))}
+                        </Form.Select>
                         <Form.Control.Feedback>
                           Cela semble bon !
                         </Form.Control.Feedback>
                         <Form.Control.Feedback type="invalid">
-                          Veuillez sélectionner le nom du fournisseur !
+                          Veuillez saisir l'adresse e-mail de l'admin dans un
+                          format adéquat !
                         </Form.Control.Feedback>
                       </InputGroup>
                     </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>E-mail</Form.Label>
-                      <InputGroup className="mb-3">
-                        <InputGroup.Text id="inputGroup-sizing-default">
-                          <div className="input-group-prepend bg-transparent">
-                            <span className="input-group-text bg-transparent border-right-0">
-                              <MdEmail
-                                className="text-primary"
-                                style={{ fontSize: "1.5em" }}
-                              />
-                            </span>
-                          </div>
-                        </InputGroup.Text>
-                        <Form.Control
-                          name="supplierEmail"
-                          type="email"
-                          placeholder="Saisir l'e-mail"
-                          value={product.supplierEmail}
-                          onChange={(e) => handleProductChange(index, e)}
-                          required
-                        />
-                        <Form.Control.Feedback>
-                          Cela semble bon !
-                        </Form.Control.Feedback>
-                        <Form.Control.Feedback type="invalid">
-                          Veuillez saisir l'e-mail du fournisseur !
-                        </Form.Control.Feedback>
-                      </InputGroup>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Numéro de téléphone</Form.Label>
-                      <InputGroup className="mb-3">
-                        <InputGroup.Text id="inputGroup-sizing-default">
-                          <div className="input-group-prepend bg-transparent">
-                            <span className="input-group-text bg-transparent border-right-0">
-                              <FaPhone
-                                className="text-primary"
-                                style={{ fontSize: "1.5em" }}
-                              />
-                            </span>
-                          </div>
-                        </InputGroup.Text>
-                        <Form.Control
-                          name="supplierPhoneNumber"
-                          type="text"
-                          value={product.supplierPhoneNumber}
-                          onChange={(e) => handleProductChange(index, e)}
-                          placeholder="Saisir le numéro de téléphone"
-                          required
-                          minLength={8}
-                        />
-                        <Form.Control.Feedback>
-                          Cela semble bon !
-                        </Form.Control.Feedback>
-                        <Form.Control.Feedback type="invalid">
-                          Veuillez saisir le numéro de téléphone du fournisseur
-                          minimum 8 caractères !
-                        </Form.Control.Feedback>
-                      </InputGroup>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Conditions de paiement</Form.Label>
-                      <InputGroup className="mb-3">
-                        <InputGroup.Text id="inputGroup-sizing-default">
-                          <div className="input-group-prepend bg-transparent">
-                            <span className="input-group-text bg-transparent border-right-0">
-                              <FcRules
-                                className="text-primary"
-                                style={{ fontSize: "1.5em" }}
-                              />
-                            </span>
-                          </div>
-                        </InputGroup.Text>
-                        <Form.Control
-                          name="supplierPaymentConditions"
-                          type="text"
-                          value={product.supplierPaymentConditions}
-                          onChange={(e) => handleProductChange(index, e)}
-                          placeholder="Saisir les conditions de paiement"
-                          required
-                        />
-                        <Form.Control.Feedback>
-                          Cela semble bon !
-                        </Form.Control.Feedback>
-                        <Form.Control.Feedback type="invalid">
-                          Veuillez saisir les conditions de paiement du
-                          fournisseur !
-                        </Form.Control.Feedback>
-                      </InputGroup>
-                    </Form.Group>
-                    <div className="shadow-lg p-3 mb-5 mt-5 bg-white rounded">
-                      <Row className="mb-3">
-                        <Form.Group as={Col} className="mb-3">
-                          <Form.Label>Numero de la Rue</Form.Label>
-                          <InputGroup className="mb-3">
-                            <InputGroup.Text id="inputGroup-sizing-sm">
-                              <div className="input-group-prepend bg-transparent">
-                                <span className="input-group-text bg-transparent border-right-0">
-                                  <FaMapMarkedAlt className="text-primary" />
-                                </span>
-                              </div>
-                            </InputGroup.Text>
-                            <Form.Control
-                              name="numero_rue"
-                              type="number"
-                              placeholder="numero du rue"
-                              value={product.numero_rue}
-                              onChange={(e) => handleProductChange(index, e)}
-                            />
-                          </InputGroup>
-                        </Form.Group>
-                        <Form.Group as={Col} className="mb-3">
-                          <Form.Label>Nom de la Rue</Form.Label>
-                          <InputGroup className="mb-3">
-                            <InputGroup.Text id="inputGroup-sizing-sm">
-                              <div className="input-group-prepend bg-transparent">
-                                <span className="input-group-text bg-transparent border-right-0">
-                                  <FaMapMarkerAlt className="text-primary" />
-                                </span>
-                              </div>
-                            </InputGroup.Text>
-                            <Form.Control
-                              name="nom_rue"
-                              type="text"
-                              placeholder="nom de la rue"
-                              value={product.nom_rue}
-                              onChange={(e) => handleProductChange(index, e)}
-                            />
-                          </InputGroup>
-                        </Form.Group>
-                        <Form.Group as={Col} className="mb-3">
-                          <Form.Label>Ville</Form.Label>
-                          <InputGroup className="mb-3">
-                            <InputGroup.Text id="inputGroup-sizing-sm">
-                              <div className="input-group-prepend bg-transparent">
-                                <span className="input-group-text bg-transparent border-right-0">
-                                  <SiBandsintown className="text-primary" />
-                                </span>
-                              </div>
-                            </InputGroup.Text>
-                            <Form.Control
-                              name="ville"
-                              type="text"
-                              placeholder="ville"
-                              value={product.ville}
-                              onChange={(e) => handleProductChange(index, e)}
-                            />
-                          </InputGroup>
-                        </Form.Group>
-                      </Row>
-                      <Row>
-                        <Form.Group as={Col} className="mb-3">
-                          <Form.Label>Code Postal</Form.Label>
-                          <InputGroup className="mb-3">
-                            <InputGroup.Text id="inputGroup-sizing-sm">
-                              <div className="input-group-prepend bg-transparent">
-                                <span className="input-group-text bg-transparent border-right-0">
-                                  <PiFileZipDuotone className="text-primary" />
-                                </span>
-                              </div>
-                            </InputGroup.Text>
-                            <Form.Control
-                              name="code_postal"
-                              type="text"
-                              placeholder="code postal"
-                              value={product.code_postal}
-                              onChange={(e) => handleProductChange(index, e)}
-                            />
-                          </InputGroup>
-                        </Form.Group>
-                        <Form.Group as={Col} className="mb-3">
-                          <Form.Label>Pays</Form.Label>
-                          <InputGroup className="mb-3">
-                            <InputGroup.Text id="inputGroup-sizing-sm">
-                              <div className="input-group-prepend bg-transparent">
-                                <span className="input-group-text bg-transparent border-right-0">
-                                  <SiOpenstreetmap className="text-primary" />
-                                </span>
-                              </div>
-                            </InputGroup.Text>
-                            <Form.Control
-                              name="pays"
-                              type="text"
-                              placeholder="pays"
-                              value={product.pays}
-                              onChange={(e) => handleProductChange(index, e)}
-                            />
-                          </InputGroup>
-                        </Form.Group>
-                        <Form.Group as={Col} className="mb-3">
-                          <Form.Label>Région</Form.Label>
-                          <InputGroup className="mb-3">
-                            <InputGroup.Text id="inputGroup-sizing-sm">
-                              <div className="input-group-prepend bg-transparent">
-                                <span className="input-group-text bg-transparent border-right-0">
-                                  <BsFillPinMapFill className="text-primary" />
-                                </span>
-                              </div>
-                            </InputGroup.Text>
-                            <Form.Control
-                              name="region"
-                              type="text"
-                              placeholder="région"
-                              value={product.region}
-                              onChange={(e) => handleProductChange(index, e)}
-                            />
-                          </InputGroup>
-                        </Form.Group>
-                      </Row>
-                    </div>
+                  )}
+                  <div className="d-flex justify-content-center">
+                    <Button
+                      className="my-3 btn btn-rounded btn-inverse-info"
+                      onClick={() => setAddSupplier(!addSupplier)}
+                    >
+                      Ajouter un autre Fournisseur <FaPlusCircle size={25} />
+                    </Button>
                   </div>
+                  {addSupplier && (
+                    <div className="shadow-lg p-3 mb-5 mt-5 bg-white rounded">
+                      <Form.Group className="mb-3">
+                        <Form.Label>Nom du fournisseur</Form.Label>
+                        <InputGroup className="mb-3">
+                          <InputGroup.Text id="inputGroup-sizing-default">
+                            <div className="input-group-prepend bg-transparent">
+                              <span className="input-group-text bg-transparent border-right-0">
+                                <IoPerson
+                                  className="text-primary"
+                                  style={{ fontSize: "1.5em" }}
+                                />
+                              </span>
+                            </div>
+                          </InputGroup.Text>
+                          <Form.Control
+                            name="supplierName"
+                            type="text"
+                            placeholder="Saisir le nom"
+                            value={product.supplierName}
+                            onChange={(e) => handleProductChange(index, e)}
+                            required
+                          />
+                          <Form.Control.Feedback>
+                            Cela semble bon !
+                          </Form.Control.Feedback>
+                          <Form.Control.Feedback type="invalid">
+                            Veuillez sélectionner le nom du fournisseur !
+                          </Form.Control.Feedback>
+                        </InputGroup>
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label>E-mail</Form.Label>
+                        <InputGroup className="mb-3">
+                          <InputGroup.Text id="inputGroup-sizing-default">
+                            <div className="input-group-prepend bg-transparent">
+                              <span className="input-group-text bg-transparent border-right-0">
+                                <MdEmail
+                                  className="text-primary"
+                                  style={{ fontSize: "1.5em" }}
+                                />
+                              </span>
+                            </div>
+                          </InputGroup.Text>
+                          <Form.Control
+                            name="email"
+                            type="email"
+                            placeholder="Saisir l'e-mail"
+                            value={product.email}
+                            onChange={(e) => handleProductChange(index, e)}
+                            required
+                          />
+                          <Form.Control.Feedback>
+                            Cela semble bon !
+                          </Form.Control.Feedback>
+                          <Form.Control.Feedback type="invalid">
+                            Veuillez saisir l'e-mail du fournisseur !
+                          </Form.Control.Feedback>
+                        </InputGroup>
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Numéro de téléphone</Form.Label>
+                        <InputGroup className="mb-3">
+                          <InputGroup.Text id="inputGroup-sizing-default">
+                            <div className="input-group-prepend bg-transparent">
+                              <span className="input-group-text bg-transparent border-right-0">
+                                <FaPhone
+                                  className="text-primary"
+                                  style={{ fontSize: "1.5em" }}
+                                />
+                              </span>
+                            </div>
+                          </InputGroup.Text>
+                          <Form.Control
+                            name="supplierPhoneNumber"
+                            type="text"
+                            value={product.supplierPhoneNumber}
+                            onChange={(e) => handleProductChange(index, e)}
+                            placeholder="Saisir le numéro de téléphone"
+                            required
+                            minLength={8}
+                          />
+                          <Form.Control.Feedback>
+                            Cela semble bon !
+                          </Form.Control.Feedback>
+                          <Form.Control.Feedback type="invalid">
+                            Veuillez saisir le numéro de téléphone du
+                            fournisseur minimum 8 caractères !
+                          </Form.Control.Feedback>
+                        </InputGroup>
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Conditions de paiement</Form.Label>
+                        <InputGroup className="mb-3">
+                          <InputGroup.Text id="inputGroup-sizing-default">
+                            <div className="input-group-prepend bg-transparent">
+                              <span className="input-group-text bg-transparent border-right-0">
+                                <FcRules
+                                  className="text-primary"
+                                  style={{ fontSize: "1.5em" }}
+                                />
+                              </span>
+                            </div>
+                          </InputGroup.Text>
+                          <Form.Control
+                            name="supplierPaymentConditions"
+                            type="text"
+                            value={product.supplierPaymentConditions}
+                            onChange={(e) => handleProductChange(index, e)}
+                            placeholder="Saisir les conditions de paiement"
+                            required
+                          />
+                          <Form.Control.Feedback>
+                            Cela semble bon !
+                          </Form.Control.Feedback>
+                          <Form.Control.Feedback type="invalid">
+                            Veuillez saisir les conditions de paiement du
+                            fournisseur !
+                          </Form.Control.Feedback>
+                        </InputGroup>
+                      </Form.Group>
+                      <div className="shadow-lg p-3 mb-5 mt-5 bg-white rounded">
+                        <Row className="mb-3">
+                          <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Numero de la Rue</Form.Label>
+                            <InputGroup className="mb-3">
+                              <InputGroup.Text id="inputGroup-sizing-sm">
+                                <div className="input-group-prepend bg-transparent">
+                                  <span className="input-group-text bg-transparent border-right-0">
+                                    <FaMapMarkedAlt className="text-primary" />
+                                  </span>
+                                </div>
+                              </InputGroup.Text>
+                              <Form.Control
+                                name="numero_rue"
+                                type="number"
+                                placeholder="numero du rue"
+                                value={product.numero_rue}
+                                onChange={(e) => handleProductChange(index, e)}
+                              />
+                            </InputGroup>
+                          </Form.Group>
+                          <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Nom de la Rue</Form.Label>
+                            <InputGroup className="mb-3">
+                              <InputGroup.Text id="inputGroup-sizing-sm">
+                                <div className="input-group-prepend bg-transparent">
+                                  <span className="input-group-text bg-transparent border-right-0">
+                                    <FaMapMarkerAlt className="text-primary" />
+                                  </span>
+                                </div>
+                              </InputGroup.Text>
+                              <Form.Control
+                                name="nom_rue"
+                                type="text"
+                                placeholder="nom de la rue"
+                                value={product.nom_rue}
+                                onChange={(e) => handleProductChange(index, e)}
+                              />
+                            </InputGroup>
+                          </Form.Group>
+                          <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Ville</Form.Label>
+                            <InputGroup className="mb-3">
+                              <InputGroup.Text id="inputGroup-sizing-sm">
+                                <div className="input-group-prepend bg-transparent">
+                                  <span className="input-group-text bg-transparent border-right-0">
+                                    <SiBandsintown className="text-primary" />
+                                  </span>
+                                </div>
+                              </InputGroup.Text>
+                              <Form.Control
+                                name="ville"
+                                type="text"
+                                placeholder="ville"
+                                value={product.ville}
+                                onChange={(e) => handleProductChange(index, e)}
+                              />
+                            </InputGroup>
+                          </Form.Group>
+                        </Row>
+                        <Row>
+                          <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Code Postal</Form.Label>
+                            <InputGroup className="mb-3">
+                              <InputGroup.Text id="inputGroup-sizing-sm">
+                                <div className="input-group-prepend bg-transparent">
+                                  <span className="input-group-text bg-transparent border-right-0">
+                                    <PiFileZipDuotone className="text-primary" />
+                                  </span>
+                                </div>
+                              </InputGroup.Text>
+                              <Form.Control
+                                name="code_postal"
+                                type="text"
+                                placeholder="code postal"
+                                value={product.code_postal}
+                                onChange={(e) => handleProductChange(index, e)}
+                              />
+                            </InputGroup>
+                          </Form.Group>
+                          <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Pays</Form.Label>
+                            <InputGroup className="mb-3">
+                              <InputGroup.Text id="inputGroup-sizing-sm">
+                                <div className="input-group-prepend bg-transparent">
+                                  <span className="input-group-text bg-transparent border-right-0">
+                                    <SiOpenstreetmap className="text-primary" />
+                                  </span>
+                                </div>
+                              </InputGroup.Text>
+                              <Form.Control
+                                name="pays"
+                                type="text"
+                                placeholder="pays"
+                                value={product.pays}
+                                onChange={(e) => handleProductChange(index, e)}
+                              />
+                            </InputGroup>
+                          </Form.Group>
+                          <Form.Group as={Col} className="mb-3">
+                            <Form.Label>Région</Form.Label>
+                            <InputGroup className="mb-3">
+                              <InputGroup.Text id="inputGroup-sizing-sm">
+                                <div className="input-group-prepend bg-transparent">
+                                  <span className="input-group-text bg-transparent border-right-0">
+                                    <BsFillPinMapFill className="text-primary" />
+                                  </span>
+                                </div>
+                              </InputGroup.Text>
+                              <Form.Control
+                                name="region"
+                                type="text"
+                                placeholder="région"
+                                value={product.region}
+                                onChange={(e) => handleProductChange(index, e)}
+                              />
+                            </InputGroup>
+                          </Form.Group>
+                        </Row>
+                      </div>
+                    </div>
+                  )}
                   <div className="d-flex justify-content-end">
                     <Button
                       className="btn btn-info btn-rounded btn-icon btn-inverse-danger"
@@ -687,7 +729,7 @@ const CommandeModal = ({ show, handleClose }) => {
               ))}
               <div className="d-flex justify-content-end">
                 <Button
-                  className="my-3 btn btn-info btn-rounded btn-icon btn-inverse-info"
+                  className="my-3 btn btn-info btn-icon btn-rounded btn-inverse-info"
                   onClick={addProduct}
                 >
                   <FaPlusCircle size={25} />

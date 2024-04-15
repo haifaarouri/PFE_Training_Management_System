@@ -9,7 +9,9 @@ function Unauthorized({ status }) {
           <div className="notfound-404">
             <h1>{status}</h1>
           </div>
-          <h2>Oops! Page non Authorisée !</h2>
+          <h2>
+            Oops! Page non {status === "404" ? "Introuvable" : "Authorisée"} !
+          </h2>
           {/* <form className="notfound-search">
               <input type="text" placeholder="Search..." />
               <button type="button">Search</button>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Card, Carousel, Form, InputGroup, Pagination } from "react-bootstrap";
+import { Card, Carousel, Form, InputGroup, Pagination, Row } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import CommandeModal from "../../components/CommandeModal";
@@ -27,7 +27,7 @@ function AllCommandes() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
-console.log(commandes);
+
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
@@ -88,7 +88,7 @@ console.log(commandes);
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-Commande/${id}`);
+    navigate(`/edit-commande/${id}`);
   };
 
   const fetchData = async () => {
@@ -269,32 +269,35 @@ console.log(commandes);
                           <th>Actions</th>
                         </tr>
                       </thead>
-                      {/* <tbody>
+                      <tbody>
                         {filteredData.length > 0 ? (
                           filteredData.map((c, index) => {
                             return (
-                              <tr key={index} className="text-center">
+                              <tr key={index}>
                                 <td>
                                   <h6>{c.date}</h6>
                                 </td>
                                 <td>
-                                  <h6>{c.status}</h6>
+                                  <div
+                                    pill
+                                    className="badge badge-outline-success badge-pill"
+                                  >
+                                    {c.status}
+                                  </div>
                                 </td>
                                 <td>{c.quantity}</td>
-                                <td>{c.payementMethod}</td>
-                                <td>{c.total}</td>
+                                <td>{c.paymentMethod}</td>
+                                <td>{c.total} DT</td>
                                 <td>
-                                   {Array.isArray(c.produits) &&
-                                    c.produits.map((d, i) => {
-                                      return (
-                                        <div
-                                          pill
-                                          className="badge badge-outline-success badge-pill mb-2"
-                                          key={i}
-                                        >
-                                           <p>{`${startDate} - ${endDate}`}</p>
-                                        </div>
-                                      );
+                                  {Array.isArray(c.produits) &&
+                                    c.produits.map((p, i) => {
+                                      return <p>{p.name}</p>;
+                                    })}
+                                </td>
+                                <td>
+                                  {Array.isArray(c.produits) &&
+                                    c.produits.map((p, i) => {
+                                      return <p>{p.fournisseur.name}</p>;
                                     })}
                                 </td>
                                 <td style={{ width: "15%" }}>
@@ -329,28 +332,31 @@ console.log(commandes);
                           commandes.length > 0 &&
                           commandesPage.map((c, index) => {
                             return (
-                              <tr key={index} className="text-center">
+                              <tr key={index}>
                                 <td>
                                   <h6>{c.date}</h6>
                                 </td>
                                 <td>
-                                  <h6>{c.status}</h6>
+                                  <div
+                                    pill
+                                    className="badge badge-outline-success badge-pill"
+                                  >
+                                    {c.status}
+                                  </div>
                                 </td>
                                 <td>{c.quantity}</td>
-                                <td>{c.payementMethod}</td>
-                                <td>{c.total}</td>
+                                <td>{c.paymentMethod}</td>
+                                <td>{c.total} DT</td>
                                 <td>
-                                {Array.isArray(c.produits) &&
-                                    c.produits.map((d, i) => {
-                                      return (
-                                        <div
-                                          pill
-                                          className="badge badge-outline-success badge-pill mb-2"
-                                          key={i}
-                                        >
-                                           <p>{`${startDate} - ${endDate}`}</p>
-                                        </div>
-                                      );
+                                  {Array.isArray(c.produits) &&
+                                    c.produits.map((p, i) => {
+                                      return <p>{p.name}</p>;
+                                    })}
+                                </td>
+                                <td>
+                                  {Array.isArray(c.produits) &&
+                                    c.produits.map((p, i) => {
+                                      return <p>{p.fournisseur.name}</p>;
                                     })}
                                 </td>
                                 <td style={{ width: "15%" }}>
@@ -379,7 +385,7 @@ console.log(commandes);
                             );
                           })
                         )}
-                      </tbody> */}
+                      </tbody>
                     </table>
                   </div>
                   <Pagination className="d-flex justify-content-center mt-5">
@@ -414,23 +420,13 @@ console.log(commandes);
                   </Pagination>
                 </>
               )}
-              {/* {showCarousel && (
+              {showCarousel && (
                 <Carousel
                   style={{ backgroundColor: "#D2D8EB" }}
                   className="shadow-lg p-5 mb-5 rounded"
                 >
                   {commandes.length > 0 &&
-                    commandes.map((f, idx) => {
-                      let dispo = f.disponibilities;
-                      const object = {};
-                      dispo.forEach((obj, i) => {
-                        const key = `selection${i + 1}`;
-                        object[key] = {
-                          startDate: new Date(obj.startDate),
-                          endDate: new Date(obj.endDate),
-                          key: key,
-                        };
-                      });
+                    commandes.map((c, idx) => {
                       return (
                         <Carousel.Item key={idx} className="row">
                           <div
@@ -438,13 +434,13 @@ console.log(commandes);
                             style={{ marginRight: "5%" }}
                           >
                             <Button
-                              onClick={() => handleButtonEdit(f.id)}
+                              onClick={() => handleButtonEdit(c.id)}
                               className="btn btn-sm m-1 btn-dark btn-rounded col-lg-2 col-xs-12"
                             >
                               Modifier <i className="mdi mdi-tooltip-edit"></i>
                             </Button>
                             <Button
-                            //   onClick={() => handleDeleteCommande(f.id)}
+                              //   onClick={() => handleDeleteCommande(c.id)}
                               className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
                             >
                               Supprimer <i className="mdi mdi-delete"></i>
@@ -454,134 +450,113 @@ console.log(commandes);
                             <Card className="shadow-lg p-3 rounded">
                               <Card.Body>
                                 <Card.Title>
-                                  <h2>
-                                    {f.firstName} {f.lastName}
-                                  </h2>
+                                  <h2>{c.date}</h2>
                                 </Card.Title>
                                 <Card.Text className="d-flex justify-content-evenly row">
                                   <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Adresse E-mail :
+                                        Etat de la commande :
                                       </span>{" "}
-                                      {f.email}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Numéro de téléphone :
-                                      </span>{" "}
-                                      {f.phoneNumber}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Nombre d'année d'expérience :
-                                      </span>{" "}
-                                      {f.experience}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Type :
-                                      </span>{" "}
-                                      {f.type}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Spécialité(s) :
-                                      </span>{" "}
-                                      {f.speciality}
-                                    </p>
-                                    <div className="d-flex flex-column justify-content-center m-5">
-                                      <h5>Disponibilité</h5>
-                                      <div style={{ position: "relative" }}>
-                                        <DateRange
-                                          ranges={Object.values(object)}
-                                          disabledDay={() => true}
-                                          editableDateInputs={true}
-                                          moveRangeOnFirstSelection={false}
-                                        />
-                                        <div
-                                          style={{
-                                            pointerEvents: "none",
-                                            opacity: 0.5,
-                                            position: "absolute",
-                                            top: 0,
-                                            right: 0,
-                                            bottom: 0,
-                                            left: 0,
-                                          }}
-                                        ></div>
+                                      <div
+                                        pill
+                                        className="badge badge-outline-success badge-pill"
+                                      >
+                                        {c.status}
                                       </div>
-                                    </div>
-                                    <div className="solution_cards_box">
-                                      {f.certificats.length > 0 &&
-                                        f.certificats.map((certif) => (
-                                          <div className="solution_card">
-                                            <div className="hover_color_bubble"></div>
-                                            <div className="solu_title d-flex justify-content-between">
-                                              <h3>{certif.name}</h3>
-                                              <LiaCertificateSolid
-                                                style={{ fontSize: "4em" }}
-                                              />
-                                            </div>
-                                            <div className="solu_description">
-                                              <p>
-                                                Oraganisme de délivrance :{" "}
-                                                {certif.organisme}
-                                              </p>
-                                              <p>
-                                                Date d'obtention :{" "}
-                                                {certif.obtainedDate}
-                                              </p>
-                                              {certif.idCertificat && (
-                                                <p>
-                                                  ID du certficat :{" "}
-                                                  <button
-                                                    onClick={() =>
-                                                      (window.location.href =
-                                                        certif.idCertificat)
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Quantité :
+                                      </span>{" "}
+                                      {c.quantity}
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Méthode de paiement :
+                                      </span>{" "}
+                                      {c.paymentMethod}
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Total :
+                                      </span>{" "}
+                                      {c.total} DT
+                                    </p>
+                                    <span className="text-primary fw-bold">
+                                      Liste des produits :
+                                    </span>
+                                    <Row>
+                                      {c.produits.length > 0 &&
+                                        c.produits.map((p, i) => (
+                                          <Card
+                                            key={i}
+                                            className="col shadow-lg p-3 rounded mt-4"
+                                          >
+                                            <Card.Body className="p-1">
+                                              <Card.Title>{p.name}</Card.Title>
+                                              <Card.Text>
+                                                <dl>
+                                                  <dt>Prix</dt>
+                                                  <dd>{p.price} DT</dd>
+                                                  <dt>Catégorie</dt>
+                                                  <dd>{p.category}</dd>
+                                                  <dt style={{ color: "red" }}>
+                                                    Nom du fournisseur
+                                                  </dt>
+                                                  <dd>{p.fournisseur.name}</dd>
+                                                  <dt>E-mail du fournisseur</dt>
+                                                  <dd>{p.fournisseur.email}</dd>
+                                                  <dt>Numéro de téléphone</dt>
+                                                  <dd>
+                                                    {p.fournisseur.phoneNumber}
+                                                  </dd>
+                                                  <dt>
+                                                    Conditions de paiement du
+                                                    fournisseur
+                                                  </dt>
+                                                  <dd>
+                                                    {
+                                                      p.fournisseur
+                                                        .paymentConditions
                                                     }
-                                                  >
-                                                    Afficher l'ID{" "}
-                                                    <MdOutlineOpenInNew />
-                                                  </button>{" "}
-                                                </p>
-                                              )}
-                                              {certif.urlCertificat && (
-                                                <p>
-                                                  URL du certificat :{" "}
-                                                  <button
-                                                    onClick={() =>
-                                                      (window.location.href =
-                                                        certif.urlCertificat)
+                                                  </dd>
+                                                  <dt>
+                                                    Adresse du fournisseur
+                                                  </dt>
+                                                  <dd>
+                                                    {
+                                                      p.fournisseur.address
+                                                        .numero_rue
+                                                    }{" "}
+                                                    {
+                                                      p.fournisseur.address
+                                                        .nom_rue
                                                     }
-                                                  >
-                                                    Afficher l'URL{" "}
-                                                    <MdOutlineOpenInNew />
-                                                  </button>{" "}
-                                                </p>
-                                              )}
-                                            </div>
-                                          </div>
+                                                    ,{" "}
+                                                    {
+                                                      p.fournisseur.address
+                                                        .ville
+                                                    }
+                                                    ,{" "}
+                                                    {
+                                                      p.fournisseur.address
+                                                        .code_postal
+                                                    }
+                                                    ,{" "}
+                                                    {
+                                                      p.fournisseur.address
+                                                        .region
+                                                    }
+                                                    ,{" "}
+                                                    {p.fournisseur.address.pays}
+                                                  </dd>
+                                                </dl>
+                                              </Card.Text>
+                                            </Card.Body>
+                                          </Card>
                                         ))}
-                                    </div>
-                                  </div>
-                                  <div className="solution_cards_box col-sm-12 col-md-12 col-lg-6">
-                                    {f.cv && (
-                                      <div className="solution_card">
-                                        <div className="hover_color_bubble"></div>
-                                        <div className="solu_title d-flex justify-content-between">
-                                          <h3>{f.cv.slice(13)}</h3>
-                                        </div>
-                                        <div className="solu_description">
-                                          <iframe
-                                            src={`http://localhost:8000/TrainersCV/${f.cv}`}
-                                            width="100%"
-                                            height="600px"
-                                            title="PDF Viewer"
-                                          ></iframe>
-                                        </div>
-                                      </div>
-                                    )}
+                                    </Row>
                                   </div>
                                 </Card.Text>
                               </Card.Body>
@@ -591,7 +566,7 @@ console.log(commandes);
                       );
                     })}
                 </Carousel>
-              )} */}
+              )}
             </div>
           </div>
         </div>
