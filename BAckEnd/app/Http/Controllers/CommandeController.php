@@ -38,7 +38,7 @@ class CommandeController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
             try {
-                if ($request->input('produits.*.supplierEmailFromDB')) {
+                if ($request->has('produits.*.supplierEmailFromDB')) {
                     $validator = Validator::make($request->all(), [
                         'date' => 'required|date',
                         'quantity' => 'required|integer',
@@ -217,77 +217,114 @@ class CommandeController extends Controller
 
     public function update(Request $request, $id)
     {
-
-        if ($this->list_roles->contains(auth()->user()->role)) {
-            try {
-                $commande = Commande::find($id);
-                if (!$commande) {
-                    return response()->json(['error' => 'Commande avec cette ID non trouvé !'], 404);
-                }
-
-                $validator = Validator::make($request->all(), [
-                    
-                ]);
-
-                if ($validator->fails()) {
-                    return response()->json(['error' => $validator->errors()], 400);
-                }
-
-                if ($request->has('certificates') && is_array($request->input('certificates'))) {
-                    foreach ($request->input('certificates') as $certificate) {
-                        $validator = Validator::make($certificate, [
-                            'name' => 'required|string|max:255',
-                            'organisme' => 'required|string|max:255',
-                            'obtainedDate' => 'required|date',
-                            'idCertificat' => 'nullable',
-                            'urlCertificat' => 'nullable',
-                        ]);
-
-                        if ($validator->fails()) {
-                            return response()->json(['error' => $validator->errors()], 400);
-                        }
-
-                        // Update certificates
-                        $incomingCertificates = $request->input('certificates', []);
-                        $currentCertificates = $Commande->certificats()->get()->keyBy('id');
-
-                        foreach ($incomingCertificates as $certificateData) {
-                            $certificateId = $certificateData['id'] ?? null;
-                            if ($certificateId && $currentCertificates->has($certificateId)) {
-                                // Update existing certificate
-                                $currentCertificates[$certificateId]->update($certificateData);
-                                $currentCertificates->forget($certificateId); // Remove from the collection to avoid deleting later
-                            } else {
-                                // Create new certificate
-                                $Commande->certificats()->create($certificateData);
-                            }
-                        }
-
-                        // Delete any certificates not included in the incoming data
-                        foreach ($currentCertificates as $certificate) {
-                            $certificate->delete();
-                        }
-                    }
-                }
-
-                $commande->firstName = $request->input('firstName');
-                $commande->lastName = $request->input('lastName');
-                $commande->email = $request->input('email');
-                $commande->type = $request->input('type');
-                $commande->phoneNumber = $request->input('phoneNumber');
-                $commande->experience = $request->input('experience');
-                $commande->cv = !empty($cvName) ? $cvName : $request->input('cv');
-                $commande->save();
-
-                return response()->json($commande, 200);
-            } catch (\Exception $e) {
-                dd($e->getMessage());
-                return response()->json(['error' => 'Erreur lors de la mise à jour du Commande !'], 500);
-            }
-        } else {
-            // User does not have access, return a 403 response
+        if (!$this->list_roles->contains(auth()->user()->role)) {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
+
+        $commande = Commande::find($id);
+        if (!$commande) {
+            return response()->json(['error' => 'Commande avec cette ID non trouvé !'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date',
+            'quantity' => 'required|integer',
+            'total' => 'required|numeric',
+            'paymentMethod' => 'required|string|max:255',
+            'produits.*.name' => 'required|string|max:255',
+            'produits.*.price' => 'required|numeric',
+            'produits.*.category' => ['required', new ProductCategoryRule()],
+            // 'produits.*.supplierEmailFromDB' => 'sometimes|email|max:255',
+            'produits.*.fournisseur.name' => 'sometimes|string|max:255',
+            'produits.*.fournisseur.email' => 'sometimes|email|max:255|unique:fournisseurs,email,' . $id,
+            'produits.*.fournisseur.phoneNumber' => 'sometimes|string|max:8',
+            'produits.*.fournisseur.paymentConditions' => 'sometimes|string|max:255',
+            'produits.*.fournisseur.address.numero_rue' => 'sometimes|integer',
+            'produits.*.fournisseur.address.nom_rue' => 'sometimes|string|max:255',
+            'produits.*.fournisseur.address.ville' => 'sometimes|string|max:255',
+            'produits.*.fournisseur.address.code_postal' => 'sometimes|string|max:255',
+            'produits.*.fournisseur.address.pays' => 'sometimes|string|max:255',
+            'produits.*.fournisseur.address.region' => 'sometimes|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        $commande->update([
+            'date' => $request->input('date'),
+            'quantity' => $request->input('quantity'),
+            'total' => $request->input('total'),
+            'paymentMethod' => $request->input('paymentMethod'),
+        ]);
+
+        foreach ($request->input('produits') as $produitInput) {
+            $produitData = [
+                'name' => $produitInput['name'],
+                'price' => $produitInput['price'],
+                'category' => $produitInput['category'],
+            ];
+
+            if (isset($produitInput['id'])) {
+                $produit = Produit::find($produitInput['id']);
+                if ($produit) {
+                    $produit->update($produitData);
+                }
+            } else {
+                $produit = new Produit($produitData);
+                $commande->produits()->save($produit);
+            }
+
+            $decodedSupplier = json_decode($produitInput['fournisseur'], true);
+
+            if (isset($decodedSupplier['id'])) {
+                $fournisseur = Fournisseur::find($decodedSupplier['id']);
+                if ($fournisseur) {
+                    $fournisseur->update([
+                        'name' => $decodedSupplier['name'],
+                        'email' => $decodedSupplier['email'],
+                        'phoneNumber' => $decodedSupplier['phoneNumber'],
+                        'paymentConditions' => $decodedSupplier['paymentConditions'],
+                    ]);
+                }
+            } else {
+                $fournisseur = new Fournisseur([
+                    'name' => $decodedSupplier['name'],
+                    'email' => $decodedSupplier['email'],
+                    'phoneNumber' => $decodedSupplier['phoneNumber'],
+                    'paymentConditions' => $decodedSupplier['paymentConditions'],
+                ]);
+                $commande->fournisseurs()->save($fournisseur);
+            }
+
+            if (isset($produitInput['supplierEmailFromDB'])) {
+                $fournisseur = Fournisseur::firstOrCreate(
+                    ['email' => $produitInput['supplierEmailFromDB']],
+                    [
+                        'name' => $produitInput['supplierName'] ?? '',
+                        'phoneNumber' => $produitInput['supplierPhoneNumber'] ?? '',
+                        'paymentConditions' => $produitInput['supplierPaymentConditions'] ?? '',
+                    ]
+                );
+            }
+
+            if (isset($produitInput['numero_rue'])) {
+                $adresse = new Address([
+                    'numero_rue' => $decodedSupplier['address']['numero_rue'],
+                    'nom_rue' => $decodedSupplier['address']['nom_rue'],
+                    'ville' => $decodedSupplier['address']['ville'],
+                    'code_postal' => $decodedSupplier['address']['code_postal'],
+                    'pays' => $decodedSupplier['address']['pays'],
+                    'region' => $decodedSupplier['address']['region'],
+                ]);
+                $fournisseur->address()->save($adresse);
+            }
+
+            $produit->fournisseur()->associate($fournisseur);
+            $produit->save();
+        }
+
+        return response()->json($commande, 200);
     }
 
     // public function destroy($id)
