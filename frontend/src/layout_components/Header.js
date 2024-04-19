@@ -296,7 +296,7 @@ function Header() {
               </Button>
             </div>
           </li>
-          <li className="nav-item">
+          {/* <li className="nav-item">
             <Link to="#" className="nav-link icon-link">
               <i className="mdi mdi-plus-circle-outline" />
             </Link>
@@ -310,7 +310,7 @@ function Header() {
             <Link to="#" className="nav-link icon-link">
               <i className="mdi mdi-clock-outline" />
             </Link>
-          </li>
+          </li> */}
         </ul>
       </div>
     </nav>

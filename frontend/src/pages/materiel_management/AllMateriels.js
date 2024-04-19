@@ -10,11 +10,11 @@ import {
   InputGroup,
   Pagination,
 } from "react-bootstrap";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import MaterielModal from "../../components/MaterielModal";
 import {
-  deleteMateriel,
+  // deleteMateriel,
   fetchAllMateriaux,
 } from "../../services/MaterielServices";
 import FileModal from "../../components/FileModal";
@@ -95,30 +95,6 @@ function AllMateriels() {
 
   const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
-
-  const handleSuccess = (msg) =>
-    toast.success(msg, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-
-  const handleError = (err) =>
-    toast.error(err, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
 
   const handleButtonEdit = (id) => {
     navigate(`/edit-materiel/${id}`);

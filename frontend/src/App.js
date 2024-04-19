@@ -21,11 +21,18 @@ import EditMateriel from "./pages/materiel_management/EditMateriel";
 import AllFormateurs from "./pages/formateur_management/AllFormateurs";
 import EditFormateur from "./pages/formateur_management/EditFormateur";
 import AllCommandes from "./pages/commande_management/AllCommandes";
-import EditCommande from "./pages/commande_management/EditCommande"
+import EditCommande from "./pages/commande_management/EditCommande";
+import { useEffect, useState } from "react";
 
 function App() {
   const persistRootData = localStorage.getItem("persist:root");
   const storedUser = persistRootData ? JSON.parse(persistRootData).user : null;
+  const tokenUser = localStorage.getItem("token");
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    setToken(token);
+  }, [tokenUser]);
 
   return (
     <div className="App">
@@ -191,7 +198,7 @@ function App() {
                 allowedRoles={[
                   "Admin",
                   "SuperAdmin",
-                  "PiloteDuProcessus",
+                  // "PiloteDuProcessus",
                   "Sales",
                   "ChargéFormation",
                   "CommunityManager",
@@ -250,7 +257,7 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          {storedUser ? (
+          {token && storedUser ? (
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           ) : (
             <Route path="/" element={<Navigate to="/login" replace />} />

@@ -95,6 +95,37 @@ export const editCommande = async (id, formData) => {
   }
 };
 
+export const editStatusCommande = async (id, status) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.post(`/api/update-commande-status/${id}`, {
+        status,
+      });
+      return response.data;
+    } else {
+      const headers = {
+        Accept: "application/json",
+        withCredentials: true,
+      };
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      const response = await axios.post(
+        `/api/update-commande-status/${id}`,
+        { status },
+        {
+          headers: headers,
+        }
+      );
+      return response;
+    }
+  } catch (error) {
+    console.log("Error editing Commande Status with this id :", error);
+  }
+};
+
 // export const deleteCommande = async (id) => {
 //   try {
 //     if (!localStorage.getItem("token")) {

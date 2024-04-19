@@ -13,6 +13,8 @@ function GoogleCallback() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  console.log(data);
+  console.log(userAuth);
   // On page load, we take "search" parameters
   // and proxy them to /api/auth/callback on Laravel API
   useEffect(() => {

@@ -41,7 +41,21 @@ const EditCommande = () => {
   });
   const [produits, setProduits] = useState([]);
   const [showProduct, setShowProduct] = useState(false);
-  const [addSupplier, setAddSupplier] = useState(false);
+
+  const toggleFournisseurDetails = (index) => {
+    setProduits(
+      produits.map((product, i) => {
+        if (i === index) {
+          // Toggle visibility for the clicked product
+          return {
+            ...product,
+            showFournisseurDetails: !product.showFournisseurDetails,
+          };
+        }
+        return product;
+      })
+    );
+  };
 
   const addProduct = () => {
     setProduits([
@@ -122,6 +136,18 @@ const EditCommande = () => {
       theme: "light",
     });
 
+  const handleSuccess = (msg) =>
+    toast.success(msg, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
   const handleUpdateCommande = async (event) => {
     event.preventDefault();
     await csrf();
@@ -156,13 +182,14 @@ const EditCommande = () => {
 
       const res = await editCommande(id, formData);
 
-      if (res.status === 200) {
+      if (res.data.message) {
         Swal.fire({
           icon: "success",
           title: "Commande modifiée avec succès !",
           showConfirmButton: false,
           timer: 2000,
         });
+        handleSuccess(res.data.message);
 
         setCommande({
           date: "",
@@ -425,12 +452,14 @@ const EditCommande = () => {
                         <div className="d-flex justify-content-center">
                           <Button
                             className="my-3 btn btn-rounded btn-inverse-info"
-                            onClick={() => setAddSupplier(!addSupplier)}
+                            onClick={() => {
+                              toggleFournisseurDetails(index);
+                            }}
                           >
                             Ajouter le Fournisseur <FaPlusCircle size={25} />
                           </Button>
                         </div>
-                        {addSupplier && (
+                        {product.showFournisseurDetails && (
                           <div className="shadow-lg p-3 mb-5 mt-5 bg-white rounded">
                             <Form.Group className="mb-3">
                               <Form.Label>Nom du fournisseur</Form.Label>

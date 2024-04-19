@@ -18,16 +18,16 @@ function SideBar() {
         <li className="nav-item sidebar-category">
           <div className="d-flex justify-content-center">
             <img
-              src="../../images/smartSkillsLogo.png"
+              src="../../images/TrainSchedulerLogo.png"
               alt="logo"
-              width="45%"
+              width="100%"
             />
-            <p
+            {/* <p
               className="text-center align-self-center"
               style={{ color: "white" }}
             >
               Gestion des Formations
-            </p>
+            </p> */}
           </div>
           <span />
         </li>

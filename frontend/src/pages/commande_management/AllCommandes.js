@@ -1,15 +1,34 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Card, Carousel, Form, InputGroup, Pagination, Row } from "react-bootstrap";
+import {
+  Badge,
+  Card,
+  Carousel,
+  Form,
+  InputGroup,
+  Pagination,
+  Row,
+} from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import CommandeModal from "../../components/CommandeModal";
-import { fetchAllCommandes } from "../../services/CommandeServices";
+import {
+  editStatusCommande,
+  fetchAllCommandes,
+} from "../../services/CommandeServices";
+import { BsFillSendCheckFill } from "react-icons/bs";
+import { FaCheckCircle } from "react-icons/fa";
+import { MdCancel } from "react-icons/md";
+import { useSelector } from "react-redux";
+// import Pusher from "pusher-js";
+import Echo from "laravel-echo";
+import axios from "../../services/axios";
 require("moment/locale/fr");
 
 function AllCommandes() {
   const [commandes, setCommandes] = useState([]);
+  const [commandesDraft, setCommandesDraft] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,40 +40,223 @@ function AllCommandes() {
   const numberPages = Math.ceil(
     commandes.length > 0 && commandes.length / commandesPerPage
   );
+  const commandesDraftPage =
+    commandesDraft.length > 0 && commandesDraft.slice(firstIndex, lastIndex);
+  const numberPagesDraft = Math.ceil(
+    commandesDraft.length > 0 && commandesDraft.length / commandesPerPage
+  );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
+  const numbersDraft = [...Array(numberPagesDraft + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
+  const [userAuth, setUserAuth] = useState(null);
+  const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
+
+  window.Pusher = require("pusher-js");
+
+  const token = localStorage.getItem("token");
+  const headers = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    withCredentials: true,
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  // const csrf = () => axios.get("/sanctum/csrf-cookie");
+
+  function getCsrfTokenFromCookies() {
+    // Decode cookies to handle encoded characters
+    const decodedCookies = decodeURIComponent(document.cookie);
+    // Split cookies string into individual cookies
+    const cookies = decodedCookies.split(";");
+    // Look for the XSRF-TOKEN cookie and return its value
+    const xsrfToken = cookies.find((cookie) =>
+      cookie.trim().startsWith("XSRF-TOKEN=")
+    );
+    if (xsrfToken) {
+      // Split the cookie string by '=' and return the value part
+      return xsrfToken.split("=")[1];
+    }
+    return null; // Return null if the token is not found
+  }
+
+  // Example usage
+  const csrfToken = getCsrfTokenFromCookies();
+
+  //open connection with WS
+  if (token) {
+    window.Echo = new Echo({
+      broadcaster: "pusher",
+      key: "LaravelWebSocketKey",
+      wsHost: window.location.hostname,
+      wsPort: 6001,
+      forceTLS: false,
+      disableStats: true,
+      cluster: "mt1",
+      encrypted: true,
+      withCredentials: true,
+      authEndpoint: "http://localhost:8000/broadcasting/auth",
+      auth: {
+        headers: {
+          api_token: csrfToken,
+          "X-CSRF-Token": document.head.querySelector(
+            'meta[name="csrf-token"]'
+          ),
+          Authorization: window.localStorage.getItem("token")
+            ? `Bearer ${token}`
+            : `Bearer ${csrfToken}`,
+          "Access-Control-Allow-Credentials": true,
+          Accept: "application/json",
+        },
+      },
+      enabledTransports: ["ws", "wss"],
+    });
+  } else {
+    window.Echo = new Echo({
+      broadcaster: "pusher",
+      key: "LaravelWebSocketKey",
+      wsHost: window.location.hostname,
+      wsPort: 6001,
+      forceTLS: false,
+      disableStats: true,
+      cluster: "mt1",
+      encrypted: true,
+      withCredentials: true,
+      authEndpoint: "http://localhost:8000/broadcasting/auth",
+      auth: {
+        headers: {
+          api_token: csrfToken,
+          "X-CSRF-Token": document.head.querySelector(
+            'meta[name="csrf-token"]'
+          ),
+          Authorization: window.localStorage.getItem("token")
+            ? `Bearer ${token}`
+            : `Bearer ${csrfToken}`,
+          "Access-Control-Allow-Credentials": true,
+          Accept: "application/json",
+        },
+      },
+      enabledTransports: ["ws", "wss"],
+      authorizer: (channel, options) => {
+        return {
+          authorize: (socketId, callback) => {
+            axios
+              .post("/api/broadcasting/auth", {
+                socket_id: socketId,
+                channel_name: channel.name,
+              })
+              .then((response) => {
+                console.log(response);
+                callback(false, response.data);
+              })
+              .catch((error) => {
+                callback(true, error.response);
+              });
+          },
+        };
+      },
+    });
+  }
+
+  //Subscribe to channel
+  // window.Echo.channel("statusChannel").listen("OrderStatusUpdated", (event) => {
+  //   console.log(event);
+  // });
+
+  //Subscribe to private channel
+  const channel = window.Echo.private("statusChannel.1");
+
+  channel
+    // .subscribe(() => {
+    //   console.log("subscribed!");
+    // })
+    .listen("OrderStatusUpdated", (e) => {
+      console.log(e);
+    });
 
   useEffect(() => {
+    const n = async () => {
+      // await csrf()
+      await axios.get("http://localhost:8000/api/notif");
+    };
     const u = async () => {
       const d = await fetchData();
       setCommandes(d);
+      const cd = d.filter((c) => c.status !== "Brouillon");
+      setCommandesDraft(cd);
     };
 
     u();
+    n();
   }, []);
+
+  // window.Echo.private("statusChannel.1").listen("OrderStatusUpdated", (event) => {
+  //   console.log(event);
+  // });
+
+  // useEffect(() => {
+  //   Pusher.logToConsole = true;
+
+  //   const pusher = new Pusher("337d478b24ca2c0bf504", {
+  //     cluster: "eu",
+  //     encrypted: true,
+  //   });
+
+  //   const channel = pusher.subscribe("statusChannel" + 13);
+  //   channel.bind("updateOrderStatus", function (data) {
+  //     toast.info(
+  //       "L'etat de la commande avec l'id " +
+  //         data.order.id +
+  //         " est devenu : " +
+  //         data.order.status
+  //     );
+  //   });
+
+  //   return () => {
+  //     channel.unbind_all();
+  //     channel.unsubscribe();
+  //   };
+  // }, []);
+
+  useEffect(() => {
+    setUserAuth(result.user);
+  }, [result.user]);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
     setWordEntered(searchWord);
-    if (columnName && columnName !== "Colonne") {
+    if (
+      columnName &&
+      columnName !== "Colonne" &&
+      (columnName === "status" ||
+        columnName === "paymentMethod" ||
+        columnName === "date")
+    ) {
       const newFilter =
         commandes.length > 0 &&
-        commandes.filter((Commande) =>
-          Commande[columnName].toLowerCase().includes(searchWord.toLowerCase())
+        commandes.filter((commande) =>
+          commande[columnName].toLowerCase().includes(searchWord.toLowerCase())
         );
+      setFilteredData(newFilter);
+    } else if (columnName === "quatity" || columnName === "total") {
+      const newFilter =
+        commandes.length > 0 &&
+        commandes.filter((commande) => commande[columnName] === searchWord);
       setFilteredData(newFilter);
     } else {
       const newFilter =
         commandes.length > 0 &&
-        commandes.filter((Commande) => {
-          const CommandeFields = Object.values(Commande)
+        commandes.filter((commande) => {
+          const commandeFields = Object.values(commande)
             .join(" ")
             .toLowerCase();
-          return CommandeFields.includes(searchWord);
+          return commandeFields.includes(searchWord);
         });
       setFilteredData(newFilter);
     }
@@ -166,6 +368,102 @@ function AllCommandes() {
     setShowList(false);
   };
 
+  const handleSendCommande = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, envoyer !",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await editStatusCommande(id, "EnCours");
+          if (res.message) {
+            Swal.fire({
+              title: "Envoyée avec succès!",
+              text: "Commande est en cours de traitement par le pilote du processus !",
+              icon: "success",
+            });
+            const d = await fetchData();
+            setCommandes(d);
+            handleSuccess(res.message);
+          }
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
+
+  const handleValidateCommande = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, valider !",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await editStatusCommande(id, "Confirmé");
+          if (res.message) {
+            Swal.fire({
+              title: "Confirmée avec succès!",
+              text: "Commande est confirmée et en cours de livraison !",
+              icon: "success",
+            });
+            const d = await fetchData();
+            setCommandesDraft(d);
+            handleSuccess(res.message);
+          }
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
+
+  const handleCancelCommande = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, annuler !",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await editStatusCommande(id, "Annulé");
+          if (res.message) {
+            Swal.fire({
+              title: "Annulée avec succès!",
+              text: "Commande est non confirmée !",
+              icon: "success",
+            });
+            const d = await fetchData();
+            setCommandesDraft(d);
+            handleSuccess(res.message);
+          }
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -177,13 +475,15 @@ function AllCommandes() {
                 <h4 className="card-title mb-5 mt-2">
                   Liste de toutes les commandes
                 </h4>
-                <Button
-                  variant="outline-success"
-                  className="btn btn-sm m-3 mt-1"
-                  onClick={handleShowAddModal}
-                >
-                  Ajouter une Commande
-                </Button>
+                {userAuth && userAuth.role !== "PiloteDuProcessus" && (
+                  <Button
+                    variant="outline-success"
+                    className="btn btn-sm m-3 mt-1"
+                    onClick={handleShowAddModal}
+                  >
+                    Ajouter une Commande
+                  </Button>
+                )}
               </div>
               <div className="d-flex justify-content-end px-3 py-3">
                 <div className="btn-group">
@@ -222,15 +522,30 @@ function AllCommandes() {
                                 required
                               >
                                 <option value="">Colonne</option>
-                                <option value="lastName">Nom</option>
-                                <option value="firstName">Prénom</option>
-                                <option value="email">E-mail</option>
-                                <option value="type">Type</option>
-                                <option value="speciality">Spécialité</option>
-                                <option value="disponibility">
-                                  Disponibilité
+                                <option value="stats">Etat du commande</option>
+                                <option value="paymentMethod">
+                                  Méthode de paiement
                                 </option>
+                                <option value="date">Date de création</option>
+                                <option value="quantity">Quantité</option>
+                                <option value="total">Total</option>
                               </Form.Select>
+                            </InputGroup>
+                          </Form.Group>
+                        </div>
+                        <div className="input-field second-wrap">
+                          <Form.Group>
+                            <InputGroup>
+                              <Form.Control
+                                id="search"
+                                type="text"
+                                placeholder="Recherchez des administareurs ..."
+                                size="lg"
+                                name=""
+                                value={wordEntered}
+                                onChange={handleFilter}
+                                required
+                              />
                             </InputGroup>
                           </Form.Group>
                         </div>
@@ -278,12 +593,22 @@ function AllCommandes() {
                                   <h6>{c.date}</h6>
                                 </td>
                                 <td>
-                                  <div
+                                  <Badge
+                                    bg={
+                                      c.status === "Brouillon"
+                                        ? "secondary"
+                                        : c.status === "EnCours"
+                                        ? "primary"
+                                        : c.status === "Confirmé" ||
+                                          c.status === "Réceptionné"
+                                        ? "success"
+                                        : "danger"
+                                    }
+                                    className="fs-5"
                                     pill
-                                    className="badge badge-outline-success badge-pill"
                                   >
                                     {c.status}
-                                  </div>
+                                  </Badge>
                                 </td>
                                 <td>{c.quantity}</td>
                                 <td>{c.paymentMethod}</td>
@@ -308,17 +633,30 @@ function AllCommandes() {
                                       className="btn btn-sm mb-2"
                                     >
                                       Modifier{" "}
-                                      <i className="mdi mdi-tooltip-edit"></i>
+                                      <i
+                                        className="mdi mdi-tooltip-edit"
+                                        style={{ fontSize: 18 }}
+                                      ></i>
                                     </Button>
                                     <Button
-                                      //   onClick={
+                                      //   onClick={()=>
                                       // handleDeleteCommande(c.id)
                                       //   }
                                       variant="outline-danger"
-                                      className="btn btn-sm"
+                                      className="btn btn-sm mb-2"
                                     >
                                       Supprimer{" "}
-                                      <i className="mdi mdi-delete"></i>
+                                      <i
+                                        className="mdi mdi-delete"
+                                        style={{ fontSize: 18 }}
+                                      ></i>
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleSendCommande(c.id)}
+                                      variant="outline-success"
+                                      className="btn btn-sm mb-2"
+                                    >
+                                      Envoyer <BsFillSendCheckFill size={18} />
                                     </Button>
                                   </div>
                                 </td>
@@ -328,8 +666,9 @@ function AllCommandes() {
                         ) : filteredData.length === 0 &&
                           commandes.length === 0 ? (
                           <></>
-                        ) : (
-                          commandes.length > 0 &&
+                        ) : commandes.length > 0 &&
+                          userAuth &&
+                          userAuth.role !== "PiloteDuProcessus" ? (
                           commandesPage.map((c, index) => {
                             return (
                               <tr key={index}>
@@ -337,12 +676,22 @@ function AllCommandes() {
                                   <h6>{c.date}</h6>
                                 </td>
                                 <td>
-                                  <div
+                                  <Badge
+                                    bg={
+                                      c.status === "Brouillon"
+                                        ? "secondary"
+                                        : c.status === "EnCours"
+                                        ? "primary"
+                                        : c.status === "Confirmé" ||
+                                          c.status === "Réceptionné"
+                                        ? "success"
+                                        : "danger"
+                                    }
+                                    className="fs-5"
                                     pill
-                                    className="badge badge-outline-success badge-pill"
                                   >
                                     {c.status}
-                                  </div>
+                                  </Badge>
                                 </td>
                                 <td>{c.quantity}</td>
                                 <td>{c.paymentMethod}</td>
@@ -365,19 +714,114 @@ function AllCommandes() {
                                       variant="outline-primary"
                                       onClick={() => handleButtonEdit(c.id)}
                                       className="btn btn-sm mb-2"
+                                      disabled={
+                                        c.status === "Anuulé" ||
+                                        c.status === "Confirmé" ||
+                                        c.status === "Réceptionné" ||
+                                        c.status === "Consommé"
+                                      }
                                     >
                                       Modifier{" "}
-                                      <i className="mdi mdi-tooltip-edit"></i>
+                                      <i
+                                        className="mdi mdi-tooltip-edit"
+                                        style={{ fontSize: 18 }}
+                                      ></i>
                                     </Button>
                                     <Button
-                                      //   onClick={
+                                      //   onClick={()=>
                                       // handleDeleteCommande(c.id)
                                       //   }
                                       variant="outline-danger"
-                                      className="btn btn-sm"
+                                      className="btn btn-sm mb-2"
                                     >
                                       Supprimer{" "}
-                                      <i className="mdi mdi-delete"></i>
+                                      <i
+                                        className="mdi mdi-delete"
+                                        style={{ fontSize: 18 }}
+                                      ></i>
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleSendCommande(c.id)}
+                                      variant="outline-success"
+                                      className="btn btn-sm mb-2"
+                                      disabled={
+                                        c.status === "Annulé" ||
+                                        c.status === "Confirmé" ||
+                                        c.status === "Réceptionné" ||
+                                        c.status === "Consommé"
+                                      }
+                                    >
+                                      Envoyer <BsFillSendCheckFill size={18} />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          commandesDraft.length > 0 &&
+                          commandesDraftPage.map((c, index) => {
+                            return (
+                              <tr key={index}>
+                                <td>
+                                  <h6>{c.date}</h6>
+                                </td>
+                                <td>
+                                  <Badge
+                                    bg={
+                                      c.status === "Brouillon"
+                                        ? "secondary"
+                                        : c.status === "EnCours"
+                                        ? "primary"
+                                        : c.status === "Confirmé" ||
+                                          c.status === "Réceptionné"
+                                        ? "success"
+                                        : "danger"
+                                    }
+                                    className="fs-5"
+                                    pill
+                                  >
+                                    {c.status}
+                                  </Badge>
+                                </td>
+                                <td>{c.quantity}</td>
+                                <td>{c.paymentMethod}</td>
+                                <td>{c.total} DT</td>
+                                <td>
+                                  {Array.isArray(c.produits) &&
+                                    c.produits.map((p, i) => {
+                                      return <p>{p.name}</p>;
+                                    })}
+                                </td>
+                                <td>
+                                  {Array.isArray(c.produits) &&
+                                    c.produits.map((p, i) => {
+                                      return <p>{p.fournisseur.name}</p>;
+                                    })}
+                                </td>
+                                <td style={{ width: "15%" }}>
+                                  <div className="d-flex flex-column justify-content-center">
+                                    <Button
+                                      onClick={() =>
+                                        handleValidateCommande(c.id)
+                                      }
+                                      variant="outline-success"
+                                      className="btn btn-sm mb-2"
+                                      disabled={
+                                        c.status === "Confirmé" ||
+                                        c.status === "Réceptionné" ||
+                                        c.status === "Consommé"
+                                      }
+                                    >
+                                      Valider <FaCheckCircle size={16} />
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleCancelCommande(c.id)}
+                                      variant="outline-danger"
+                                      className="btn btn-sm"
+                                      disabled={c.status === "Annulé"}
+                                    >
+                                      Annuler <MdCancel size={18} />
                                     </Button>
                                   </div>
                                 </td>
@@ -388,36 +832,69 @@ function AllCommandes() {
                       </tbody>
                     </table>
                   </div>
-                  <Pagination className="d-flex justify-content-center mt-5">
-                    <Pagination.Prev
-                      onClick={prevPage}
-                      disabled={currentPage === 1}
-                    >
-                      <i
-                        className="mdi mdi-arrow-left-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Prev>
-                    {numbers.map((n, i) => (
-                      <Pagination.Item
-                        className={`${currentPage === n ? "active" : ""}`}
-                        key={i}
-                        style={{ fontSize: "1.5em" }}
-                        onClick={() => changeCurrentPage(n)}
+                  {userAuth && userAuth.role !== "PiloteDuProcessus" ? (
+                    <Pagination className="d-flex justify-content-center mt-5">
+                      <Pagination.Prev
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
                       >
-                        {n}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      onClick={nextPage}
-                      disabled={currentPage === numberPages}
-                    >
-                      <i
-                        className="mdi mdi-arrow-right-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Next>
-                  </Pagination>
+                        <i
+                          className="mdi mdi-arrow-left-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Prev>
+                      {numbers.map((n, i) => (
+                        <Pagination.Item
+                          className={`${currentPage === n ? "active" : ""}`}
+                          key={i}
+                          style={{ fontSize: "1.5em" }}
+                          onClick={() => changeCurrentPage(n)}
+                        >
+                          {n}
+                        </Pagination.Item>
+                      ))}
+                      <Pagination.Next
+                        onClick={nextPage}
+                        disabled={currentPage === numberPages}
+                      >
+                        <i
+                          className="mdi mdi-arrow-right-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Next>
+                    </Pagination>
+                  ) : (
+                    <Pagination className="d-flex justify-content-center mt-5">
+                      <Pagination.Prev
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
+                      >
+                        <i
+                          className="mdi mdi-arrow-left-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Prev>
+                      {numbersDraft.map((n, i) => (
+                        <Pagination.Item
+                          className={`${currentPage === n ? "active" : ""}`}
+                          key={i}
+                          style={{ fontSize: "1.5em" }}
+                          onClick={() => changeCurrentPage(n)}
+                        >
+                          {n}
+                        </Pagination.Item>
+                      ))}
+                      <Pagination.Next
+                        onClick={nextPage}
+                        disabled={currentPage === numberPagesDraft}
+                      >
+                        <i
+                          className="mdi mdi-arrow-right-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Next>
+                    </Pagination>
+                  )}
                 </>
               )}
               {showCarousel && (
@@ -425,146 +902,352 @@ function AllCommandes() {
                   style={{ backgroundColor: "#D2D8EB" }}
                   className="shadow-lg p-5 mb-5 rounded"
                 >
-                  {commandes.length > 0 &&
-                    commandes.map((c, idx) => {
-                      return (
-                        <Carousel.Item key={idx} className="row">
-                          <div
-                            className="d-flex justify-content-end row"
-                            style={{ marginRight: "5%" }}
-                          >
-                            <Button
-                              onClick={() => handleButtonEdit(c.id)}
-                              className="btn btn-sm m-1 btn-dark btn-rounded col-lg-2 col-xs-12"
+                  {userAuth &&
+                  userAuth.role !== "PiloteDuProcessus" &&
+                  commandes.length > 0
+                    ? commandes.map((c, idx) => {
+                        return (
+                          <Carousel.Item key={idx} className="row">
+                            <div
+                              className="d-flex justify-content-end row"
+                              style={{ marginRight: "5%" }}
                             >
-                              Modifier <i className="mdi mdi-tooltip-edit"></i>
-                            </Button>
-                            <Button
-                              //   onClick={() => handleDeleteCommande(c.id)}
-                              className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
+                              <Button
+                                onClick={() => handleButtonEdit(c.id)}
+                                className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12 col-md-8"
+                              >
+                                Modifier{" "}
+                                <i className="mdi mdi-tooltip-edit"></i>
+                              </Button>
+                              <Button
+                                //   onClick={() => handleDeleteCommande(c.id)}
+                                className="btn btn-sm m-1 btn-danger btn-rounded col-lg-2 col-xs-12 col-md-8"
+                                style={{ color: "white" }}
+                              >
+                                Supprimer <i className="mdi mdi-delete"></i>
+                              </Button>
+                              <Button
+                                onClick={() => handleSendCommande(c.id)}
+                                className="btn btn-sm m-1 btn-success btn-rounded col-lg-2 col-xs-12 col-md-8"
+                                style={{ color: "white" }}
+                              >
+                                Envoyer <BsFillSendCheckFill size={18} />
+                              </Button>
+                            </div>
+                            <div className="m-lg-5 m-md-5 m-sm-0 m-xs-0 p-sm-0 p-xs-0">
+                              <Card className="shadow-lg p-3 rounded">
+                                <Card.Body>
+                                  <Card.Title>
+                                    <h2>{c.date}</h2>
+                                  </Card.Title>
+                                  <Card.Text className="d-flex justify-content-evenly row">
+                                    <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
+                                      <p>
+                                        <span className="text-primary fw-bold">
+                                          Etat de la commande :
+                                        </span>{" "}
+                                        <Badge
+                                          bg={
+                                            c.status === "Brouillon"
+                                              ? "secondary"
+                                              : c.status === "EnCours"
+                                              ? "primary"
+                                              : c.status === "Confirmé" ||
+                                                c.status === "Réceptionné"
+                                              ? "success"
+                                              : "danger"
+                                          }
+                                          className="fs-5"
+                                          pill
+                                        >
+                                          {c.status}
+                                        </Badge>
+                                      </p>
+                                      <p>
+                                        <span className="text-primary fw-bold">
+                                          Quantité :
+                                        </span>{" "}
+                                        {c.quantity}
+                                      </p>
+                                      <p>
+                                        <span className="text-primary fw-bold">
+                                          Méthode de paiement :
+                                        </span>{" "}
+                                        {c.paymentMethod}
+                                      </p>
+                                      <p>
+                                        <span className="text-primary fw-bold">
+                                          Total :
+                                        </span>{" "}
+                                        {c.total} DT
+                                      </p>
+                                      <span className="text-primary fw-bold">
+                                        Liste des produits :
+                                      </span>
+                                      <Row>
+                                        {c.produits.length > 0 &&
+                                          c.produits.map((p, i) => (
+                                            <Card
+                                              key={i}
+                                              className="col shadow-lg p-3 rounded mt-4"
+                                            >
+                                              <Card.Body className="p-1">
+                                                <Card.Title>
+                                                  {p.name}
+                                                </Card.Title>
+                                                <Card.Text>
+                                                  <dl>
+                                                    <dt>Prix</dt>
+                                                    <dd>{p.price} DT</dd>
+                                                    <dt>Catégorie</dt>
+                                                    <dd>{p.category}</dd>
+                                                    <dt
+                                                      style={{ color: "red" }}
+                                                    >
+                                                      Nom du fournisseur
+                                                    </dt>
+                                                    <dd>
+                                                      {p.fournisseur.name}
+                                                    </dd>
+                                                    <dt>
+                                                      E-mail du fournisseur
+                                                    </dt>
+                                                    <dd>
+                                                      {p.fournisseur.email}
+                                                    </dd>
+                                                    <dt>Numéro de téléphone</dt>
+                                                    <dd>
+                                                      {
+                                                        p.fournisseur
+                                                          .phoneNumber
+                                                      }
+                                                    </dd>
+                                                    <dt>
+                                                      Conditions de paiement du
+                                                      fournisseur
+                                                    </dt>
+                                                    <dd>
+                                                      {
+                                                        p.fournisseur
+                                                          .paymentConditions
+                                                      }
+                                                    </dd>
+                                                    <dt>
+                                                      Adresse du fournisseur
+                                                    </dt>
+                                                    <dd>
+                                                      {
+                                                        p.fournisseur.address
+                                                          .numero_rue
+                                                      }{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .nom_rue
+                                                      }
+                                                      ,{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .ville
+                                                      }
+                                                      ,{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .code_postal
+                                                      }
+                                                      ,{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .region
+                                                      }
+                                                      ,{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .pays
+                                                      }
+                                                    </dd>
+                                                  </dl>
+                                                </Card.Text>
+                                              </Card.Body>
+                                            </Card>
+                                          ))}
+                                      </Row>
+                                    </div>
+                                  </Card.Text>
+                                </Card.Body>
+                              </Card>
+                            </div>
+                          </Carousel.Item>
+                        );
+                      })
+                    : userAuth &&
+                      userAuth.role === "PiloteDuProcessus" &&
+                      commandesDraft.map((c, idx) => {
+                        return (
+                          <Carousel.Item key={idx} className="row">
+                            <div
+                              className="d-flex justify-content-end row"
+                              style={{ marginRight: "5%" }}
                             >
-                              Supprimer <i className="mdi mdi-delete"></i>
-                            </Button>
-                          </div>
-                          <div className="m-lg-5 m-md-5 m-sm-0 m-xs-0 p-sm-0 p-xs-0">
-                            <Card className="shadow-lg p-3 rounded">
-                              <Card.Body>
-                                <Card.Title>
-                                  <h2>{c.date}</h2>
-                                </Card.Title>
-                                <Card.Text className="d-flex justify-content-evenly row">
-                                  <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
-                                    <p>
+                              <Button
+                                onClick={() => handleValidateCommande(c.id)}
+                                className="btn btn-sm m-1 btn-success btn-rounded col-lg-2 col-md-8 col-xs-12"
+                                style={{ color: "white" }}
+                              >
+                                Valider <FaCheckCircle size={16} />
+                              </Button>
+                              <Button
+                                onClick={() => handleCancelCommande(c.id)}
+                                className="btn btn-sm m-1 btn-danger btn-rounded col-lg-2 col-md-8 col-xs-12"
+                                style={{ color: "white" }}
+                              >
+                                Annuler <MdCancel size={18} />
+                              </Button>
+                            </div>
+                            <div className="m-lg-5 m-md-5 m-sm-0 m-xs-0 p-sm-0 p-xs-0">
+                              <Card className="shadow-lg p-3 rounded">
+                                <Card.Body>
+                                  <Card.Title>
+                                    <h2>{c.date}</h2>
+                                  </Card.Title>
+                                  <Card.Text className="d-flex justify-content-evenly row">
+                                    <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
+                                      <p>
+                                        <span className="text-primary fw-bold">
+                                          Etat de la commande :
+                                        </span>{" "}
+                                        <Badge
+                                          bg={
+                                            c.status === "Brouillon"
+                                              ? "secondary"
+                                              : c.status === "EnCours"
+                                              ? "primary"
+                                              : c.status === "Confirmé" ||
+                                                c.status === "Réceptionné"
+                                              ? "success"
+                                              : "danger"
+                                          }
+                                          className="fs-5"
+                                          pill
+                                        >
+                                          {c.status}
+                                        </Badge>
+                                      </p>
+                                      <p>
+                                        <span className="text-primary fw-bold">
+                                          Quantité :
+                                        </span>{" "}
+                                        {c.quantity}
+                                      </p>
+                                      <p>
+                                        <span className="text-primary fw-bold">
+                                          Méthode de paiement :
+                                        </span>{" "}
+                                        {c.paymentMethod}
+                                      </p>
+                                      <p>
+                                        <span className="text-primary fw-bold">
+                                          Total :
+                                        </span>{" "}
+                                        {c.total} DT
+                                      </p>
                                       <span className="text-primary fw-bold">
-                                        Etat de la commande :
-                                      </span>{" "}
-                                      <div
-                                        pill
-                                        className="badge badge-outline-success badge-pill"
-                                      >
-                                        {c.status}
-                                      </div>
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Quantité :
-                                      </span>{" "}
-                                      {c.quantity}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Méthode de paiement :
-                                      </span>{" "}
-                                      {c.paymentMethod}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Total :
-                                      </span>{" "}
-                                      {c.total} DT
-                                    </p>
-                                    <span className="text-primary fw-bold">
-                                      Liste des produits :
-                                    </span>
-                                    <Row>
-                                      {c.produits.length > 0 &&
-                                        c.produits.map((p, i) => (
-                                          <Card
-                                            key={i}
-                                            className="col shadow-lg p-3 rounded mt-4"
-                                          >
-                                            <Card.Body className="p-1">
-                                              <Card.Title>{p.name}</Card.Title>
-                                              <Card.Text>
-                                                <dl>
-                                                  <dt>Prix</dt>
-                                                  <dd>{p.price} DT</dd>
-                                                  <dt>Catégorie</dt>
-                                                  <dd>{p.category}</dd>
-                                                  <dt style={{ color: "red" }}>
-                                                    Nom du fournisseur
-                                                  </dt>
-                                                  <dd>{p.fournisseur.name}</dd>
-                                                  <dt>E-mail du fournisseur</dt>
-                                                  <dd>{p.fournisseur.email}</dd>
-                                                  <dt>Numéro de téléphone</dt>
-                                                  <dd>
-                                                    {p.fournisseur.phoneNumber}
-                                                  </dd>
-                                                  <dt>
-                                                    Conditions de paiement du
-                                                    fournisseur
-                                                  </dt>
-                                                  <dd>
-                                                    {
-                                                      p.fournisseur
-                                                        .paymentConditions
-                                                    }
-                                                  </dd>
-                                                  <dt>
-                                                    Adresse du fournisseur
-                                                  </dt>
-                                                  <dd>
-                                                    {
-                                                      p.fournisseur.address
-                                                        .numero_rue
-                                                    }{" "}
-                                                    {
-                                                      p.fournisseur.address
-                                                        .nom_rue
-                                                    }
-                                                    ,{" "}
-                                                    {
-                                                      p.fournisseur.address
-                                                        .ville
-                                                    }
-                                                    ,{" "}
-                                                    {
-                                                      p.fournisseur.address
-                                                        .code_postal
-                                                    }
-                                                    ,{" "}
-                                                    {
-                                                      p.fournisseur.address
-                                                        .region
-                                                    }
-                                                    ,{" "}
-                                                    {p.fournisseur.address.pays}
-                                                  </dd>
-                                                </dl>
-                                              </Card.Text>
-                                            </Card.Body>
-                                          </Card>
-                                        ))}
-                                    </Row>
-                                  </div>
-                                </Card.Text>
-                              </Card.Body>
-                            </Card>
-                          </div>
-                        </Carousel.Item>
-                      );
-                    })}
+                                        Liste des produits :
+                                      </span>
+                                      <Row>
+                                        {c.produits.length > 0 &&
+                                          c.produits.map((p, i) => (
+                                            <Card
+                                              key={i}
+                                              className="col shadow-lg p-3 rounded mt-4"
+                                            >
+                                              <Card.Body className="p-1">
+                                                <Card.Title>
+                                                  {p.name}
+                                                </Card.Title>
+                                                <Card.Text>
+                                                  <dl>
+                                                    <dt>Prix</dt>
+                                                    <dd>{p.price} DT</dd>
+                                                    <dt>Catégorie</dt>
+                                                    <dd>{p.category}</dd>
+                                                    <dt
+                                                      style={{ color: "red" }}
+                                                    >
+                                                      Nom du fournisseur
+                                                    </dt>
+                                                    <dd>
+                                                      {p.fournisseur.name}
+                                                    </dd>
+                                                    <dt>
+                                                      E-mail du fournisseur
+                                                    </dt>
+                                                    <dd>
+                                                      {p.fournisseur.email}
+                                                    </dd>
+                                                    <dt>Numéro de téléphone</dt>
+                                                    <dd>
+                                                      {
+                                                        p.fournisseur
+                                                          .phoneNumber
+                                                      }
+                                                    </dd>
+                                                    <dt>
+                                                      Conditions de paiement du
+                                                      fournisseur
+                                                    </dt>
+                                                    <dd>
+                                                      {
+                                                        p.fournisseur
+                                                          .paymentConditions
+                                                      }
+                                                    </dd>
+                                                    <dt>
+                                                      Adresse du fournisseur
+                                                    </dt>
+                                                    <dd>
+                                                      {
+                                                        p.fournisseur.address
+                                                          .numero_rue
+                                                      }{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .nom_rue
+                                                      }
+                                                      ,{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .ville
+                                                      }
+                                                      ,{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .code_postal
+                                                      }
+                                                      ,{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .region
+                                                      }
+                                                      ,{" "}
+                                                      {
+                                                        p.fournisseur.address
+                                                          .pays
+                                                      }
+                                                    </dd>
+                                                  </dl>
+                                                </Card.Text>
+                                              </Card.Body>
+                                            </Card>
+                                          ))}
+                                      </Row>
+                                    </div>
+                                  </Card.Text>
+                                </Card.Body>
+                              </Card>
+                            </div>
+                          </Carousel.Item>
+                        );
+                      })}
                 </Carousel>
               )}
             </div>

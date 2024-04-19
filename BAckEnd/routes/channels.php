@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+//create new private channel
+Broadcast::channel('statusChannel.{id}', function($user, $id) {
+    return true;
+});

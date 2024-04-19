@@ -34,8 +34,22 @@ const CommandeModal = ({ show, handleClose }) => {
   var curr = new Date();
   curr.setDate(curr.getDate());
   var date = curr.toISOString().substring(0, 10);
-  const [addSupplier, setAddSupplier] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
+
+  const toggleFournisseurDetails = (index) => {
+    setProduits(
+      produits.map((product, i) => {
+        if (i === index) {
+          // Toggle visibility for the clicked product
+          return {
+            ...product,
+            showFournisseurDetails: !product.showFournisseurDetails,
+          };
+        }
+        return product;
+      })
+    );
+  };
 
   const fetchData = async () => {
     try {
@@ -86,6 +100,7 @@ const CommandeModal = ({ show, handleClose }) => {
         pays: "",
         region: "",
         supplierEmailFromDB: "",
+        showFournisseurDetails: false,
       },
     ]);
   };
@@ -287,7 +302,6 @@ const CommandeModal = ({ show, handleClose }) => {
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 required
-                minLength={8}
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
@@ -425,7 +439,7 @@ const CommandeModal = ({ show, handleClose }) => {
                       </Form.Control.Feedback>
                     </InputGroup>
                   </Form.Group>
-                  {!addSupplier && (
+                  {!product.showFournisseurDetails && (
                     <Form.Group className="mb-3">
                       <Form.Label>Fournisseur</Form.Label>
                       <InputGroup className="mb-3">
@@ -469,12 +483,14 @@ const CommandeModal = ({ show, handleClose }) => {
                   <div className="d-flex justify-content-center">
                     <Button
                       className="my-3 btn btn-rounded btn-inverse-info"
-                      onClick={() => setAddSupplier(!addSupplier)}
+                      onClick={() => {
+                        toggleFournisseurDetails(index);
+                      }}
                     >
                       Ajouter un autre Fournisseur <FaPlusCircle size={25} />
                     </Button>
                   </div>
-                  {addSupplier && (
+                  {product.showFournisseurDetails && (
                     <div className="shadow-lg p-3 mb-5 mt-5 bg-white rounded">
                       <Form.Group className="mb-3">
                         <Form.Label>Nom du fournisseur</Form.Label>

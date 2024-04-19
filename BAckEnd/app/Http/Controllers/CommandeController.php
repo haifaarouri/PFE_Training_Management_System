@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderStatusUpdated;
 use App\Models\Address;
 use App\Models\Commande;
 use App\Models\Fournisseur;
 use App\Models\Produit;
+use App\Models\User;
 use App\Rules\CommandeSatutsRule;
 use App\Rules\ProductCategoryRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use DateTimeZone;
-use DateTime;
 
 class CommandeController extends Controller
 {
@@ -38,80 +38,79 @@ class CommandeController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
             try {
-                if ($request->has('produits.*.supplierEmailFromDB')) {
-                    $validator = Validator::make($request->all(), [
-                        'date' => 'required|date',
-                        'quantity' => 'required|integer',
-                        'total' => 'required|numeric',
-                        'paymentMethod' => 'required|string|max:255',
-                        'produits.*.name' => 'required|string|max:255',
-                        'produits.*.price' => 'required|numeric',
-                        'produits.*.category' => ['required', new ProductCategoryRule()],
-                        'produits.*.supplierEmailFromDB' => 'required|email|max:255',
-                    ]);
+                $validator = Validator::make($request->all(), [
+                    'date' => 'required|date',
+                    'quantity' => 'required|integer',
+                    'total' => 'required|numeric',
+                    'paymentMethod' => 'required|string|max:255',
+                ]);
 
-                    if ($validator->fails()) {
-                        return response()->json(['error' => $validator->errors()], 400);
-                    }
+                if ($validator->fails()) {
+                    return response()->json(['error' => $validator->errors()], 400);
+                }
 
-                    $commandeData = [
-                        'date' => $request->input('date'),
-                        'quantity' => $request->input('quantity'),
-                        'total' => $request->input('total'),
-                        'paymentMethod' => $request->input('paymentMethod'),
-                    ];
+                $commandeData = [
+                    'date' => $request->input('date'),
+                    'quantity' => $request->input('quantity'),
+                    'total' => $request->input('total'),
+                    'paymentMethod' => $request->input('paymentMethod'),
+                ];
 
-                    $commande = Commande::create($commandeData);
+                $commande = Commande::create($commandeData);
 
-                    foreach ($request->input('produits') as $produit) {
+                foreach ($request->input('produits') as $produit) {
+                    if ($produit['supplierEmailFromDB']) {
+                        $validator = Validator::make($produit, [
+                            'name' => 'required|string|max:255',
+                            'price' => 'required|numeric',
+                            'category' => ['required', new ProductCategoryRule()],
+                            'supplierEmailFromDB' => 'required|email|max:255',
+                        ]);
+
+                        if ($validator->fails()) {
+                            return response()->json(['error' => $validator->errors()], 400);
+                        }
+
                         $produitData = [
                             'name' => $produit['name'],
                             'price' => $produit['price'],
                             'category' => $produit['category'],
                         ];
 
-                        $newProduit = new Produit($produitData);
+                        $newProduit = Produit::create($produitData);
                         $commande->produits()->save($newProduit);
 
                         $existingSupplier = Fournisseur::firstWhere('email', $produit['supplierEmailFromDB']);
                         $existingSupplier->produits()->save($newProduit);
-                    }
+                    } else {
+                        $validator = Validator::make($produit, [
+                            'name' => 'required|string|max:255',
+                            'price' => 'required|numeric',
+                            'category' => ['required', new ProductCategoryRule()],
+                            'supplierName' => 'required|string|max:255',
+                            'email' => 'required|email|max:255|unique:fournisseurs',
+                            'supplierPhoneNumber' => 'required|string|max:8',
+                            'supplierPaymentConditions' => 'required|string|max:255',
+                            'numero_rue' => 'required|integer',
+                            'nom_rue' => 'required|string|max:255',
+                            'ville' => 'required|string|max:255',
+                            'code_postal' => 'required|max:255',
+                            'pays' => 'required|string|max:255',
+                            'region' => 'required|string|max:255',
+                        ]);
 
-                    return response()->json($commande, 201);
-                } else {
-                    $validator = Validator::make($request->all(), [
-                        'date' => 'required|date',
-                        'quantity' => 'required|integer',
-                        'total' => 'required|numeric',
-                        'paymentMethod' => 'required|string|max:255',
-                        'produits.*.name' => 'required|string|max:255',
-                        'produits.*.price' => 'required|numeric',
-                        'produits.*.category' => ['required', new ProductCategoryRule()],
-                        'produits.*.supplierName' => 'required|string|max:255',
-                        'produits.*.email' => 'required|email|max:255|unique:fournisseurs',
-                        'produits.*.supplierPhoneNumber' => 'required|string|max:8',
-                        'produits.*.supplierPaymentConditions' => 'required|string|max:255',
-                    ]);
+                        if ($validator->fails()) {
+                            return response()->json(['error' => $validator->errors()], 400);
+                        }
 
-                    if ($validator->fails()) {
-                        return response()->json(['error' => $validator->errors()], 400);
-                    }
-
-                    $commandeData = [
-                        'date' => $request->input('date'),
-                        'quantity' => $request->input('quantity'),
-                        'total' => $request->input('total'),
-                        'paymentMethod' => $request->input('paymentMethod'),
-                    ];
-
-                    $commande = Commande::create($commandeData);
-
-                    foreach ($request->input('produits') as $produit) {
                         $produitData = [
                             'name' => $produit['name'],
                             'price' => $produit['price'],
                             'category' => $produit['category'],
                         ];
+
+                        $newProduit = Produit::create($produitData);
+                        $commande->produits()->save($newProduit);
 
                         $fournisseurData = [
                             'name' => $produit['supplierName'],
@@ -133,14 +132,11 @@ class CommandeController extends Controller
 
                         $fournisseur->address()->save($adresse);
 
-                        $produit = new Produit($produitData);
-                        $commande->produits()->save($produit);
-                        $fournisseur->produits()->save($produit);
+                        $fournisseur->produits()->save($newProduit);
                     }
-
-                    return response()->json($commande, 201);
-
                 }
+
+                return response()->json($commande, 201);
             } catch (\Exception $e) {
                 dd($e->getMessage());
                 return response()->json(['error' => 'Erreur lors de l\'ajout de la commande !'], 500);
@@ -152,25 +148,36 @@ class CommandeController extends Controller
 
     public function updateStatus($id, Request $request)
     {
-        if (auth()->user()->role === 'PiloteDuProcessus') {
+        if ($this->list_roles->contains(auth()->user()->role)) {
+            if ($request->status === "EnCours") {
+                $commande = Commande::find($id);
 
-            $commande = Commande::find($id);
+                $commande->status = $request->status;
+                $commande->save();
 
-            $commande->status = $request->status;
-            $commande->save();
-            return response()->json(['message' => 'Commande est ' . $request->status . ' !']);
+                $piloteDuProcessus = User::firstWhere('role', "PiloteDuProcessus");
 
-        } else {
-            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
-        }
+                if (!$piloteDuProcessus) {
+                    return response()->json(['error' => "Pas de Pilote Du Processus !"], 404);
+                }
 
-        if (auth()->user()->role !== 'PiloteDuProcessus') {
+                $piloteId = $piloteDuProcessus->id;
 
-            $commande = Commande::find($id);
+                OrderStatusUpdated::dispatch($commande, 13);
+                // event(new OrderStatusUpdated($commande, 13));
 
-            $commande->status = "EnCours";
-            $commande->save();
-            return response()->json(['message' => 'Commande est en cours de traitement par le pilote de processus !']);
+                // \broadcast(new OrderStatusUpdated($commande, $piloteId));
+                return response()->json(['message' => 'Commande est ' . $request->status . ' !']);
+            }
+
+            // $commande = Commande::find($id);
+
+            // $commande->status = $request->status;
+            // $commande->save();
+
+            // \broadcast(new OrderStatusUpdated($commande));
+
+            // return response()->json(['message' => 'Commande est ' . $request->status . ' !']);
 
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
@@ -286,6 +293,31 @@ class CommandeController extends Controller
                         'phoneNumber' => $decodedSupplier['phoneNumber'],
                         'paymentConditions' => $decodedSupplier['paymentConditions'],
                     ]);
+                    if (isset($decodedSupplier['address'])) {
+                        if ($decodedSupplier['address']['id']) {
+                            $adresse = Address::find($decodedSupplier['address']['id']);
+                            $adresse->update([
+                                "numero_rue" => $decodedSupplier['address']['numero_rue'],
+                                "nom_rue" => $decodedSupplier['address']['nom_rue'],
+                                "ville" => $decodedSupplier['address']['id'],
+                                "code_postal" => $decodedSupplier['address']['ville'],
+                                "pays" => $decodedSupplier['address']['pays'],
+                                "region" => $decodedSupplier['address']['region'],
+                            ]);
+                            $fournisseur->address()->save($adresse);
+                        } else {
+                            $adresse = new Address([
+                                "numero_rue" => $decodedSupplier['address']['numero_rue'],
+                                "nom_rue" => $decodedSupplier['address']['nom_rue'],
+                                "ville" => $decodedSupplier['address']['id'],
+                                "code_postal" => $decodedSupplier['address']['ville'],
+                                "pays" => $decodedSupplier['address']['pays'],
+                                "region" => $decodedSupplier['address']['region'],
+                            ]);
+                            $fournisseur->address()->save($adresse);
+                        }
+                    }
+                    $fournisseur->produits()->save($produit);
                 }
             } else {
                 $fournisseur = new Fournisseur([
@@ -294,7 +326,17 @@ class CommandeController extends Controller
                     'phoneNumber' => $decodedSupplier['phoneNumber'],
                     'paymentConditions' => $decodedSupplier['paymentConditions'],
                 ]);
-                $commande->fournisseurs()->save($fournisseur);
+
+                $adresse = new Address([
+                    "numero_rue" => $decodedSupplier['address']['numero_rue'],
+                    "nom_rue" => $decodedSupplier['address']['nom_rue'],
+                    "ville" => $decodedSupplier['address']['id'],
+                    "code_postal" => $decodedSupplier['address']['ville'],
+                    "pays" => $decodedSupplier['address']['pays'],
+                    "region" => $decodedSupplier['address']['region'],
+                ]);
+                $fournisseur->address()->save($adresse);
+                $fournisseur->produits()->save($produit);
             }
 
             if (isset($produitInput['supplierEmailFromDB'])) {
@@ -308,23 +350,11 @@ class CommandeController extends Controller
                 );
             }
 
-            if (isset($produitInput['numero_rue'])) {
-                $adresse = new Address([
-                    'numero_rue' => $decodedSupplier['address']['numero_rue'],
-                    'nom_rue' => $decodedSupplier['address']['nom_rue'],
-                    'ville' => $decodedSupplier['address']['ville'],
-                    'code_postal' => $decodedSupplier['address']['code_postal'],
-                    'pays' => $decodedSupplier['address']['pays'],
-                    'region' => $decodedSupplier['address']['region'],
-                ]);
-                $fournisseur->address()->save($adresse);
-            }
-
             $produit->fournisseur()->associate($fournisseur);
             $produit->save();
         }
 
-        return response()->json($commande, 200);
+        return response()->json(['message' => "Commande modifié avec succès !"], 200);
     }
 
     // public function destroy($id)
