@@ -10,7 +10,7 @@ import {
   Pagination,
   Row,
 } from "react-bootstrap";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import CommandeModal from "../../components/CommandeModal";
 import {
@@ -21,9 +21,9 @@ import { BsFillSendCheckFill } from "react-icons/bs";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
 import { useSelector } from "react-redux";
-// import Pusher from "pusher-js";
 import Echo from "laravel-echo";
 import axios from "../../services/axios";
+import { Toaster, toast } from "sonner";
 require("moment/locale/fr");
 
 function AllCommandes() {
@@ -58,17 +58,6 @@ function AllCommandes() {
   window.Pusher = require("pusher-js");
 
   const token = localStorage.getItem("token");
-  const headers = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    withCredentials: true,
-  };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  // const csrf = () => axios.get("/sanctum/csrf-cookie");
 
   function getCsrfTokenFromCookies() {
     // Decode cookies to handle encoded characters
@@ -86,10 +75,9 @@ function AllCommandes() {
     return null; // Return null if the token is not found
   }
 
-  // Example usage
   const csrfToken = getCsrfTokenFromCookies();
 
-  //open connection with WS
+  //open connection with WS => all authenticated users can make this connection with WS
   if (token) {
     window.Echo = new Echo({
       broadcaster: "pusher",
@@ -116,6 +104,36 @@ function AllCommandes() {
         },
       },
       enabledTransports: ["ws", "wss"],
+      authorizer: (channel, options) => {
+        return {
+          authorize: (socketId, callback) => {
+            axios
+              .post("/broadcasting/auth", {
+                socket_id: socketId,
+                channel_name: channel.name,
+                headers: {
+                  withCredentials: true,
+                  api_token: token,
+                  "X-CSRF-Token": document.head.querySelector(
+                    'meta[name="csrf-token"]'
+                  ),
+                  Authorization: window.localStorage.getItem("token")
+                    ? `Bearer ${token}`
+                    : `Bearer ${csrfToken}`,
+                  "Access-Control-Allow-Credentials": true,
+                  Accept: "application/json",
+                },
+              })
+              .then((response) => {
+                console.log(response);
+                callback(false, response.data);
+              })
+              .catch((error) => {
+                callback(true, error.response);
+              });
+          },
+        };
+      },
     });
   } else {
     window.Echo = new Echo({
@@ -147,9 +165,21 @@ function AllCommandes() {
         return {
           authorize: (socketId, callback) => {
             axios
-              .post("/api/broadcasting/auth", {
+              .post("/broadcasting/auth", {
                 socket_id: socketId,
                 channel_name: channel.name,
+                headers: {
+                  withCredentials: true,
+                  api_token: csrfToken,
+                  "X-CSRF-Token": document.head.querySelector(
+                    'meta[name="csrf-token"]'
+                  ),
+                  Authorization: window.localStorage.getItem("token")
+                    ? `Bearer ${token}`
+                    : `Bearer ${csrfToken}`,
+                  "Access-Control-Allow-Credentials": true,
+                  Accept: "application/json",
+                },
               })
               .then((response) => {
                 console.log(response);
@@ -164,65 +194,45 @@ function AllCommandes() {
     });
   }
 
-  //Subscribe to channel
-  // window.Echo.channel("statusChannel").listen("OrderStatusUpdated", (event) => {
-  //   console.log(event);
-  // });
-
-  //Subscribe to private channel
-  const channel = window.Echo.private("statusChannel.1");
-
-  channel
-    // .subscribe(() => {
-    //   console.log("subscribed!");
-    // })
-    .listen("OrderStatusUpdated", (e) => {
-      console.log(e);
+  const playNotificationSound = () => {
+    const sound = new Audio("/notification.mp3");
+    sound.play().catch((error) => {
+      console.error("Failed to play notification sound:", error);
     });
+  };
+
+  const onNewNotification = () => {
+    playNotificationSound();
+  };
 
   useEffect(() => {
-    const n = async () => {
-      // await csrf()
-      await axios.get("http://localhost:8000/api/notif");
+    //Subscribe to private channel => only for specific users
+    const channel = window.Echo.private(`statusChannel.${result.user.id}`);
+
+    const handleOrderStatusUpdated = (e) => {
+      console.log(e);
+      onNewNotification();
+      toast.info(`Nouvelle commande ${e.order.id} est ${e.order.status} !`);
     };
+
+    channel.listen("OrderStatusUpdated", handleOrderStatusUpdated);
+
+    // Unsubscribe from the channel
+    return () => {
+      channel.stopListening("OrderStatusUpdated", handleOrderStatusUpdated);
+    };
+  }, [result.user.id]);
+
+  useEffect(() => {
     const u = async () => {
       const d = await fetchData();
       setCommandes(d);
-      const cd = d.filter((c) => c.status !== "Brouillon");
+      const cd = d.length > 0 && d.filter((c) => c.status !== "Brouillon");
       setCommandesDraft(cd);
     };
 
     u();
-    n();
   }, []);
-
-  // window.Echo.private("statusChannel.1").listen("OrderStatusUpdated", (event) => {
-  //   console.log(event);
-  // });
-
-  // useEffect(() => {
-  //   Pusher.logToConsole = true;
-
-  //   const pusher = new Pusher("337d478b24ca2c0bf504", {
-  //     cluster: "eu",
-  //     encrypted: true,
-  //   });
-
-  //   const channel = pusher.subscribe("statusChannel" + 13);
-  //   channel.bind("updateOrderStatus", function (data) {
-  //     toast.info(
-  //       "L'etat de la commande avec l'id " +
-  //         data.order.id +
-  //         " est devenu : " +
-  //         data.order.status
-  //     );
-  //   });
-
-  //   return () => {
-  //     channel.unbind_all();
-  //     channel.unsubscribe();
-  //   };
-  // }, []);
 
   useEffect(() => {
     setUserAuth(result.user);
@@ -471,6 +481,7 @@ function AllCommandes() {
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
               <ToastContainer />
+              <Toaster position="bottom-left" expand={false} richColors />
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
                   Liste de toutes les commandes
@@ -790,7 +801,7 @@ function AllCommandes() {
                                 <td>
                                   {Array.isArray(c.produits) &&
                                     c.produits.map((p, i) => {
-                                      return <p>{p.name}</p>;
+                                      return <p key={i}>{p.name}</p>;
                                     })}
                                 </td>
                                 <td>

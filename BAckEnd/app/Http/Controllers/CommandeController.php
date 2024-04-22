@@ -8,7 +8,6 @@ use App\Models\Commande;
 use App\Models\Fournisseur;
 use App\Models\Produit;
 use App\Models\User;
-use App\Rules\CommandeSatutsRule;
 use App\Rules\ProductCategoryRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -149,25 +148,30 @@ class CommandeController extends Controller
     public function updateStatus($id, Request $request)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
-            if ($request->status === "EnCours") {
+            if ($request->status === "EnCours" && auth()->user()->role !== "PiloteDuProcessus") {
                 $commande = Commande::find($id);
 
                 $commande->status = $request->status;
                 $commande->save();
 
-                $piloteDuProcessus = User::firstWhere('role', "PiloteDuProcessus");
+                $piloteDuProcessus = User::where('role', '=', "PiloteDuProcessus")->get();
 
                 if (!$piloteDuProcessus) {
                     return response()->json(['error' => "Pas de Pilote Du Processus !"], 404);
                 }
 
-                $piloteId = $piloteDuProcessus->id;
+                foreach ($piloteDuProcessus as $user) {
+                    event(new OrderStatusUpdated($commande, $user->id));
 
-                OrderStatusUpdated::dispatch($commande, 13);
-                // event(new OrderStatusUpdated($commande, 13));
+                    //store user notification in DB 
+                    $notificationData = [
+                        'content_id' => $commande->id,
+                    ];
 
-                // \broadcast(new OrderStatusUpdated($commande, $piloteId));
-                return response()->json(['message' => 'Commande est ' . $request->status . ' !']);
+                    $user->notifications()->create($notificationData);
+                }
+
+                return response()->json(['message' => 'Le statut de la commande est ' . $request->status . ' !']);
             }
 
             // $commande = Commande::find($id);

@@ -27,6 +27,7 @@
     "react-toastify": "^10.0.4",
     "redux-persist": "^6.0.0",
     "resumablejs": "^1.1.0",
+    "sonner": "^1.4.41",
     "sweetalert2": "^11.10.6",
     "web-vitals": "^2.1.4"
   },

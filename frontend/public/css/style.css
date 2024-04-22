@@ -23221,3 +23221,18 @@ dl li {
     margin: 0 auto;
   }
 }
+
+@keyframes oscillateIcon {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: top center;
+  }
+  50% {
+    transform: rotate(20deg);
+    transform-origin: top center;
+  }
+}
+
+.moving-icon {
+  animation: oscillateIcon 1s ease-in-out infinite alternate;
+}

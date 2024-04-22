@@ -126,6 +126,20 @@ export const editStatusCommande = async (id, status) => {
   }
 };
 
+export const fetchAllUnreadNotifs = async () => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get("/api/notifications");
+      return response.data;
+    } else {
+      const response = await apiFetch("notifications");
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching unread notifications :", error);
+  }
+};
+
 // export const deleteCommande = async (id) => {
 //   try {
 //     if (!localStorage.getItem("token")) {

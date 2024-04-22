@@ -81,14 +81,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-commande/{id}', [CommandeController::class, 'update']);
     Route::post('/add-commande', [CommandeController::class, 'store']);
     Route::post('/update-commande-status/{id}', [CommandeController::class, 'updateStatus']);
+    Route::get('/notifications', function (Request $request) {
+        return auth()->user()->notifications()->where('read', false)->get();
+    });
     // Route::delete('/delete-commande/{id}', [CommandeController::class, 'destroy']);
     Route::get('/products', [CommandeController::class, 'getProducts']);
     Route::get('/suppliers', [CommandeController::class, 'getSuppliers']);
 });
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/notif', function () {
-        return event(new \App\Events\OrderStatusUpdated("test notify"));
-    });
-});
-

@@ -5,14 +5,21 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "../services/axios";
 import { setUser } from "../store/slices/authenticatedUserSlice";
 import { Button } from "react-bootstrap";
-import { ToastContainer, toast } from "react-toastify";
 import { apiFetch } from "../services/api";
+import { IoIosNotifications } from "react-icons/io";
+import { Toaster, toast } from "sonner";
+import {
+  fetchAllUnreadNotifs,
+  fetchCommandeById,
+} from "../services/CommandeServices";
 
 function Header() {
   const [today, setToday] = useState(null);
   const [userAuth, setUserAuth] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [listNotif, setListNotif] = useState([]);
+  const [listCmd, setListCmd] = useState([]);
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -26,29 +33,9 @@ function Header() {
     setUserAuth(result.user);
   }, [result.user]);
 
-  const handleSuccess = (msg) =>
-    toast.success(msg, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
+  const handleSuccess = (msg) => toast.success(msg);
 
-  const handleError = (err) =>
-    toast.error(err, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
+  const handleError = (err) => toast.error(err);
 
   const logout = async () => {
     if (localStorage.getItem("token")) {
@@ -75,6 +62,38 @@ function Header() {
     }
   };
 
+  // const playNotificationSound = () => {
+  //   const sound = new Audio("/notification.mp3");
+  //   sound.play().catch((error) => {
+  //     console.error("Failed to play notification sound:", error);
+  //   });
+  // };
+
+  // const onNewNotification = () => {
+  //   playNotificationSound();
+  //   toast.info("Be at the area 10 minutes before the event time");
+  // };
+
+  useEffect(() => {
+    if (result.user !== null) {
+      const n = async () => {
+        const notif = await fetchAllUnreadNotifs();
+        setListNotif(notif);
+
+        let cmds = [];
+        await Promise.all(
+            notif.map(async (n) => {
+              const c = await fetchCommandeById(n.content_id);
+              cmds.push(c);
+            })
+        );
+        setListCmd(cmds);
+      };
+
+      n();
+    }
+  }, []);
+
   return (
     <nav className="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
       <div className="navbar-menu-wrapper d-flex align-items-center justify-content-end">
@@ -85,15 +104,14 @@ function Header() {
         >
           <span className="mdi mdi-menu" />
         </button>
-        <ToastContainer />
-        {/* <div className="navbar-brand-wrapper">
-          <Link className="navbar-brand brand-logo" to="index.html">
-            <img src="images/logo.svg" alt="logo" />
+        <div className="navbar-brand-wrapper">
+          <Link className="navbar-brand brand-logo" to="/dashboard">
+            <img src="../../images/logoHeader.png" alt="logo" width="50%" />
           </Link>
-          <Link className="navbar-brand brand-logo-mini" to="index.html">
-            <img src="images/logo-mini.svg" alt="logo" />
+          <Link className="navbar-brand brand-logo-mini" to="/dashboard">
+            <img src="../../images/logoHeader.png" alt="logo" />
           </Link>
-        </div> */}
+        </div>
         <h4 className="font-weight-bold mb-0 d-none d-md-block mt-1">
           Bienvenue de nouveau, {userAuth && userAuth.firstName}{" "}
           {userAuth && userAuth.lastName}
@@ -180,8 +198,15 @@ function Header() {
               to="#"
               data-bs-toggle="dropdown"
             >
-              <i className="mdi mdi-email-open mx-0" />
-              <span className="count bg-danger">1</span>
+              <div className="icon-container">
+                <IoIosNotifications
+                  size={30}
+                  className={listNotif.length > 0 ? "mx-0 moving-icon" : "mx-0"}
+                />
+              </div>
+              {listNotif.length > 0 && (
+                <span className="count bg-danger">{listNotif.length}</span>
+              )}
             </Link>
             <div
               className="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
@@ -190,22 +215,45 @@ function Header() {
               <p className="mb-0 font-weight-normal float-left dropdown-header">
                 Notifications
               </p>
-              <Link className="dropdown-item preview-item">
-                <div className="preview-thumbnail">
-                  <div className="preview-icon bg-success">
-                    <i className="mdi mdi-information mx-0" />
-                  </div>
-                </div>
-                <div className="preview-item-content">
+              {listNotif.length > 0 && listCmd.length > 0 ? (
+                listCmd.map((c, i) => (
+                  <Link
+                    key={i}
+                    className="dropdown-item preview-item"
+                    to="/commandes"
+                  >
+                    <div className="preview-thumbnail">
+                      <div
+                        className="preview-icon bg-info"
+                        style={{ color: "white" }}
+                      >
+                        <i className="mdi mdi-information mx-0" />
+                      </div>
+                    </div>
+                    <div className="preview-item-content">
+                      <h6 className="preview-subject font-weight-normal">
+                        Nouvelle commande est {c.status} !
+                      </h6>
+                      <p className="font-weight-light small-text mb-0">
+                        Vérifier la liste des commandes.
+                      </p>
+                      <p className="font-weight-light small-text mb-0 text-muted">
+                        {moment(listNotif[i].created_at)
+                          .format("dddd, MMMM Do YYYY, h:mm:ss a")
+                          .replace(/am/g, "matin")
+                          .replace(/pm/g, "après-midi")}
+                      </p>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="dropdown-item preview-item preview-item-content">
                   <h6 className="preview-subject font-weight-normal">
-                    Application Error
+                    Pas de notifications pour le moment !
                   </h6>
-                  <p className="font-weight-light small-text mb-0 text-muted">
-                    Just now
-                  </p>
                 </div>
-              </Link>
-              <Link className="dropdown-item preview-item">
+              )}
+              {/* <Link className="dropdown-item preview-item">
                 <div className="preview-thumbnail">
                   <div className="preview-icon bg-warning">
                     <i className="mdi mdi-settings mx-0" />
@@ -234,7 +282,7 @@ function Header() {
                     2 days ago
                   </p>
                 </div>
-              </Link>
+              </Link> */}
             </div>
           </li>
         </ul>

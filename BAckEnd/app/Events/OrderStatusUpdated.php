@@ -14,17 +14,17 @@ class OrderStatusUpdated implements ShouldBroadcast // ShouldBroadcast to allow 
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $order;
-    // public $userId;
+    public $piloteId;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($order)
+    public function __construct($order, $piloteId)
     {
         $this->order = $order;
-        // $this->userId = $userId;
+        $this->piloteId = $piloteId;
     }
 
     /**
@@ -44,8 +44,7 @@ class OrderStatusUpdated implements ShouldBroadcast // ShouldBroadcast to allow 
 
     public function broadcastOn()
     {
-        return new PrivateChannel('statusChannel.1');
-        // .$this->userId);
+        return new PrivateChannel('statusChannel.' . $this->piloteId);
     }
 
     // public function broadcastAs()
