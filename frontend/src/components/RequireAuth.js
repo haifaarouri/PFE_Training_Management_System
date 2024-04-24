@@ -8,12 +8,12 @@ function RequireAuth({ children, allowedRoles }) {
   const [userAuth, setUserAuth] = useState(null)
 
   useEffect(() => {
-    if (result.user) {
-        setUserAuth(result.user);
+    if (result) {
+        setUserAuth(result);
     }
-  }, [result.user]);
+  }, [result]);
 
-  if (!result.user) {
+  if (!result) {
     // Redirect them to the /login page, but save the current location they were
     // trying to go to when they were redirected. This allows us to send them
     // along to that page after they login, which is a nicer user experience

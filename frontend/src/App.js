@@ -23,12 +23,56 @@ import EditFormateur from "./pages/formateur_management/EditFormateur";
 import AllCommandes from "./pages/commande_management/AllCommandes";
 import EditCommande from "./pages/commande_management/EditCommande";
 import { useEffect, useState } from "react";
+import AllFormations from "./pages/formation_management/AllFormations";
+import { useDispatch, useSelector } from "react-redux";
+import { Toaster, toast } from "sonner";
+import pusher from "./services/pusherConfig";
+import { setNotifications } from "./store/slices/notificationsSlice";
+import { fetchAllUnreadNotifs } from "./services/CommandeServices";
 
 function App() {
   const persistRootData = localStorage.getItem("persist:root");
   const storedUser = persistRootData ? JSON.parse(persistRootData).user : null;
   const tokenUser = localStorage.getItem("token");
   const [token, setToken] = useState(null);
+  const dispatch = useDispatch();
+
+  const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
+
+  const playNotificationSound = () => {
+    const sound = new Audio("/notification.mp3");
+    sound.play().catch((error) => {
+      console.error("Failed to play notification sound:", error);
+    });
+  };
+
+  const onNewNotification = () => {
+    playNotificationSound();
+  };
+
+  useEffect(() => {
+    const n = async () => {
+      const notif = await fetchAllUnreadNotifs();
+      return notif;
+    };
+
+    //Subscribe to private channel => only for specific users
+    const channel = pusher.private(`statusChannel.${result.id}`);
+
+    const handleOrderStatusUpdated = async (e) => {
+      onNewNotification();
+      toast.info(`Nouvelle commande ${e.order.id} est ${e.order.status} !`);
+      let not = await n()
+      dispatch(setNotifications(not));
+    };
+
+    channel.listen("OrderStatusUpdated", handleOrderStatusUpdated);
+
+    // Unsubscribe from the channel
+    return () => {
+      channel.stopListening("OrderStatusUpdated", handleOrderStatusUpdated);
+    };
+  }, [result.id]);
 
   useEffect(() => {
     setToken(token);
@@ -36,6 +80,7 @@ function App() {
 
   return (
     <div className="App">
+      <Toaster position="bottom-left" expand={false} richColors />
       <Routes>
         {/* Protected Routes */}
         <Route element={<Layout />}>
@@ -207,6 +252,25 @@ function App() {
                 ]}
               >
                 <EditCommande />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/formations"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <AllFormations />
               </RequireAuth>
             }
           />

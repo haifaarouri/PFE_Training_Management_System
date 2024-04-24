@@ -21,9 +21,7 @@ import { BsFillSendCheckFill } from "react-icons/bs";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
 import { useSelector } from "react-redux";
-import Echo from "laravel-echo";
-import axios from "../../services/axios";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 require("moment/locale/fr");
 
 function AllCommandes() {
@@ -55,174 +53,6 @@ function AllCommandes() {
   const [userAuth, setUserAuth] = useState(null);
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
-  window.Pusher = require("pusher-js");
-
-  const token = localStorage.getItem("token");
-
-  function getCsrfTokenFromCookies() {
-    // Decode cookies to handle encoded characters
-    const decodedCookies = decodeURIComponent(document.cookie);
-    // Split cookies string into individual cookies
-    const cookies = decodedCookies.split(";");
-    // Look for the XSRF-TOKEN cookie and return its value
-    const xsrfToken = cookies.find((cookie) =>
-      cookie.trim().startsWith("XSRF-TOKEN=")
-    );
-    if (xsrfToken) {
-      // Split the cookie string by '=' and return the value part
-      return xsrfToken.split("=")[1];
-    }
-    return null; // Return null if the token is not found
-  }
-
-  const csrfToken = getCsrfTokenFromCookies();
-
-  //open connection with WS => all authenticated users can make this connection with WS
-  if (token) {
-    window.Echo = new Echo({
-      broadcaster: "pusher",
-      key: "LaravelWebSocketKey",
-      wsHost: window.location.hostname,
-      wsPort: 6001,
-      forceTLS: false,
-      disableStats: true,
-      cluster: "mt1",
-      encrypted: true,
-      withCredentials: true,
-      authEndpoint: "http://localhost:8000/broadcasting/auth",
-      auth: {
-        headers: {
-          api_token: csrfToken,
-          "X-CSRF-Token": document.head.querySelector(
-            'meta[name="csrf-token"]'
-          ),
-          Authorization: window.localStorage.getItem("token")
-            ? `Bearer ${token}`
-            : `Bearer ${csrfToken}`,
-          "Access-Control-Allow-Credentials": true,
-          Accept: "application/json",
-        },
-      },
-      enabledTransports: ["ws", "wss"],
-      authorizer: (channel, options) => {
-        return {
-          authorize: (socketId, callback) => {
-            axios
-              .post("/broadcasting/auth", {
-                socket_id: socketId,
-                channel_name: channel.name,
-                headers: {
-                  withCredentials: true,
-                  api_token: token,
-                  "X-CSRF-Token": document.head.querySelector(
-                    'meta[name="csrf-token"]'
-                  ),
-                  Authorization: window.localStorage.getItem("token")
-                    ? `Bearer ${token}`
-                    : `Bearer ${csrfToken}`,
-                  "Access-Control-Allow-Credentials": true,
-                  Accept: "application/json",
-                },
-              })
-              .then((response) => {
-                console.log(response);
-                callback(false, response.data);
-              })
-              .catch((error) => {
-                callback(true, error.response);
-              });
-          },
-        };
-      },
-    });
-  } else {
-    window.Echo = new Echo({
-      broadcaster: "pusher",
-      key: "LaravelWebSocketKey",
-      wsHost: window.location.hostname,
-      wsPort: 6001,
-      forceTLS: false,
-      disableStats: true,
-      cluster: "mt1",
-      encrypted: true,
-      withCredentials: true,
-      authEndpoint: "http://localhost:8000/broadcasting/auth",
-      auth: {
-        headers: {
-          api_token: csrfToken,
-          "X-CSRF-Token": document.head.querySelector(
-            'meta[name="csrf-token"]'
-          ),
-          Authorization: window.localStorage.getItem("token")
-            ? `Bearer ${token}`
-            : `Bearer ${csrfToken}`,
-          "Access-Control-Allow-Credentials": true,
-          Accept: "application/json",
-        },
-      },
-      enabledTransports: ["ws", "wss"],
-      authorizer: (channel, options) => {
-        return {
-          authorize: (socketId, callback) => {
-            axios
-              .post("/broadcasting/auth", {
-                socket_id: socketId,
-                channel_name: channel.name,
-                headers: {
-                  withCredentials: true,
-                  api_token: csrfToken,
-                  "X-CSRF-Token": document.head.querySelector(
-                    'meta[name="csrf-token"]'
-                  ),
-                  Authorization: window.localStorage.getItem("token")
-                    ? `Bearer ${token}`
-                    : `Bearer ${csrfToken}`,
-                  "Access-Control-Allow-Credentials": true,
-                  Accept: "application/json",
-                },
-              })
-              .then((response) => {
-                console.log(response);
-                callback(false, response.data);
-              })
-              .catch((error) => {
-                callback(true, error.response);
-              });
-          },
-        };
-      },
-    });
-  }
-
-  const playNotificationSound = () => {
-    const sound = new Audio("/notification.mp3");
-    sound.play().catch((error) => {
-      console.error("Failed to play notification sound:", error);
-    });
-  };
-
-  const onNewNotification = () => {
-    playNotificationSound();
-  };
-
-  useEffect(() => {
-    //Subscribe to private channel => only for specific users
-    const channel = window.Echo.private(`statusChannel.${result.user.id}`);
-
-    const handleOrderStatusUpdated = (e) => {
-      console.log(e);
-      onNewNotification();
-      toast.info(`Nouvelle commande ${e.order.id} est ${e.order.status} !`);
-    };
-
-    channel.listen("OrderStatusUpdated", handleOrderStatusUpdated);
-
-    // Unsubscribe from the channel
-    return () => {
-      channel.stopListening("OrderStatusUpdated", handleOrderStatusUpdated);
-    };
-  }, [result.user.id]);
-
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
@@ -235,8 +65,8 @@ function AllCommandes() {
   }, []);
 
   useEffect(() => {
-    setUserAuth(result.user);
-  }, [result.user]);
+    setUserAuth(result);
+  }, [result]);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -481,7 +311,6 @@ function AllCommandes() {
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
               <ToastContainer />
-              <Toaster position="bottom-left" expand={false} richColors />
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
                   Liste de toutes les commandes

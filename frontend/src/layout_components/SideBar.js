@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { GiTeacher } from "react-icons/gi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { FaBookBookmark } from "react-icons/fa6";
 
 function SideBar() {
   const [userAuth, setUserAuth] = useState(null);
@@ -9,8 +10,8 @@ function SideBar() {
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
   useEffect(() => {
-    setUserAuth(result.user);
-  }, [result.user]);
+    setUserAuth(result);
+  }, [result]);
 
   return (
     <nav className="sidebar sidebar-offcanvas" id="sidebar">
@@ -104,6 +105,14 @@ function SideBar() {
           <Link className="nav-link" to="/commandes">
             <i className="mdi mdi-cart menu-icon" />
             <span className="menu-title">Gestions des commandes</span>
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link className="nav-link" to="/formations">
+            <i className="menu-icon">
+              <FaBookBookmark />
+            </i>
+            <span className="menu-title">Gestions des formations</span>
           </Link>
         </li>
         {/* <li className="nav-item sidebar-category">

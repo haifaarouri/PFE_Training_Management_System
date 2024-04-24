@@ -7,7 +7,7 @@ function AuthLayout() {
   // const [userAuth, setUserAuth] = useState(null);
   // console.log(result);
   // useEffect(() => {
-  //   setUserAuth(result.user);
+  //   setUserAuth(result);
   // }, []);
   // console.log(userAuth);
 

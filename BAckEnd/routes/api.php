@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\FormateurController;
+use App\Http\Controllers\FormationController;
 use App\Http\Controllers\materielController;
 use App\Http\Controllers\SalleController;
 use App\Http\Controllers\UserController;
-use App\Models\Commande;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmailController;
+use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,3 +89,13 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/products', [CommandeController::class, 'getProducts']);
     Route::get('/suppliers', [CommandeController::class, 'getSuppliers']);
 });
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/formations', [FormationController::class, 'index']);
+    // Route::get('/formation-id/{id}', [FormationController::class, 'show']);
+    // Route::put('/update-formation/{id}', [FormationController::class, 'update']);
+    Route::post('/add-formation', [FormationController::class, 'store']);
+    // Route::delete('/delete-formation/{id}', [FormationController::class, 'destroy']);
+});
+
+Broadcast::routes(['middleware' => ['auth:sanctum']]);

@@ -1,4 +1,4 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import authenticatedUserSlice from "./slices/authenticatedUserSlice";
 import {
   persistStore,
@@ -12,23 +12,24 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import successMessageSlice from "./slices/successMessageSlice";
+import notificationsSlice from "./slices/notificationsSlice";
 
 const persistConfig = {
   key: "root",
   storage,
 };
 
-const persistedUserReducer = persistReducer(
+const persistedReducer = persistReducer(
   persistConfig,
-  authenticatedUserSlice
+  combineReducers({
+    user: authenticatedUserSlice,
+    msg: successMessageSlice,
+    notifications: notificationsSlice,
+  })
 );
 
 export const store = configureStore({
-  reducer: {
-    //reducer contains all slices
-    user: persistedUserReducer,
-    msg: successMessageSlice,
-  },
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

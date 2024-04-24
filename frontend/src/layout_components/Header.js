@@ -7,7 +7,7 @@ import { setUser } from "../store/slices/authenticatedUserSlice";
 import { Button } from "react-bootstrap";
 import { apiFetch } from "../services/api";
 import { IoIosNotifications } from "react-icons/io";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 import {
   fetchAllUnreadNotifs,
   fetchCommandeById,
@@ -22,6 +22,7 @@ function Header() {
   const [listCmd, setListCmd] = useState([]);
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
+  const notifsRedux = useSelector((state) => state.notifications); //pour récuperer la liste des notifications inside redux
 
   useEffect(() => {
     let d = moment()
@@ -30,8 +31,8 @@ function Header() {
       .replace(/pm/g, "après-midi");
     setToday(d);
 
-    setUserAuth(result.user);
-  }, [result.user]);
+    setUserAuth(result);
+  }, [result]);
 
   const handleSuccess = (msg) => toast.success(msg);
 
@@ -62,37 +63,20 @@ function Header() {
     }
   };
 
-  // const playNotificationSound = () => {
-  //   const sound = new Audio("/notification.mp3");
-  //   sound.play().catch((error) => {
-  //     console.error("Failed to play notification sound:", error);
-  //   });
-  // };
-
-  // const onNewNotification = () => {
-  //   playNotificationSound();
-  //   toast.info("Be at the area 10 minutes before the event time");
-  // };
-
   useEffect(() => {
-    if (result.user !== null) {
-      const n = async () => {
-        const notif = await fetchAllUnreadNotifs();
-        setListNotif(notif);
+    setListNotif(notifsRedux.notifications);
 
-        let cmds = [];
-        await Promise.all(
-            notif.map(async (n) => {
-              const c = await fetchCommandeById(n.content_id);
-              cmds.push(c);
-            })
-        );
-        setListCmd(cmds);
-      };
-
-      n();
-    }
-  }, []);
+    let cmds = [];
+    notifsRedux.notifications.length > 0 &&
+      notifsRedux.notifications.map(async (n) => {
+        // console.log(n);
+        if (!listCmd.some((cmd) => cmd.id === n.content_id)) {
+          const c = await fetchCommandeById(n.content_id);
+          cmds.push(c);
+        }
+      });
+    setListCmd([...listCmd, ...cmds]);
+  }, [notifsRedux.notifications]);
 
   return (
     <nav className="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">

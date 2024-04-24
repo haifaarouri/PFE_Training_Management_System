@@ -20,11 +20,5 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 
 //create new private channel
 Broadcast::channel('statusChannel.{id}', function ($user, $piloteId) {
-    $pilote = User::find($piloteId);
-
-    if (!$pilote) {
-        return false;
-    }
-
-    return $user->id === $pilote->id;
+    return (int) $user->id === (int) User::find($piloteId)->id;
 });
