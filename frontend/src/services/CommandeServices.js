@@ -140,6 +140,22 @@ export const fetchAllUnreadNotifs = async () => {
   }
 };
 
+export const readNotification = async (id) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.put(`/api/read-notif/${id}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`read-notif/${id}`, {
+        method: "PUT",
+      });
+      return response;
+    }
+  } catch (error) {
+    console.log("Error reading notif with this id :", error);
+  }
+};
+
 // export const deleteCommande = async (id) => {
 //   try {
 //     if (!localStorage.getItem("token")) {

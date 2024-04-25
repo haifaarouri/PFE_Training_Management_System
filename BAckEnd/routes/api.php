@@ -85,6 +85,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/notifications', function (Request $request) {
         return auth()->user()->notifications()->where('read', false)->get();
     });
+    Route::put('/read-notif/{id}', [CommandeController::class, 'readNotification']);
     // Route::delete('/delete-commande/{id}', [CommandeController::class, 'destroy']);
     Route::get('/products', [CommandeController::class, 'getProducts']);
     Route::get('/suppliers', [CommandeController::class, 'getSuppliers']);
@@ -92,7 +93,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/formations', [FormationController::class, 'index']);
-    // Route::get('/formation-id/{id}', [FormationController::class, 'show']);
+    Route::get('/formation-id/{id}', [FormationController::class, 'show']);
     // Route::put('/update-formation/{id}', [FormationController::class, 'update']);
     Route::post('/add-formation', [FormationController::class, 'store']);
     // Route::delete('/delete-formation/{id}', [FormationController::class, 'destroy']);

@@ -6,6 +6,7 @@ use App\Events\OrderStatusUpdated;
 use App\Models\Address;
 use App\Models\Commande;
 use App\Models\Fournisseur;
+use App\Models\Notification;
 use App\Models\Produit;
 use App\Models\User;
 use App\Rules\ProductCategoryRule;
@@ -359,6 +360,25 @@ class CommandeController extends Controller
         }
 
         return response()->json(['message' => "Commande modifié avec succès !"], 200);
+    }
+
+    public function readNotification($id)
+    {
+        if ($this->list_roles->contains(auth()->user()->role)) {
+
+            $notification = Notification::find($id);
+            if (!$notification) {
+                return response()->json(['error' => 'Notification avec cette ID non trouvé !'], 404);
+            }
+
+            $notification->read = true;
+            $notification->save();
+
+            return response()->json(['message' => 'La notification est lue avec succès !']);
+
+        } else {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
     }
 
     // public function destroy($id)

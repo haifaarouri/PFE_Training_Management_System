@@ -146,6 +146,7 @@ const FormationModal = ({ show, handleClose }) => {
   };
 
   const handleCategoryChange = (e) => {
+    console.log(e.target.value);
     const categoryId = e.target.value;
     setFormData((prevState) => ({
       ...prevState,
@@ -153,9 +154,9 @@ const FormationModal = ({ show, handleClose }) => {
     }));
 
     // Fetch sous-categories based on selected category
-    fetch(`/api/categories/${categoryId}/sousCategories`)
-      .then((response) => response.json())
-      .then((data) => setSousCategories(data));
+    // fetch(`/api/categories/${categoryId}/sousCategories`)
+    //   .then((response) => response.json())
+    //   .then((data) => setSousCategories(data));
   };
 
   const handleInputChange = (e) => {
@@ -353,7 +354,7 @@ const FormationModal = ({ show, handleClose }) => {
                 <option value="">Sélectionnez une catégorie</option>
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
-                    {category.name}
+                    {category.categorie_name}
                   </option>
                 ))}
                 <option value="newCategory">
@@ -397,7 +398,7 @@ const FormationModal = ({ show, handleClose }) => {
                 <option value="">Sélectionnez une sous-catégorie</option>
                 {sousCategories.map((sousCategorie) => (
                   <option key={sousCategorie.id} value={sousCategorie.id}>
-                    {sousCategorie.name}
+                    {sousCategorie.sous_categorie_name}
                   </option>
                 ))}
                 <option value="newSubCategory">

@@ -10,8 +10,8 @@ function SideBar() {
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
   useEffect(() => {
-    setUserAuth(result);
-  }, [result]);
+    setUserAuth(result.user);
+  }, [result.user]);
 
   return (
     <nav className="sidebar sidebar-offcanvas" id="sidebar">

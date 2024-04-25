@@ -8,10 +8,7 @@ import { Button } from "react-bootstrap";
 import { apiFetch } from "../services/api";
 import { IoIosNotifications } from "react-icons/io";
 import { toast } from "sonner";
-import {
-  fetchAllUnreadNotifs,
-  fetchCommandeById,
-} from "../services/CommandeServices";
+import { readNotification } from "../services/CommandeServices";
 
 function Header() {
   const [today, setToday] = useState(null);
@@ -19,7 +16,6 @@ function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [listNotif, setListNotif] = useState([]);
-  const [listCmd, setListCmd] = useState([]);
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
   const notifsRedux = useSelector((state) => state.notifications); //pour récuperer la liste des notifications inside redux
@@ -31,8 +27,8 @@ function Header() {
       .replace(/pm/g, "après-midi");
     setToday(d);
 
-    setUserAuth(result);
-  }, [result]);
+    setUserAuth(result.user);
+  }, [result.user]);
 
   const handleSuccess = (msg) => toast.success(msg);
 
@@ -65,18 +61,17 @@ function Header() {
 
   useEffect(() => {
     setListNotif(notifsRedux.notifications);
-
-    let cmds = [];
-    notifsRedux.notifications.length > 0 &&
-      notifsRedux.notifications.map(async (n) => {
-        // console.log(n);
-        if (!listCmd.some((cmd) => cmd.id === n.content_id)) {
-          const c = await fetchCommandeById(n.content_id);
-          cmds.push(c);
-        }
-      });
-    setListCmd([...listCmd, ...cmds]);
   }, [notifsRedux.notifications]);
+
+  const readNotif = async (id) => {
+    const res = await readNotification(id);
+    if (res.message) {
+      toast.success(res.message);
+
+      let unread = listNotif.filter((n) => n.id !== id);
+      setListNotif(unread);
+    }
+  };
 
   return (
     <nav className="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
@@ -199,44 +194,58 @@ function Header() {
               <p className="mb-0 font-weight-normal float-left dropdown-header">
                 Notifications
               </p>
-              {listNotif.length > 0 && listCmd.length > 0 ? (
-                listCmd.map((c, i) => (
-                  <Link
-                    key={i}
-                    className="dropdown-item preview-item"
-                    to="/commandes"
-                  >
-                    <div className="preview-thumbnail">
-                      <div
-                        className="preview-icon bg-info"
-                        style={{ color: "white" }}
+              <div
+                style={{
+                  height: "300px",
+                  width: "100%",
+                  overflow: "hidden",
+                  overflowY: "scroll",
+                }}
+              >
+                {listNotif.length > 0 ? (
+                  listNotif
+                    .slice()
+                    .reverse()
+                    .map((n, i) => (
+                      <Link
+                        id="list-example"
+                        key={i}
+                        className="dropdown-item preview-item"
+                        to="/commandes"
+                        onClick={() => readNotif(n.id)}
                       >
-                        <i className="mdi mdi-information mx-0" />
-                      </div>
-                    </div>
-                    <div className="preview-item-content">
-                      <h6 className="preview-subject font-weight-normal">
-                        Nouvelle commande est {c.status} !
-                      </h6>
-                      <p className="font-weight-light small-text mb-0">
-                        Vérifier la liste des commandes.
-                      </p>
-                      <p className="font-weight-light small-text mb-0 text-muted">
-                        {moment(listNotif[i].created_at)
-                          .format("dddd, MMMM Do YYYY, h:mm:ss a")
-                          .replace(/am/g, "matin")
-                          .replace(/pm/g, "après-midi")}
-                      </p>
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <div className="dropdown-item preview-item preview-item-content">
-                  <h6 className="preview-subject font-weight-normal">
-                    Pas de notifications pour le moment !
-                  </h6>
-                </div>
-              )}
+                        <div className="preview-thumbnail">
+                          <div
+                            className="preview-icon bg-info"
+                            style={{ color: "white" }}
+                          >
+                            <i className="mdi mdi-information mx-0" />
+                          </div>
+                        </div>
+                        <div className="preview-item-content">
+                          <h6 className="preview-subject font-weight-normal">
+                            L'état d'une nouvelle commande est mis à jour !
+                          </h6>
+                          <p className="font-weight-light small-text mb-0">
+                            Vérifier la liste des commandes.
+                          </p>
+                          <p className="font-weight-light small-text mb-0 text-muted">
+                            {moment(n.created_at)
+                              .format("dddd, MMMM Do YYYY, h:mm:ss a")
+                              .replace(/am/g, "matin")
+                              .replace(/pm/g, "après-midi")}
+                          </p>
+                        </div>
+                      </Link>
+                    ))
+                ) : (
+                  <div className="dropdown-item preview-item preview-item-content">
+                    <h6 className="preview-subject font-weight-normal">
+                      Pas de notifications pour le moment !
+                    </h6>
+                  </div>
+                )}
+              </div>
               {/* <Link className="dropdown-item preview-item">
                 <div className="preview-thumbnail">
                   <div className="preview-icon bg-warning">

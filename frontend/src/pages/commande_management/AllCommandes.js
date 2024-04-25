@@ -65,8 +65,8 @@ function AllCommandes() {
   }, []);
 
   useEffect(() => {
-    setUserAuth(result);
-  }, [result]);
+    setUserAuth(result.user);
+  }, [result.user]);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();

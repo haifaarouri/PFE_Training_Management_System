@@ -48,8 +48,8 @@ const EditProfileModal = ({ show, handleClose, handleMsg }) => {
     });
 
   useEffect(() => {
-    setUserToEdit(result);
-  }, [result]);
+    setUserToEdit(result.user);
+  }, [result.user]);
 
   useEffect(() => {
     setPasswordConfirm(userToEdit.password);

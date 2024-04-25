@@ -29,6 +29,7 @@ import { Toaster, toast } from "sonner";
 import pusher from "./services/pusherConfig";
 import { setNotifications } from "./store/slices/notificationsSlice";
 import { fetchAllUnreadNotifs } from "./services/CommandeServices";
+import EditFormation from "./pages/formation_management/EditFormation";
 
 function App() {
   const persistRootData = localStorage.getItem("persist:root");
@@ -56,23 +57,25 @@ function App() {
       return notif;
     };
 
-    //Subscribe to private channel => only for specific users
-    const channel = pusher.private(`statusChannel.${result.id}`);
+    if (result && result.user) {
+      //Subscribe to private channel => only for specific users
+      const channel = pusher.private(`statusChannel.${result.user.id}`);
 
-    const handleOrderStatusUpdated = async (e) => {
-      onNewNotification();
-      toast.info(`Nouvelle commande ${e.order.id} est ${e.order.status} !`);
-      let not = await n()
-      dispatch(setNotifications(not));
-    };
+      const handleOrderStatusUpdated = async (e) => {
+        onNewNotification();
+        toast.info(`Nouvelle commande ${e.order.id} est ${e.order.status} !`);
+        let not = await n();
+        dispatch(setNotifications(not));
+      };
 
-    channel.listen("OrderStatusUpdated", handleOrderStatusUpdated);
+      channel.listen("OrderStatusUpdated", handleOrderStatusUpdated);
 
-    // Unsubscribe from the channel
-    return () => {
-      channel.stopListening("OrderStatusUpdated", handleOrderStatusUpdated);
-    };
-  }, [result.id]);
+      // Unsubscribe from the channel
+      return () => {
+        channel.stopListening("OrderStatusUpdated", handleOrderStatusUpdated);
+      };
+    }
+  }, [result]);
 
   useEffect(() => {
     setToken(token);
@@ -271,6 +274,25 @@ function App() {
                 ]}
               >
                 <AllFormations />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/edit-formation/:id"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <EditFormation />
               </RequireAuth>
             }
           />

@@ -15,19 +15,19 @@ export const fetchAllFormations = async () => {
   }
 };
 
-// export const fetchFormateurById = async (id) => {
-//   try {
-//     if (!localStorage.getItem("token")) {
-//       const response = await axios.get(`/api/formateur-id/${id}`);
-//       return response.data;
-//     } else {
-//       const response = await apiFetch(`formateur-id/${id}`);
-//       return response;
-//     }
-//   } catch (error) {
-//     console.log("Error fetching formateur with this id :", error);
-//   }
-// };
+export const fetchFormationById = async (id) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/formation-id/${id}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`formation-id/${id}`);
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching formation with this id :", error);
+  }
+};
 
 // export const editFormateur = async (id, formData) => {
 //   try {

@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('personnesCible');
             $table->double('price');
             $table->string('requirements');
-            $table->unsignedBigInteger('formation_id')->nullable();
-            $table->foreign('formation_id')->references('id')->on('formations')->onDelete('cascade')->onUpdate('cascade');
+            $table->unsignedBigInteger('sous_categorie_id')->nullable();
+            $table->foreign('sous_categorie_id')->references('id')->on('sous_categories')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }

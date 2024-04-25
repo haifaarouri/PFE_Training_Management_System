@@ -5,10 +5,6 @@ import { Card, Carousel, Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import FormationModal from "../../components/FormationModal";
-import { LiaCertificateSolid } from "react-icons/lia";
-import { MdOutlineOpenInNew } from "react-icons/md";
-import moment from "moment";
-import { DateRange } from "react-date-range";
 import { fetchAllFormations } from "../../services/FormationServices";
 require("moment/locale/fr");
 
@@ -37,6 +33,7 @@ function AllFormations() {
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
+      console.log(d);
       setFormations(d);
     };
 
@@ -100,7 +97,6 @@ function AllFormations() {
   const fetchData = async () => {
     try {
       const response = await fetchAllFormations();
-
       return response;
     } catch (error) {
       console.log("Error fetching formations :", error);
@@ -290,7 +286,7 @@ function AllFormations() {
                     <table className="table table-striped table-hover">
                       <thead>
                         <tr>
-                          <th>Titre</th>
+                          <th>Titre de la formation</th>
                           <th>Description</th>
                           <th>Personnes Cibles</th>
                           <th>Prix</th>
@@ -304,38 +300,18 @@ function AllFormations() {
                         {filteredData.length > 0 ? (
                           filteredData.map((f, index) => {
                             return (
-                              <tr key={index} className="text-center">
+                              <tr key={index}>
                                 <td>
-                                  <h6>{f.lastName}</h6>
+                                  <h6>{f.name}</h6>
                                 </td>
                                 <td>
-                                  <h6>{f.firstName}</h6>
+                                  <h6>{f.description}</h6>
                                 </td>
-                                <td>{f.email}</td>
-                                <td>{f.phoneNumber}</td>
-                                <td style={{ width: "5%" }}>{f.experience}</td>
-                                <td>{f.type}</td>
-                                <td>{f.speciality}</td>
-                                <td>
-                                  {Array.isArray(f.disponibilities) &&
-                                    f.disponibilities.map((d, i) => {
-                                      const startDate = moment(d.startDate)
-                                        .locale("fr")
-                                        .format("LL");
-                                      const endDate = moment(d.endDate)
-                                        .locale("fr")
-                                        .format("LL");
-                                      return (
-                                        <div
-                                          pill
-                                          className="badge badge-outline-success badge-pill mb-2"
-                                          key={i}
-                                        >
-                                          <p>{`${startDate} - ${endDate}`}</p>
-                                        </div>
-                                      );
-                                    })}
-                                </td>
+                                <td>{f.personnesCible}</td>
+                                <td>{f.price} DT</td>
+                                <td>{f.requirements}</td>
+                                <td>{f.sous_categorie.sous_categorie_name}</td>
+                                <td>{f.sous_categorie.categorie.categorie_name}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -368,7 +344,7 @@ function AllFormations() {
                           formations.length > 0 &&
                           formationsPage.map((f, index) => {
                             return (
-                              <tr key={index} className="text-center">
+                              <tr key={index}>
                                 <td>
                                   <h6>{f.name}</h6>
                                 </td>
@@ -378,26 +354,8 @@ function AllFormations() {
                                 <td>{f.personnesCible}</td>
                                 <td>{f.price} DT</td>
                                 <td>{f.requirements}</td>
-                                {/* <td>
-                                  {Array.isArray(f.disponibilities) &&
-                                    f.disponibilities.map((d, i) => {
-                                      const startDate = moment(d.startDate)
-                                        .locale("fr")
-                                        .format("LL");
-                                      const endDate = moment(d.endDate)
-                                        .locale("fr")
-                                        .format("LL");
-                                      return (
-                                        <div
-                                          pill
-                                          className="badge badge-outline-success badge-pill mb-2"
-                                          key={i}
-                                        >
-                                          <p>{`${startDate} - ${endDate}`}</p>
-                                        </div>
-                                      );
-                                    })}
-                                </td> */}
+                                <td>{f.sous_categorie.sous_categorie_name}</td>
+                                <td>{f.sous_categorie.categorie.categorie_name}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -466,16 +424,6 @@ function AllFormations() {
                 >
                   {formations.length > 0 &&
                     formations.map((f, idx) => {
-                      let dispo = f.disponibilities;
-                      const object = {};
-                      dispo.forEach((obj, i) => {
-                        const key = `selection${i + 1}`;
-                        object[key] = {
-                          startDate: new Date(obj.startDate),
-                          endDate: new Date(obj.endDate),
-                          key: key,
-                        };
-                      });
                       return (
                         <Carousel.Item key={idx} className="row">
                           <div
@@ -496,137 +444,51 @@ function AllFormations() {
                             </Button>
                           </div>
                           <div className="m-lg-5 m-md-5 m-sm-0 m-xs-0 p-sm-0 p-xs-0">
-                            <Card className="shadow-lg p-3 rounded">
+                            <Card className="shadow-lg rounded m-5">
                               <Card.Body>
                                 <Card.Title>
                                   <h2>
-                                    {f.firstName} {f.lastName}
+                                    {f.name}
                                   </h2>
                                 </Card.Title>
                                 <Card.Text className="d-flex justify-content-evenly row">
                                   <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Adresse E-mail :
+                                        Description :
                                       </span>{" "}
-                                      {f.email}
+                                      {f.description}
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Numéro de téléphone :
+                                        Personnes cibles :
                                       </span>{" "}
-                                      {f.phoneNumber}
+                                      {f.personnesCible}
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Nombre d'année d'expérience :
+                                        Prix :
                                       </span>{" "}
-                                      {f.experience}
+                                      {f.price} DT
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Type :
+                                      Prérequis :
                                       </span>{" "}
-                                      {f.type}
+                                      {f.requirements}
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Spécialité(s) :
+                                        Catégorie :
                                       </span>{" "}
-                                      {f.speciality}
+                                      {f.sous_categorie.categorie.categorie_name}
                                     </p>
-                                    <div className="d-flex flex-column justify-content-center m-5">
-                                      <h5>Disponibilité</h5>
-                                      <div style={{ position: "relative" }}>
-                                        <DateRange
-                                          ranges={Object.values(object)}
-                                          disabledDay={() => true}
-                                          editableDateInputs={true}
-                                          moveRangeOnFirstSelection={false}
-                                        />
-                                        <div
-                                          style={{
-                                            pointerEvents: "none",
-                                            opacity: 0.5,
-                                            position: "absolute",
-                                            top: 0,
-                                            right: 0,
-                                            bottom: 0,
-                                            left: 0,
-                                          }}
-                                        ></div>
-                                      </div>
-                                    </div>
-                                    <div className="solution_cards_box">
-                                      {f.certificats.length > 0 &&
-                                        f.certificats.map((certif) => (
-                                          <div className="solution_card">
-                                            <div className="hover_color_bubble"></div>
-                                            <div className="solu_title d-flex justify-content-between">
-                                              <h3>{certif.name}</h3>
-                                              <LiaCertificateSolid
-                                                style={{ fontSize: "4em" }}
-                                              />
-                                            </div>
-                                            <div className="solu_description">
-                                              <p>
-                                                Oraganisme de délivrance :{" "}
-                                                {certif.organisme}
-                                              </p>
-                                              <p>
-                                                Date d'obtention :{" "}
-                                                {certif.obtainedDate}
-                                              </p>
-                                              {certif.idCertificat && (
-                                                <p>
-                                                  ID du certficat :{" "}
-                                                  <button
-                                                    onClick={() =>
-                                                      (window.location.href =
-                                                        certif.idCertificat)
-                                                    }
-                                                  >
-                                                    Afficher l'ID{" "}
-                                                    <MdOutlineOpenInNew />
-                                                  </button>{" "}
-                                                </p>
-                                              )}
-                                              {certif.urlCertificat && (
-                                                <p>
-                                                  URL du certificat :{" "}
-                                                  <button
-                                                    onClick={() =>
-                                                      (window.location.href =
-                                                        certif.urlCertificat)
-                                                    }
-                                                  >
-                                                    Afficher l'URL{" "}
-                                                    <MdOutlineOpenInNew />
-                                                  </button>{" "}
-                                                </p>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  </div>
-                                  <div className="solution_cards_box col-sm-12 col-md-12 col-lg-6">
-                                    {f.cv && (
-                                      <div className="solution_card">
-                                        <div className="hover_color_bubble"></div>
-                                        <div className="solu_title d-flex justify-content-between">
-                                          <h3>{f.cv.slice(13)}</h3>
-                                        </div>
-                                        <div className="solu_description">
-                                          <iframe
-                                            src={`http://localhost:8000/TrainersCV/${f.cv}`}
-                                            width="100%"
-                                            height="600px"
-                                            title="PDF Viewer"
-                                          ></iframe>
-                                        </div>
-                                      </div>
-                                    )}
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Sous Catégorie :
+                                      </span>{" "}
+                                      {f.sous_categorie.sous_categorie_name}
+                                    </p>
                                   </div>
                                 </Card.Text>
                               </Card.Body>

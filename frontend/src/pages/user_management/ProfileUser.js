@@ -35,8 +35,8 @@ function ProfileUser() {
       fetchUser();
     }
 
-    setUserAuth(result);
-  }, [id, result]);
+    setUserAuth(result.user);
+  }, [id, result.user]);
 
   const handleShowEditProfileModal = () => setShowModal(true);
   const handleCloseEditProfileModal = () => setShowModal(false);

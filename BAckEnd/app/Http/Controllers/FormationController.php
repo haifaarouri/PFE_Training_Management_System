@@ -20,7 +20,7 @@ class FormationController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $formations = Formation::all();
+            $formations = Formation::with('sousCategorie.categorie')->get();
             return response()->json($formations);
         } else {
             // User does not have access, return a 403 response
@@ -32,40 +32,30 @@ class FormationController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
             try {
-// dd($request->all());
-                // Validation pour la Categorie
-                $request->validate([
-                    'categorie_name' => 'required|string|max:255',
-                ]);
-
-                // Création de la Categorie
-                $categorie = Categorie::create([
-                    'categorie_name' => $request->input('categorie_name'),
-                ]);
-
-                // Validation pour la SousCategorie
-                $request->validate([
-                    'sous_categorie_name' => 'required|string|max:255',
-                ]);
-
-                // Création de la SousCategorie associée à la Categorie
-                $sousCategorie = $categorie->sousCategories()->create([
-                    'sous_categorie_name' => $request->input('sous_categorie_name'),
-                ]);
-
-                // Validation pour la Formation
                 $request->validate([
                     'name' => 'required|string|max:255',
                     'description' => 'required|string',
                     'personnesCible' => 'required|string|max:255',
                     'price' => 'required|numeric',
                     'requirements' => 'required|string|max:255',
+                    'categorie_name' => 'required|string|max:255',
+                    'sous_categorie_name' => 'required|string|max:255',
                 ]);
 
-                // Création de la Formation associée à la SousCategorie
+                // Create or find the category
+                $categorie = Categorie::firstOrCreate([
+                    'categorie_name' => $request->input('categorie_name')
+                ]);
+
+                // Create or find the subcategory within the found/created category
+                $sousCategorie = $categorie->sousCategories()->firstOrCreate([
+                    'sous_categorie_name' => $request->input('sous_categorie_name')
+                ]);
+
+                // Create the formation within the found/created subcategory
                 $formation = $sousCategorie->formations()->create([
-                    'name' => $request->input('formation_name'),
-                    'description' => $request->input('formation_description'),
+                    'name' => $request->input('name'),
+                    'description' => $request->input('description'),
                     'personnesCible' => $request->input('personnesCible'),
                     'price' => $request->input('price'),
                     'requirements' => $request->input('requirements'),
@@ -75,10 +65,10 @@ class FormationController extends Controller
 
             } catch (\Exception $e) {
                 \Log::error('Error : ' . $e->getMessage());
-                return response()->json(['error' => 'Erreur lors de l\'ajout du formation !'], 500);
+                dd($e->getMessage());
+                return response()->json(['error' => 'Erreur lors de l\'ajout de la formation !'], 500);
             }
         } else {
-            // User does not have access, return a 403 response
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
     }
