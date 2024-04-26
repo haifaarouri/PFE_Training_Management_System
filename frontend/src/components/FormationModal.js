@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Modal, Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "../services/axios";
@@ -8,6 +8,9 @@ import { TfiEmail } from "react-icons/tfi";
 import { MdDescription } from "react-icons/md";
 import { IoPricetags } from "react-icons/io5";
 import { TbCategoryFilled, TbListCheck } from "react-icons/tb";
+import { fetchAllCategories } from "../services/FormationServices";
+import { FaPlusCircle } from "react-icons/fa";
+import { MdDeleteForever } from "react-icons/md";
 
 const FormationModal = ({ show, handleClose }) => {
   const [validated, setValidated] = useState(false);
@@ -23,9 +26,21 @@ const FormationModal = ({ show, handleClose }) => {
     price: "",
     categorieId: "",
     sousCategorieId: "",
+    categorie_name: "",
+    sous_categorie_name: "",
   });
+  const [requirements, setRequirements] = useState([""]);
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");
+
+  useEffect(() => {
+    let f = async () => {
+      let cats = await fetchAllCategories();
+      setCategories(cats);
+    };
+
+    f();
+  }, []);
 
   const handleError = (err) =>
     toast.error(err, {
@@ -38,7 +53,7 @@ const FormationModal = ({ show, handleClose }) => {
       progress: undefined,
       theme: "light",
     });
-  console.log(formData);
+
   const handleAddFormateur = async (event) => {
     event.preventDefault();
     await csrf();
@@ -57,76 +72,103 @@ const FormationModal = ({ show, handleClose }) => {
         description: formData.description,
         personnesCible: formData.personnesCible,
         price: formData.price,
-        requirements: formData.requirements,
-        categorie_name: newCategory,
-        sous_categorie_name: newSousCategory,
+        requirements: JSON.stringify(requirements),
+        categorie_name: newCategory ? newCategory : formData.categorie_name,
+        sous_categorie_name: newSousCategory
+          ? newSousCategory
+          : formData.sous_categorie_name,
         sous_categorie_id: formData.sousCategorieId,
       };
 
-      if (!localStorage.getItem("token")) {
-        const res = await axios.post("/api/add-formation", formDataToSend, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+      const formDataToken = new FormData();
+      formDataToken.append("name", formData.name);
+      formDataToken.append("description", formData.description);
+      formDataToken.append("personnesCible", formData.personnesCible);
+      formDataToken.append("price", formData.price);
+      formDataToken.append(
+        "categorie_name",
+        newCategory ? newCategory : formData.categorie_name
+      );
+      formDataToken.append(
+        "sous_categorie_name",
+        newSousCategory ? newSousCategory : formData.sous_categorie_name
+      );
+      formDataToken.append("sous_categorie_id", formData.sousCategorieId);
+      formDataToken.append("requirements", JSON.stringify(requirements));
 
-        if (res.status === 201) {
-          Swal.fire({
-            icon: "success",
-            title: "Formation ajoutée avec succès !",
-            showConfirmButton: false,
-            timer: 1500,
+      try {
+        if (!localStorage.getItem("token")) {
+          const res = await axios.post("/api/add-formation", formDataToSend, {
+            headers: {
+              "Content-Type": "application/json",
+            },
           });
 
-          setFormData({
-            name: "",
-            description: "",
-            personnesCible: "",
-            price: "",
-            categorieId: "",
-            sousCategorieId: "",
-          });
-          setNewCategory("");
-          setNewSousCategory("");
+          if (res.status === 201) {
+            Swal.fire({
+              icon: "success",
+              title: "Formation ajoutée avec succès !",
+              showConfirmButton: false,
+              timer: 1500,
+            });
 
-          handleClose();
+            setFormData({
+              name: "",
+              description: "",
+              personnesCible: "",
+              price: "",
+              categorieId: "",
+              sousCategorieId: "",
+            });
+            setNewCategory("");
+            setNewSousCategory("");
+            setRequirements([""]);
+
+            handleClose();
+          }
+        } else {
+          const headers = {
+            "Content-Type": "multipart/form-data",
+          };
+
+          const token = localStorage.getItem("token");
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+
+          const response = await axios.post(
+            "/api/add-formation",
+            formDataToken,
+            {
+              headers: headers,
+            }
+          );
+
+          if (response.status === 201) {
+            Swal.fire({
+              icon: "success",
+              title: "Formation ajoutée avec succès !",
+              showConfirmButton: false,
+              timer: 2000,
+            });
+
+            setFormData({
+              name: "",
+              description: "",
+              personnesCible: "",
+              price: "",
+              categorieId: "",
+              sousCategorieId: "",
+            });
+            setNewCategory("");
+            setNewSousCategory("");
+            setRequirements([""]);
+
+            handleClose();
+          }
         }
-      } else {
-        const headers = {
-          "Content-Type": "application/json",
-        };
-
-        const token = localStorage.getItem("token");
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        const response = await axios.post("/api/add-formation", {
-          headers,
-          body: JSON.stringify(formDataToSend),
-        });
-
-        if (response.status === 201) {
-          Swal.fire({
-            icon: "success",
-            title: "Formation ajoutée avec succès !",
-            showConfirmButton: false,
-            timer: 2000,
-          });
-
-          setFormData({
-            name: "",
-            description: "",
-            personnesCible: "",
-            price: "",
-            categorieId: "",
-            sousCategorieId: "",
-          });
-          setNewCategory("");
-          setNewSousCategory("");
-
-          handleClose();
-        }
+      } catch (error) {
+        console.log("Error adding a new user :", error);
       }
     } catch (error) {
       if (error) {
@@ -145,18 +187,57 @@ const FormationModal = ({ show, handleClose }) => {
     }
   };
 
-  const handleCategoryChange = (e) => {
-    console.log(e.target.value);
+  const handleCategoryChange = async (e) => {
     const categoryId = e.target.value;
+    const selectedCategory = categories.find(
+      (category) => String(category.id) === categoryId
+    );
+
     setFormData((prevState) => ({
       ...prevState,
       categorieId: categoryId,
+      categorie_name: selectedCategory ? selectedCategory.categorie_name : "",
     }));
 
-    // Fetch sous-categories based on selected category
-    // fetch(`/api/categories/${categoryId}/sousCategories`)
-    //   .then((response) => response.json())
-    //   .then((data) => setSousCategories(data));
+    if (categoryId !== "" && categoryId !== "newCategory") {
+      // Fetch sous-categories based on selected category
+      if (!localStorage.getItem("token")) {
+        const res = await axios.get(`/api/sous-category/${categoryId}`, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        setSousCategories(res.data);
+      } else {
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        const token = localStorage.getItem("token");
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        const response = await axios.get(`/api/sous-category/${categoryId}`, {
+          headers,
+        });
+        setSousCategories(response.data);
+      }
+    }
+  };
+
+  const handleSousCategoryChange = (e) => {
+    const sousCategoryId = e.target.value;
+    const selectedSousCategory = sousCategories.find(
+      (sousCategory) => String(sousCategory.id) === sousCategoryId
+    );
+
+    setFormData((prevState) => ({
+      ...prevState,
+      sousCategorieId: sousCategoryId,
+      sous_categorie_name: selectedSousCategory
+        ? selectedSousCategory.sous_categorie_name
+        : "",
+    }));
   };
 
   const handleInputChange = (e) => {
@@ -173,6 +254,24 @@ const FormationModal = ({ show, handleClose }) => {
 
   const handleNewSousCategoryChange = (e) => {
     setNewSousCategory(e.target.value);
+  };
+
+  const addRequirement = () => {
+    setRequirements([...requirements, ""]);
+  };
+
+  const removeRequirement = (index) => {
+    if (index !== 0) {
+      const newrequirements = [...requirements];
+      newrequirements.splice(index, 1);
+      setRequirements(newrequirements);
+    }
+  };
+
+  const handleChangeRequirement = (index, event) => {
+    const newrequirements = [...requirements];
+    newrequirements[index] = event.target.value;
+    setRequirements(newrequirements);
   };
 
   return (
@@ -307,31 +406,48 @@ const FormationModal = ({ show, handleClose }) => {
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Prérequis</Form.Label>
-            <InputGroup className="mb-3">
-              <InputGroup.Text id="inputGroup-sizing-default">
-                <div className="input-group-prepend bg-transparent">
-                  <span className="input-group-text bg-transparent border-right-0">
-                    <TbListCheck
-                      className="text-primary"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </span>
-                </div>
-              </InputGroup.Text>
-              <Form.Control
-                name="requirements"
-                type="text"
-                placeholder="Saisir les prérequis nécessaires pour cette formation"
-                value={formData.requirements}
-                onChange={handleInputChange}
-                required
-              />
-              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-              <Form.Control.Feedback type="invalid">
-                Veuillez saisir le prérequis de la formation !
-              </Form.Control.Feedback>
-            </InputGroup>
+            {requirements.map((requirement, index) => (
+              <InputGroup className="mb-3" key={index}>
+                <InputGroup.Text id="inputGroup-sizing-default">
+                  <div className="input-group-prepend bg-transparent">
+                    <span className="input-group-text bg-transparent border-right-0">
+                      <TbListCheck
+                        className="text-primary"
+                        style={{ fontSize: "1.5em" }}
+                      />
+                    </span>
+                  </div>
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="Saisir le prérequis pour cette formation"
+                  value={requirement}
+                  onChange={(e) => handleChangeRequirement(index, e)}
+                  required
+                />
+                <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid">
+                  Veuillez saisir le ou les prérequis pour cette formation !
+                </Form.Control.Feedback>
+                {index !== 0 && (
+                  <Button
+                    onClick={() => removeRequirement(index)}
+                    className="btn btn-info btn-rounded btn-inverse-danger"
+                  >
+                    <MdDeleteForever size={30} />
+                  </Button>
+                )}
+              </InputGroup>
+            ))}
           </Form.Group>
+          <div className="d-flex justify-content-end">
+            <Button
+              className="mb-3 mt-0 btn btn-info btn-rounded btn-inverse-info"
+              onClick={addRequirement}
+            >
+              Ajouter un prérequis <FaPlusCircle size={25} />
+            </Button>
+          </div>
           <Form.Group className="mb-3">
             <Form.Label>Catégorie</Form.Label>
             <InputGroup className="mb-3">
@@ -392,15 +508,16 @@ const FormationModal = ({ show, handleClose }) => {
               <Form.Select
                 name="sousCategorieId"
                 value={formData.sousCategorieId}
-                onChange={handleInputChange}
+                onChange={handleSousCategoryChange}
                 required
               >
                 <option value="">Sélectionnez une sous-catégorie</option>
-                {sousCategories.map((sousCategorie) => (
-                  <option key={sousCategorie.id} value={sousCategorie.id}>
-                    {sousCategorie.sous_categorie_name}
-                  </option>
-                ))}
+                {sousCategories.length > 0 &&
+                  sousCategories.map((sousCategorie) => (
+                    <option key={sousCategorie.id} value={sousCategorie.id}>
+                      {sousCategorie.sous_categorie_name}
+                    </option>
+                  ))}
                 <option value="newSubCategory">
                   Ajouter une nouvelle sous-catégorie
                 </option>

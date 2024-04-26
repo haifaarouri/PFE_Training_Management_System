@@ -29,43 +29,57 @@ export const fetchFormationById = async (id) => {
   }
 };
 
-// export const editFormateur = async (id, formData) => {
-//   try {
-//     if (!localStorage.getItem("token")) {
-//       const response = await axios.post(
-//         `/api/update-formateur/${id}`,
-//         formData,
-//         {
-//           headers: {
-//             "Content-Type": "multipart/form-data",
-//           },
-//         }
-//       );
-//       return response.data;
-//     } else {
-//       const headers = {
-//         "Content-Type": "multipart/form-data",
-//         Accept: "application/json",
-//         withCredentials: true,
-//       };
+export const fetchAllCategories = async () => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get("/api/categories");
+      return response.data;
+    } else {
+      const response = await apiFetch("categories");
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching categories :", error);
+  }
+};
 
-//       const token = localStorage.getItem("token");
-//       if (token) {
-//         headers["Authorization"] = `Bearer ${token}`;
-//       }
-//       const response = await axios.post(
-//         `/api/update-formateur/${id}`,
-//         formData,
-//         {
-//           headers: headers,
-//         }
-//       );
-//       return response;
-//     }
-//   } catch (error) {
-//     console.log("Error editing formateur with this id :", error);
-//   }
-// };
+export const editFormation = async (id, formData) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.post(
+        `/api/update-formation/${id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    } else {
+      const headers = {
+        "Content-Type": "multipart/form-data",
+        Accept: "application/json",
+        withCredentials: true,
+      };
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      const response = await axios.post(
+        `/api/update-formation/${id}`,
+        formData,
+        {
+          headers: headers,
+        }
+      );
+      return response;
+    }
+  } catch (error) {
+    console.log("Error editing formation with this id :", error);
+  }
+};
 
 // export const deleteFormateur = async (id) => {
 //   try {

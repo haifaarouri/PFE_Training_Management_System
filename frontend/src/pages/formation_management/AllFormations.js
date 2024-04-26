@@ -310,8 +310,8 @@ function AllFormations() {
                                 <td>{f.personnesCible}</td>
                                 <td>{f.price} DT</td>
                                 <td>{f.requirements}</td>
-                                <td>{f.sous_categorie.sous_categorie_name}</td>
                                 <td>{f.sous_categorie.categorie.categorie_name}</td>
+                                <td>{f.sous_categorie.sous_categorie_name}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -354,8 +354,8 @@ function AllFormations() {
                                 <td>{f.personnesCible}</td>
                                 <td>{f.price} DT</td>
                                 <td>{f.requirements}</td>
-                                <td>{f.sous_categorie.sous_categorie_name}</td>
                                 <td>{f.sous_categorie.categorie.categorie_name}</td>
+                                <td>{f.sous_categorie.sous_categorie_name}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
