@@ -81,18 +81,18 @@ export const editFormation = async (id, formData) => {
   }
 };
 
-// export const deleteFormateur = async (id) => {
-//   try {
-//     if (!localStorage.getItem("token")) {
-//       const response = await axios.delete(`/api/delete-formateur/${id}`);
-//       return response.data;
-//     } else {
-//       const response = await apiFetch(`delete-formateur/${id}`, {
-//         method: "DELETE",
-//       });
-//       return response;
-//     }
-//   } catch (error) {
-//     console.log("Error deleting formateur with this id :", error);
-//   }
-// };
+export const deleteFormation = async (id) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.delete(`/api/delete-formation/${id}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`delete-formation/${id}`, {
+        method: "DELETE",
+      });
+      return response;
+    }
+  } catch (error) {
+    console.log("Error deleting formation with this id :", error);
+  }
+};

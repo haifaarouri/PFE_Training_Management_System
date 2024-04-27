@@ -12,8 +12,9 @@ use Illuminate\Support\Facades\Mail;
 class UserController extends Controller
 {
     public function show(Request $request)
-    {
-        return response()->json($request->user());
+    {   
+        $user = $request->user()->load('notifications');
+        return response()->json($user);
     }
 
     public function getUserById($id)

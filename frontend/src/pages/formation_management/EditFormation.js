@@ -9,7 +9,7 @@ import {
   fetchAllCategories,
   fetchFormationById,
 } from "../../services/FormationServices";
-import { FaBook, FaPlusCircle } from "react-icons/fa";
+import { FaBook, FaEdit, FaPlusCircle } from "react-icons/fa";
 import { TfiEmail } from "react-icons/tfi";
 import { MdDeleteForever, MdDescription } from "react-icons/md";
 import { IoPricetags } from "react-icons/io5";
@@ -30,18 +30,13 @@ const EditFormation = () => {
     sousCategorieId: "",
     categorie_name: "",
     sous_categorie_name: "",
-    // sous_categorie: {
-    //   categorie: {
-    //     categorie_name: "",
-    //   },
-    //   sous_categorie_name: "",
-    // },
   });
   const [requirements, setRequirements] = useState([""]);
   const [categories, setCategories] = useState([]);
   const [sousCategories, setSousCategories] = useState([]);
   const [newCategory, setNewCategory] = useState("");
   const [newSousCategory, setNewSousCategory] = useState("");
+  const [showCat, setShowCat] = useState(false);
 
   useEffect(() => {
     const fetchFormation = async () => {
@@ -115,7 +110,21 @@ const EditFormation = () => {
           timer: 2000,
         });
 
-        // navigate("/formations");
+        setFormData({
+          name: "",
+          description: "",
+          personnesCible: "",
+          price: "",
+          categorieId: "",
+          sousCategorieId: "",
+          categorie_name: "",
+          sous_categorie_name: "",
+        });
+        setNewCategory("");
+        setNewSousCategory("");
+        setRequirements([""]);
+
+        navigate("/formations");
       }
     } catch (error) {
       if (error && error.response.status === 422) {
@@ -214,6 +223,10 @@ const EditFormation = () => {
     const newrequirements = [...requirements];
     newrequirements[index] = event.target.value;
     setRequirements(newrequirements);
+  };
+
+  const editCategoryAndSubCategory = () => {
+    setShowCat(!showCat);
   };
 
   return (
@@ -395,105 +408,161 @@ const EditFormation = () => {
                     Ajouter un prérequis <FaPlusCircle size={25} />
                   </Button>
                 </div>
-                <Form.Group className="mb-3">
-                  <Form.Label>Catégorie</Form.Label>
-                  <InputGroup className="mb-3">
-                    <InputGroup.Text id="inputGroup-sizing-default">
-                      <div className="input-group-prepend bg-transparent">
-                        <span className="input-group-text bg-transparent border-right-0">
-                          <TbCategoryFilled
-                            className="text-primary"
-                            style={{ fontSize: "1.5em" }}
-                          />
-                        </span>
-                      </div>
-                    </InputGroup.Text>
-                    <Form.Select
-                      name="categorieId"
-                      value={
-                        formData.sous_categorie &&
-                        formData.sous_categorie.categorie.id
-                      }
-                      onChange={handleCategoryChange}
-                      required
-                    >
-                      <option value="">Sélectionnez une catégorie</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.categorie_name}
-                        </option>
-                      ))}
-                      <option value="newCategory">
-                        Ajouter une nouvelle catégorie
-                      </option>
-                    </Form.Select>
-                    <Form.Control.Feedback>
-                      Cela semble bon !
-                    </Form.Control.Feedback>
-                    <Form.Control.Feedback type="invalid">
-                      Veuillez saisir la catégorie de la formation !
-                    </Form.Control.Feedback>
-                  </InputGroup>
-                  {formData.categorieId === "newCategory" && (
-                    <Form.Control
-                      type="text"
-                      placeholder="Nouvelle catégorie"
-                      value={newCategory}
-                      onChange={handleNewCategoryChange}
-                      required
-                    />
-                  )}
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Sous Catégorie</Form.Label>
-                  <InputGroup className="mb-3">
-                    <InputGroup.Text id="inputGroup-sizing-default">
-                      <div className="input-group-prepend bg-transparent">
-                        <span className="input-group-text bg-transparent border-right-0">
-                          <TbCategoryFilled
-                            className="text-primary"
-                            style={{ fontSize: "1.5em" }}
-                          />
-                        </span>
-                      </div>
-                    </InputGroup.Text>
-                    <Form.Select
-                      name="sousCategorieId"
-                      value={formData.sousCategorieId}
-                      onChange={handleSousCategoryChange}
-                      required
-                    >
-                      <option value="">Sélectionnez une sous-catégorie</option>
-                      {sousCategories.length > 0 &&
-                        sousCategories.map((sousCategorie) => (
-                          <option
-                            key={sousCategorie.id}
-                            value={sousCategorie.id}
-                          >
-                            {sousCategorie.sous_categorie_name}
+                {!showCat && formData && formData.sous_categorie && (
+                  <div>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Catégorie</Form.Label>
+                      <InputGroup className="mb-3">
+                        <InputGroup.Text id="inputGroup-sizing-default">
+                          <div className="input-group-prepend bg-transparent">
+                            <span className="input-group-text bg-transparent border-right-0">
+                              <TbCategoryFilled
+                                className="text-primary"
+                                style={{ fontSize: "1.5em" }}
+                              />
+                            </span>
+                          </div>
+                        </InputGroup.Text>
+                        <Form.Control
+                          value={
+                            formData.sous_categorie.categorie.categorie_name
+                          }
+                          disabled="true"
+                        />
+                      </InputGroup>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Sous Catégorie</Form.Label>
+                      <InputGroup className="mb-3">
+                        <InputGroup.Text id="inputGroup-sizing-default">
+                          <div className="input-group-prepend bg-transparent">
+                            <span className="input-group-text bg-transparent border-right-0">
+                              <TbCategoryFilled
+                                className="text-primary"
+                                style={{ fontSize: "1.5em" }}
+                              />
+                            </span>
+                          </div>
+                        </InputGroup.Text>
+                        <Form.Control
+                          value={formData.sous_categorie.sous_categorie_name}
+                          disabled="true"
+                        />
+                      </InputGroup>
+                    </Form.Group>
+                  </div>
+                )}
+                <div className="d-flex justify-content-end">
+                  <Button
+                    className="mb-3 mt-0 btn btn-info btn-rounded btn-inverse-info"
+                    onClick={editCategoryAndSubCategory}
+                  >
+                    Modifier Catégorie et Sous catégorie{" "}
+                    <FaEdit className="ml-2" size={25} />
+                  </Button>
+                </div>
+                {showCat && (
+                  <>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Catégorie</Form.Label>
+                      <InputGroup className="mb-3">
+                        <InputGroup.Text id="inputGroup-sizing-default">
+                          <div className="input-group-prepend bg-transparent">
+                            <span className="input-group-text bg-transparent border-right-0">
+                              <TbCategoryFilled
+                                className="text-primary"
+                                style={{ fontSize: "1.5em" }}
+                              />
+                            </span>
+                          </div>
+                        </InputGroup.Text>
+                        <Form.Select
+                          name="categorieId"
+                          value={formData.categorieId}
+                          onChange={handleCategoryChange}
+                          required
+                        >
+                          <option value="">Sélectionnez une catégorie</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.categorie_name}
+                            </option>
+                          ))}
+                          <option value="newCategory">
+                            Ajouter une nouvelle catégorie
                           </option>
-                        ))}
-                      <option value="newSubCategory">
-                        Ajouter une nouvelle sous-catégorie
-                      </option>
-                    </Form.Select>
-                    <Form.Control.Feedback>
-                      Cela semble bon !
-                    </Form.Control.Feedback>
-                    <Form.Control.Feedback type="invalid">
-                      Veuillez saisir la sous catégorie de la formation !
-                    </Form.Control.Feedback>
-                  </InputGroup>
-                  {formData.sousCategorieId === "newSubCategory" && (
-                    <Form.Control
-                      type="text"
-                      placeholder="Nouvelle sous catégorie"
-                      value={newSousCategory}
-                      onChange={handleNewSousCategoryChange}
-                      required
-                    />
-                  )}
-                </Form.Group>
+                        </Form.Select>
+                        <Form.Control.Feedback>
+                          Cela semble bon !
+                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">
+                          Veuillez saisir la catégorie de la formation !
+                        </Form.Control.Feedback>
+                      </InputGroup>
+                      {formData.categorieId === "newCategory" && (
+                        <Form.Control
+                          type="text"
+                          placeholder="Nouvelle catégorie"
+                          value={newCategory}
+                          onChange={handleNewCategoryChange}
+                          required
+                        />
+                      )}
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Sous Catégorie</Form.Label>
+                      <InputGroup className="mb-3">
+                        <InputGroup.Text id="inputGroup-sizing-default">
+                          <div className="input-group-prepend bg-transparent">
+                            <span className="input-group-text bg-transparent border-right-0">
+                              <TbCategoryFilled
+                                className="text-primary"
+                                style={{ fontSize: "1.5em" }}
+                              />
+                            </span>
+                          </div>
+                        </InputGroup.Text>
+                        <Form.Select
+                          name="sousCategorieId"
+                          value={formData.sousCategorieId}
+                          onChange={handleSousCategoryChange}
+                          required
+                        >
+                          <option value="">
+                            Sélectionnez une sous-catégorie
+                          </option>
+                          {sousCategories.length > 0 &&
+                            sousCategories.map((sousCategorie) => (
+                              <option
+                                key={sousCategorie.id}
+                                value={sousCategorie.id}
+                              >
+                                {sousCategorie.sous_categorie_name}
+                              </option>
+                            ))}
+                          <option value="newSubCategory">
+                            Ajouter une nouvelle sous-catégorie
+                          </option>
+                        </Form.Select>
+                        <Form.Control.Feedback>
+                          Cela semble bon !
+                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">
+                          Veuillez saisir la sous catégorie de la formation !
+                        </Form.Control.Feedback>
+                      </InputGroup>
+                      {formData.sousCategorieId === "newSubCategory" && (
+                        <Form.Control
+                          type="text"
+                          placeholder="Nouvelle sous catégorie"
+                          value={newSousCategory}
+                          onChange={handleNewSousCategoryChange}
+                          required
+                        />
+                      )}
+                    </Form.Group>
+                  </>
+                )}
                 <div className="mt-5 d-flex justify-content-center">
                   <Button
                     type="submit"

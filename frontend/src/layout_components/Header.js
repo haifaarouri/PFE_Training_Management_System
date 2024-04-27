@@ -28,6 +28,7 @@ function Header() {
     setToday(d);
 
     setUserAuth(result.user);
+    setListNotif(notifsRedux.notifications)
   }, [result.user]);
 
   const handleSuccess = (msg) => toast.success(msg);

@@ -36,7 +36,7 @@ if (token) {
     cluster: "mt1",
     encrypted: true,
     withCredentials: true,
-    authEndpoint: "http://localhost:8000/broadcasting/auth",
+    authEndpoint: "http://localhost:8000/api/broadcasting/auth",
     auth: {
       headers: {
         Authorization: window.localStorage.getItem("token")

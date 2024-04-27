@@ -96,7 +96,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/formation-id/{id}', [FormationController::class, 'show']);
     Route::put('/update-formation/{id}', [FormationController::class, 'update']);
     Route::post('/add-formation', [FormationController::class, 'store']);
-    // Route::delete('/delete-formation/{id}', [FormationController::class, 'destroy']);
+    Route::delete('/delete-formation/{id}', [FormationController::class, 'destroy']);
     Route::get('/categories', [FormationController::class, 'getAllCategories']);
     Route::get('/sous-category/{category_id}', [FormationController::class, 'sousCategoriesOfSpecificaCategory']);
 });

@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux";
 import { setUser } from "../../store/slices/authenticatedUserSlice";
 import CustomModal from "../../components/CustomModal";
 import Swal from "sweetalert2";
+import { setNotifications } from "../../store/slices/notificationsSlice";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [loginUrl, setLoginUrl] = useState(null);
+  const [listNotif, setListNotif] = useState([]);
 
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -97,6 +99,7 @@ function Login() {
 
             //stock user in redux
             dispatch(setUser(user));
+            dispatch(setNotifications(user.notifications))
 
             if (user && user.email_verified_at) {
               if (user.role === "SuperAdministrateur") {

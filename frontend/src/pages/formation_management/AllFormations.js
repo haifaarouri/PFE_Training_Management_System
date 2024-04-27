@@ -5,7 +5,10 @@ import { Card, Carousel, Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import FormationModal from "../../components/FormationModal";
-import { fetchAllFormations } from "../../services/FormationServices";
+import {
+  deleteFormation,
+  fetchAllFormations,
+} from "../../services/FormationServices";
 require("moment/locale/fr");
 
 function AllFormations() {
@@ -112,35 +115,35 @@ function AllFormations() {
     u();
   }, [showModal]);
 
-//   const handleDeleteformation = async (id) => {
-//     Swal.fire({
-//       title: "Êtes-vous sûr?",
-//       text: "Vous ne pourrez pas revenir en arrière !",
-//       icon: "warning",
-//       showCancelButton: true,
-//       confirmButtonColor: "#3085d6",
-//       cancelButtonColor: "#d33",
-//       confirmButtonText: "Oui, supprimer!",
-//     }).then(async (result) => {
-//       if (result.isConfirmed) {
-//         try {
-//           const res = await deleteformation(id);
-//           Swal.fire({
-//             title: "Supprimé avec succès!",
-//             text: "formation est supprimé !",
-//             icon: "success",
-//           });
-//           const d = await fetchData();
-//           setFormations(d);
-//           handleSuccess(res.message);
-//         } catch (error) {
-//           if (error && error.response.status === 422) {
-//             handleError(error.response.data.message);
-//           }
-//         }
-//       }
-//     });
-//   };
+  const handleDeleteFormation = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, supprimer!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await deleteFormation(id);
+          Swal.fire({
+            title: "Supprimée avec succès!",
+            text: "Formation est supprimée !",
+            icon: "success",
+          });
+          const d = await fetchData();
+          setFormations(d);
+          handleSuccess(res.message);
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
 
   const prevPage = () => {
     if (currentPage !== 1) {
@@ -304,13 +307,15 @@ function AllFormations() {
                                 <td>
                                   <h6>{f.name}</h6>
                                 </td>
-                                <td>
+                                <td style={{ width: "30%" }}>
                                   <h6>{f.description}</h6>
                                 </td>
                                 <td>{f.personnesCible}</td>
                                 <td>{f.price} DT</td>
                                 <td>{f.requirements}</td>
-                                <td>{f.sous_categorie.categorie.categorie_name}</td>
+                                <td>
+                                  {f.sous_categorie.categorie.categorie_name}
+                                </td>
                                 <td>{f.sous_categorie.sous_categorie_name}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -323,9 +328,9 @@ function AllFormations() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                    //   onClick={() =>
-                                    //     handleDeleteformation(f.id)
-                                    //   }
+                                      onClick={() =>
+                                        handleDeleteFormation(f.id)
+                                      }
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -348,13 +353,15 @@ function AllFormations() {
                                 <td>
                                   <h6>{f.name}</h6>
                                 </td>
-                                <td>
+                                <td style={{ width: "30%" }}>
                                   <h6>{f.description}</h6>
                                 </td>
                                 <td>{f.personnesCible}</td>
                                 <td>{f.price} DT</td>
                                 <td>{f.requirements}</td>
-                                <td>{f.sous_categorie.categorie.categorie_name}</td>
+                                <td>
+                                  {f.sous_categorie.categorie.categorie_name}
+                                </td>
                                 <td>{f.sous_categorie.sous_categorie_name}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -367,9 +374,9 @@ function AllFormations() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                    //   onClick={() =>
-                                    //     handleDeleteformation(f.id)
-                                    //   }
+                                      onClick={() =>
+                                        handleDeleteFormation(f.id)
+                                      }
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -437,7 +444,7 @@ function AllFormations() {
                               Modifier <i className="mdi mdi-tooltip-edit"></i>
                             </Button>
                             <Button
-                            //   onClick={() => handleDeleteformation(f.id)}
+                              onClick={() => handleDeleteFormation(f.id)}
                               className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
                             >
                               Supprimer <i className="mdi mdi-delete"></i>
@@ -447,9 +454,7 @@ function AllFormations() {
                             <Card className="shadow-lg rounded m-5">
                               <Card.Body>
                                 <Card.Title>
-                                  <h2>
-                                    {f.name}
-                                  </h2>
+                                  <h2>{f.name}</h2>
                                 </Card.Title>
                                 <Card.Text className="d-flex justify-content-evenly row">
                                   <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
@@ -473,7 +478,7 @@ function AllFormations() {
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
-                                      Prérequis :
+                                        Prérequis :
                                       </span>{" "}
                                       {f.requirements}
                                     </p>
@@ -481,7 +486,10 @@ function AllFormations() {
                                       <span className="text-primary fw-bold">
                                         Catégorie :
                                       </span>{" "}
-                                      {f.sous_categorie.categorie.categorie_name}
+                                      {
+                                        f.sous_categorie.categorie
+                                          .categorie_name
+                                      }
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
