@@ -3,6 +3,7 @@ import { GiTeacher } from "react-icons/gi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { FaBookBookmark } from "react-icons/fa6";
+import { PiStudentFill } from "react-icons/pi";
 
 function SideBar() {
   const [userAuth, setUserAuth] = useState(null);
@@ -102,9 +103,16 @@ function SideBar() {
           </Link>
         </li>
         <li className="nav-item">
-          <Link className="nav-link" to="/commandes">
+          <Link
+            className="nav-link"
+            to={
+              userAuth && userAuth.role === "ServiceFinancier"
+                ? "/confirmed-commandes"
+                : "/commandes"
+            }
+          >
             <i className="mdi mdi-cart menu-icon" />
-            <span className="menu-title">Gestions des commandes</span>
+            <span className="menu-title">Gestions des Commandes</span>
           </Link>
         </li>
         <li className="nav-item">
@@ -112,7 +120,15 @@ function SideBar() {
             <i className="menu-icon">
               <FaBookBookmark />
             </i>
-            <span className="menu-title">Gestions des formations</span>
+            <span className="menu-title">Gestions des Formations</span>
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link className="nav-link" to="/candidats">
+            <i className="menu-icon">
+              <PiStudentFill size={22} />
+            </i>
+            <span className="menu-title">Gestions des Candidats</span>
           </Link>
         </li>
         {/* <li className="nav-item sidebar-category">

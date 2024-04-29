@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CandidatController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\FormateurController;
 use App\Http\Controllers\FormationController;
@@ -101,4 +102,16 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/sous-category/{category_id}', [FormationController::class, 'sousCategoriesOfSpecificaCategory']);
 });
 
+// if (Auth::check() && !Auth::user()->provider==="google") {
+    // Broadcast::routes(['middleware' => ['auth:sanctum']]);
+// }
+
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/candidats', [CandidatController::class, 'index']);
+    Route::get('/candidat-id/{id}', [CandidatController::class, 'show']);
+    Route::put('/update-candidat/{id}', [CandidatController::class, 'update']);
+    Route::post('/add-candidat', [CandidatController::class, 'store']);
+    Route::delete('/delete-candidat/{id}', [CandidatController::class, 'destroy']);
+});

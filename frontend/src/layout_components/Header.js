@@ -317,7 +317,7 @@ function Header() {
                       ? `${userAuth.profileImage}`
                       : `http://localhost:8000/profilePictures/${userAuth.profileImage}`
                   }
-                  alt={userAuth.profileImage}
+                  alt="Photo de profile"
                 />
                 <span className="nav-profile-name">
                   {userAuth.firstName} {userAuth.lastName}

@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { setUser } from "../../store/slices/authenticatedUserSlice";
 import Swal from "sweetalert2";
 import { fetchUserData } from "../../services/UserServices";
+import { setNotifications } from "../../store/slices/notificationsSlice";
 
 function GoogleCallback() {
   const [loading, setLoading] = useState(true);
@@ -44,6 +45,7 @@ function GoogleCallback() {
           //stock user in redux
           dispatch(setUser(user));
           setUserAuth(user);
+          dispatch(setNotifications(user.notifications));
 
           if (user) {
             if (user.role === "SuperAdministrateur") {

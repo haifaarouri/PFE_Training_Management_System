@@ -11,8 +11,8 @@ class Commande extends Model
 
     protected $fillable = [
         'date',
+        'deliveryDate',
         'status',
-        'quantity',
         'total',
         'paymentMethod'
     ];

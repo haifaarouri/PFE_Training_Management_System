@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('commandes', function (Blueprint $table) {
+        Schema::create('candidats', function (Blueprint $table) {
             $table->id();
-            $table->date('date');
-            $table->date('deliveryDate');
-            $table->string('status')->default("Brouillon");
-            $table->string('paymentMethod');
-            $table->double('total');
+            $table->string('firstName');
+            $table->string('lastName');
+            $table->string('email')->unique();
+            $table->string('phoneNumber');
+            $table->string('type');
             $table->timestamps();
         });
     }
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('commandes');
+        Schema::dropIfExists('candidats');
     }
 };

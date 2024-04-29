@@ -152,36 +152,6 @@ function AllCommandes() {
     u();
   }, [showModal]);
 
-  //   const handleDeleteCommande = async (id) => {
-  //     Swal.fire({
-  //       title: "Êtes-vous sûr?",
-  //       text: "Vous ne pourrez pas revenir en arrière !",
-  //       icon: "warning",
-  //       showCancelButton: true,
-  //       confirmButtonColor: "#3085d6",
-  //       cancelButtonColor: "#d33",
-  //       confirmButtonText: "Oui, supprimer!",
-  //     }).then(async (result) => {
-  //       if (result.isConfirmed) {
-  //         try {
-  //           const res = await deleteCommande(id);
-  //           Swal.fire({
-  //             title: "Supprimé avec succès!",
-  //             text: "Commande est supprimé !",
-  //             icon: "success",
-  //           });
-  //           const d = await fetchData();
-  //           setCommandes(d);
-  //           handleSuccess(res.message);
-  //         } catch (error) {
-  //           if (error && error.response.status === 422) {
-  //             handleError(error.response.data.message);
-  //           }
-  //         }
-  //       }
-  //     });
-  //   };
-
   const prevPage = () => {
     if (currentPage !== 1) {
       setCurrentPage(currentPage - 1);
@@ -367,7 +337,6 @@ function AllCommandes() {
                                   Méthode de paiement
                                 </option>
                                 <option value="date">Date de création</option>
-                                <option value="quantity">Quantité</option>
                                 <option value="total">Total</option>
                               </Form.Select>
                             </InputGroup>
@@ -379,7 +348,7 @@ function AllCommandes() {
                               <Form.Control
                                 id="search"
                                 type="text"
-                                placeholder="Recherchez des administareurs ..."
+                                placeholder="Recherchez des commandes ..."
                                 size="lg"
                                 name=""
                                 value={wordEntered}
@@ -414,9 +383,9 @@ function AllCommandes() {
                     <table className="table table-striped table-hover">
                       <thead>
                         <tr>
-                          <th>Date</th>
+                          <th>Date de création</th>
+                          <th>Date de livraison maximale</th>
                           <th>Etat</th>
-                          <th>Quantité</th>
                           <th>Mode de Paiement</th>
                           <th>Total</th>
                           <th>Produits</th>
@@ -433,6 +402,9 @@ function AllCommandes() {
                                   <h6>{c.date}</h6>
                                 </td>
                                 <td>
+                                  <h6>{c.deliveryDate}</h6>
+                                </td>
+                                <td>
                                   <Badge
                                     bg={
                                       c.status === "Brouillon"
@@ -450,56 +422,83 @@ function AllCommandes() {
                                     {c.status}
                                   </Badge>
                                 </td>
-                                <td>{c.quantity}</td>
                                 <td>{c.paymentMethod}</td>
                                 <td>{c.total} DT</td>
                                 <td>
                                   {Array.isArray(c.produits) &&
                                     c.produits.map((p, i) => {
-                                      return <p>{p.name}</p>;
+                                      return <p key={i}>{p.name}</p>;
                                     })}
                                 </td>
                                 <td>
                                   {Array.isArray(c.produits) &&
                                     c.produits.map((p, i) => {
-                                      return <p>{p.fournisseur.name}</p>;
+                                      return (
+                                        <p key={i}>{p.fournisseur.name}</p>
+                                      );
                                     })}
                                 </td>
-                                <td style={{ width: "15%" }}>
-                                  <div className="d-flex flex-column justify-content-center">
-                                    <Button
-                                      variant="outline-primary"
-                                      onClick={() => handleButtonEdit(c.id)}
-                                      className="btn btn-sm mb-2"
-                                    >
-                                      Modifier{" "}
-                                      <i
-                                        className="mdi mdi-tooltip-edit"
-                                        style={{ fontSize: 18 }}
-                                      ></i>
-                                    </Button>
-                                    <Button
-                                      //   onClick={()=>
-                                      // handleDeleteCommande(c.id)
-                                      //   }
-                                      variant="outline-danger"
-                                      className="btn btn-sm mb-2"
-                                    >
-                                      Supprimer{" "}
-                                      <i
-                                        className="mdi mdi-delete"
-                                        style={{ fontSize: 18 }}
-                                      ></i>
-                                    </Button>
-                                    <Button
-                                      onClick={() => handleSendCommande(c.id)}
-                                      variant="outline-success"
-                                      className="btn btn-sm mb-2"
-                                    >
-                                      Envoyer <BsFillSendCheckFill size={18} />
-                                    </Button>
-                                  </div>
-                                </td>
+                                {userAuth &&
+                                userAuth.role !== "PiloteDuProcessus" ? (
+                                  <td style={{ width: "15%" }}>
+                                    <div className="d-flex flex-column justify-content-center">
+                                      <Button
+                                        variant="outline-primary"
+                                        onClick={() => handleButtonEdit(c.id)}
+                                        className="btn btn-sm mb-2"
+                                      >
+                                        Modifier{" "}
+                                        <i
+                                          className="mdi mdi-tooltip-edit"
+                                          style={{ fontSize: 18 }}
+                                        ></i>
+                                      </Button>
+                                      <Button
+                                        onClick={() => handleSendCommande(c.id)}
+                                        variant="outline-success"
+                                        className="btn btn-sm mb-2"
+                                      >
+                                        Envoyer{" "}
+                                        <BsFillSendCheckFill size={18} />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                ) : (
+                                  <td style={{ width: "15%" }}>
+                                    <div className="d-flex flex-column justify-content-center">
+                                      <Button
+                                        onClick={() =>
+                                          handleValidateCommande(c.id)
+                                        }
+                                        variant="outline-success"
+                                        className="btn btn-sm mb-2"
+                                        disabled={
+                                          c.status === "Confirmé" ||
+                                          c.status === "Réceptionné" ||
+                                          c.status === "Consommé" ||
+                                          c.status === "Annulé"
+                                        }
+                                      >
+                                        Valider <FaCheckCircle size={16} />
+                                      </Button>
+                                      <Button
+                                        onClick={() =>
+                                          handleCancelCommande(c.id)
+                                        }
+                                        variant="outline-danger"
+                                        className="btn btn-sm"
+                                        disabled={
+                                          c.status === "Annulé" ||
+                                          c.status === "Confirmé" ||
+                                          c.status === "Réceptionné" ||
+                                          c.status === "Consommé"
+                                        }
+                                      >
+                                        Annuler <MdCancel size={18} />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                )}
                               </tr>
                             );
                           })
@@ -516,6 +515,9 @@ function AllCommandes() {
                                   <h6>{c.date}</h6>
                                 </td>
                                 <td>
+                                  <h6>{c.deliveryDate}</h6>
+                                </td>
+                                <td>
                                   <Badge
                                     bg={
                                       c.status === "Brouillon"
@@ -533,19 +535,20 @@ function AllCommandes() {
                                     {c.status}
                                   </Badge>
                                 </td>
-                                <td>{c.quantity}</td>
                                 <td>{c.paymentMethod}</td>
                                 <td>{c.total} DT</td>
                                 <td>
                                   {Array.isArray(c.produits) &&
                                     c.produits.map((p, i) => {
-                                      return <p>{p.name}</p>;
+                                      return <p key={i}>{p.name}</p>;
                                     })}
                                 </td>
                                 <td>
                                   {Array.isArray(c.produits) &&
                                     c.produits.map((p, i) => {
-                                      return <p>{p.fournisseur.name}</p>;
+                                      return (
+                                        <p key={i}>{p.fournisseur.name}</p>
+                                      );
                                     })}
                                 </td>
                                 <td style={{ width: "15%" }}>
@@ -564,19 +567,6 @@ function AllCommandes() {
                                       Modifier{" "}
                                       <i
                                         className="mdi mdi-tooltip-edit"
-                                        style={{ fontSize: 18 }}
-                                      ></i>
-                                    </Button>
-                                    <Button
-                                      //   onClick={()=>
-                                      // handleDeleteCommande(c.id)
-                                      //   }
-                                      variant="outline-danger"
-                                      className="btn btn-sm mb-2"
-                                    >
-                                      Supprimer{" "}
-                                      <i
-                                        className="mdi mdi-delete"
                                         style={{ fontSize: 18 }}
                                       ></i>
                                     </Button>
@@ -607,6 +597,9 @@ function AllCommandes() {
                                   <h6>{c.date}</h6>
                                 </td>
                                 <td>
+                                  <h6>{c.deliveryDate}</h6>
+                                </td>
+                                <td>
                                   <Badge
                                     bg={
                                       c.status === "Brouillon"
@@ -624,7 +617,6 @@ function AllCommandes() {
                                     {c.status}
                                   </Badge>
                                 </td>
-                                <td>{c.quantity}</td>
                                 <td>{c.paymentMethod}</td>
                                 <td>{c.total} DT</td>
                                 <td>
@@ -636,7 +628,9 @@ function AllCommandes() {
                                 <td>
                                   {Array.isArray(c.produits) &&
                                     c.produits.map((p, i) => {
-                                      return <p>{p.fournisseur.name}</p>;
+                                      return (
+                                        <p key={i}>{p.fournisseur.name}</p>
+                                      );
                                     })}
                                 </td>
                                 <td style={{ width: "15%" }}>
@@ -650,7 +644,8 @@ function AllCommandes() {
                                       disabled={
                                         c.status === "Confirmé" ||
                                         c.status === "Réceptionné" ||
-                                        c.status === "Consommé"
+                                        c.status === "Consommé" ||
+                                        c.status === "Annulé"
                                       }
                                     >
                                       Valider <FaCheckCircle size={16} />
@@ -659,7 +654,12 @@ function AllCommandes() {
                                       onClick={() => handleCancelCommande(c.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
-                                      disabled={c.status === "Annulé"}
+                                      disabled={
+                                        c.status === "Annulé" ||
+                                        c.status === "Confirmé" ||
+                                        c.status === "Réceptionné" ||
+                                        c.status === "Consommé"
+                                      }
                                     >
                                       Annuler <MdCancel size={18} />
                                     </Button>
@@ -755,21 +755,26 @@ function AllCommandes() {
                               <Button
                                 onClick={() => handleButtonEdit(c.id)}
                                 className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12 col-md-8"
+                                disabled={
+                                  c.status === "Anuulé" ||
+                                  c.status === "Confirmé" ||
+                                  c.status === "Réceptionné" ||
+                                  c.status === "Consommé"
+                                }
                               >
                                 Modifier{" "}
                                 <i className="mdi mdi-tooltip-edit"></i>
                               </Button>
                               <Button
-                                //   onClick={() => handleDeleteCommande(c.id)}
-                                className="btn btn-sm m-1 btn-danger btn-rounded col-lg-2 col-xs-12 col-md-8"
-                                style={{ color: "white" }}
-                              >
-                                Supprimer <i className="mdi mdi-delete"></i>
-                              </Button>
-                              <Button
                                 onClick={() => handleSendCommande(c.id)}
                                 className="btn btn-sm m-1 btn-success btn-rounded col-lg-2 col-xs-12 col-md-8"
                                 style={{ color: "white" }}
+                                disabled={
+                                  c.status === "Anuulé" ||
+                                  c.status === "Confirmé" ||
+                                  c.status === "Réceptionné" ||
+                                  c.status === "Consommé"
+                                }
                               >
                                 Envoyer <BsFillSendCheckFill size={18} />
                               </Button>
@@ -778,7 +783,12 @@ function AllCommandes() {
                               <Card className="shadow-lg p-3 rounded">
                                 <Card.Body>
                                   <Card.Title>
-                                    <h2>{c.date}</h2>
+                                    <h3>Date de création : {c.date}</h3>
+                                    <h3>
+                                      {" "}
+                                      Date de livaraison maximale :{" "}
+                                      {c.deliveryDate}
+                                    </h3>
                                   </Card.Title>
                                   <Card.Text className="d-flex justify-content-evenly row">
                                     <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
@@ -802,12 +812,6 @@ function AllCommandes() {
                                         >
                                           {c.status}
                                         </Badge>
-                                      </p>
-                                      <p>
-                                        <span className="text-primary fw-bold">
-                                          Quantité :
-                                        </span>{" "}
-                                        {c.quantity}
                                       </p>
                                       <p>
                                         <span className="text-primary fw-bold">
@@ -841,6 +845,8 @@ function AllCommandes() {
                                                     <dd>{p.price} DT</dd>
                                                     <dt>Catégorie</dt>
                                                     <dd>{p.category}</dd>
+                                                    <dt>Quantité</dt>
+                                                    <dd>{p.quantity}</dd>
                                                     <dt
                                                       style={{ color: "red" }}
                                                     >
@@ -932,6 +938,12 @@ function AllCommandes() {
                                 onClick={() => handleValidateCommande(c.id)}
                                 className="btn btn-sm m-1 btn-success btn-rounded col-lg-2 col-md-8 col-xs-12"
                                 style={{ color: "white" }}
+                                disabled={
+                                  c.status === "Annulé" ||
+                                  c.status === "Confirmé" ||
+                                  c.status === "Réceptionné" ||
+                                  c.status === "Consommé"
+                                }
                               >
                                 Valider <FaCheckCircle size={16} />
                               </Button>
@@ -939,6 +951,12 @@ function AllCommandes() {
                                 onClick={() => handleCancelCommande(c.id)}
                                 className="btn btn-sm m-1 btn-danger btn-rounded col-lg-2 col-md-8 col-xs-12"
                                 style={{ color: "white" }}
+                                disabled={
+                                  c.status === "Annulé" ||
+                                  c.status === "Confirmé" ||
+                                  c.status === "Réceptionné" ||
+                                  c.status === "Consommé"
+                                }
                               >
                                 Annuler <MdCancel size={18} />
                               </Button>
@@ -947,7 +965,12 @@ function AllCommandes() {
                               <Card className="shadow-lg p-3 rounded">
                                 <Card.Body>
                                   <Card.Title>
-                                    <h2>{c.date}</h2>
+                                    <h3>Date de création : {c.date}</h3>
+                                    <h3>
+                                      {" "}
+                                      Date de livaraison maximale :{" "}
+                                      {c.deliveryDate}
+                                    </h3>
                                   </Card.Title>
                                   <Card.Text className="d-flex justify-content-evenly row">
                                     <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
@@ -971,12 +994,6 @@ function AllCommandes() {
                                         >
                                           {c.status}
                                         </Badge>
-                                      </p>
-                                      <p>
-                                        <span className="text-primary fw-bold">
-                                          Quantité :
-                                        </span>{" "}
-                                        {c.quantity}
                                       </p>
                                       <p>
                                         <span className="text-primary fw-bold">

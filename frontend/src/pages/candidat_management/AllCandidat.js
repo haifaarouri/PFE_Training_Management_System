@@ -4,25 +4,24 @@ import Button from "react-bootstrap/Button";
 import { Card, Carousel, Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
-import FormationModal from "../../components/FormationModal";
 import {
-  deleteFormation,
-  fetchAllFormations,
-} from "../../services/FormationServices";
-require("moment/locale/fr");
+  deleteCandidat,
+  fetchAllCandidats,
+} from "../../services/CandidatServices";
+import CandidatModal from "../../components/CandidatModal";
 
-function AllFormations() {
-  const [formations, setFormations] = useState([]);
+function AllCandidats() {
+  const [candidats, setCandidats] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const formationsPerPage = 2;
-  const lastIndex = currentPage * formationsPerPage;
-  const firstIndex = lastIndex - formationsPerPage;
-  const formationsPage =
-    formations.length > 0 && formations.slice(firstIndex, lastIndex);
+  const candidatsPerPage = 2;
+  const lastIndex = currentPage * candidatsPerPage;
+  const firstIndex = lastIndex - candidatsPerPage;
+  const candidatsPage =
+    candidats.length > 0 && candidats.slice(firstIndex, lastIndex);
   const numberPages = Math.ceil(
-    formations.length > 0 && formations.length / formationsPerPage
+    candidats.length > 0 && candidats.length / candidatsPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
@@ -30,13 +29,11 @@ function AllFormations() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
-  const [showDispoModal, setShowDispoModal] = useState(false);
-  const [otherFilters, setOtherFilters] = useState(false);
 
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setFormations(d);
+      setCandidats(d);
     };
 
     u();
@@ -47,19 +44,19 @@ function AllFormations() {
     setWordEntered(searchWord);
     if (columnName && columnName !== "Colonne") {
       const newFilter =
-        formations.length > 0 &&
-        formations.filter((formation) =>
-          formation[columnName].toLowerCase().includes(searchWord.toLowerCase())
+        candidats.length > 0 &&
+        candidats.filter((formateur) =>
+          formateur[columnName].toLowerCase().includes(searchWord.toLowerCase())
         );
       setFilteredData(newFilter);
     } else {
       const newFilter =
-        formations.length > 0 &&
-        formations.filter((formation) => {
-          const formationFields = Object.values(formation)
+        candidats.length > 0 &&
+        candidats.filter((formateur) => {
+          const formateurFields = Object.values(formateur)
             .join(" ")
             .toLowerCase();
-          return formationFields.includes(searchWord);
+          return formateurFields.includes(searchWord);
         });
       setFilteredData(newFilter);
     }
@@ -93,28 +90,29 @@ function AllFormations() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-formation/${id}`);
+    navigate(`/edit-candidat/${id}`);
   };
 
   const fetchData = async () => {
     try {
-      const response = await fetchAllFormations();
+      const response = await fetchAllCandidats();
+
       return response;
     } catch (error) {
-      console.log("Error fetching formations :", error);
+      console.log("Error fetching candidats :", error);
     }
   };
 
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setFormations(d);
+      setCandidats(d);
     };
 
     u();
   }, [showModal]);
 
-  const handleDeleteFormation = async (id) => {
+  const handleDeleteCandidat = async (id) => {
     Swal.fire({
       title: "Êtes-vous sûr?",
       text: "Vous ne pourrez pas revenir en arrière !",
@@ -126,14 +124,14 @@ function AllFormations() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await deleteFormation(id);
+          const res = await deleteCandidat(id);
           Swal.fire({
-            title: "Supprimée avec succès!",
-            text: "Formation est supprimée !",
+            title: "Supprimé avec succès!",
+            text: "Candidat est supprimé !",
             icon: "success",
           });
           const d = await fetchData();
-          setFormations(d);
+          setCandidats(d);
           handleSuccess(res.message);
         } catch (error) {
           if (error && error.response.status === 422) {
@@ -179,14 +177,14 @@ function AllFormations() {
               <ToastContainer />
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
-                  Liste de toutes les formations
+                  Liste de tous les Candidats
                 </h4>
                 <Button
                   variant="outline-success"
                   className="btn btn-sm m-3 mt-1"
                   onClick={handleShowAddModal}
                 >
-                  Ajouter une Formation
+                  Ajouter un Candidat
                 </Button>
               </div>
               <div className="d-flex justify-content-end px-3 py-3">
@@ -205,7 +203,7 @@ function AllFormations() {
                   </Button>
                 </div>
               </div>
-              <FormationModal
+              <CandidatModal
                 show={showModal}
                 handleClose={handleCloseAddModal}
               />
@@ -220,16 +218,7 @@ function AllFormations() {
                               <Form.Select
                                 style={{ border: "none" }}
                                 value={columnName}
-                                onChange={(e) => {
-                                  if (e.target.options[6].selected) {
-                                    setShowDispoModal(true);
-                                    setOtherFilters(false);
-                                  } else {
-                                    setShowDispoModal(false);
-                                    setOtherFilters(true);
-                                  }
-                                  return setColumnName(e.target.value);
-                                }}
+                                onChange={(e) => setColumnName(e.target.value)}
                                 required
                               >
                                 <option value="">Colonne</option>
@@ -237,10 +226,6 @@ function AllFormations() {
                                 <option value="firstName">Prénom</option>
                                 <option value="email">E-mail</option>
                                 <option value="type">Type</option>
-                                <option value="speciality">Spécialité</option>
-                                <option value="disponibility">
-                                  Disponibilité
-                                </option>
                               </Form.Select>
                             </InputGroup>
                           </Form.Group>
@@ -248,18 +233,16 @@ function AllFormations() {
                         <div className="input-field second-wrap">
                           <Form.Group>
                             <InputGroup>
-                              {!showDispoModal && (
-                                <Form.Control
-                                  id="search"
-                                  type="text"
-                                  placeholder="Recherchez des formations ..."
-                                  size="lg"
-                                  name=""
-                                  value={wordEntered}
-                                  onChange={handleFilter}
-                                  required
-                                />
-                              )}
+                              <Form.Control
+                                id="search"
+                                type="text"
+                                placeholder="Recherchez des candidats ..."
+                                size="lg"
+                                name=""
+                                value={wordEntered}
+                                onChange={handleFilter}
+                                required
+                              />
                             </InputGroup>
                           </Form.Group>
                         </div>
@@ -288,13 +271,11 @@ function AllFormations() {
                     <table className="table table-striped table-hover">
                       <thead>
                         <tr>
-                          <th>Titre de la formation</th>
-                          <th>Description</th>
-                          <th>Personnes Cibles</th>
-                          <th>Prix</th>
-                          <th>Prérequis</th>
-                          <th>Catégorie</th>
-                          <th>Sous Catégorie</th>
+                          <th>Nom</th>
+                          <th>Prénom</th>
+                          <th>E-mail</th>
+                          <th>Numéro de téléphone</th>
+                          <th>Type</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -304,18 +285,14 @@ function AllFormations() {
                             return (
                               <tr key={index}>
                                 <td>
-                                  <h6>{f.name}</h6>
+                                  <h6>{f.lastName}</h6>
                                 </td>
-                                <td style={{ width: "30%" }}>
-                                  <h6>{f.description}</h6>
-                                </td>
-                                <td>{f.personnesCible}</td>
-                                <td>{f.price} DT</td>
-                                <td>{f.requirements}</td>
                                 <td>
-                                  {f.sous_categorie.categorie.categorie_name}
+                                  <h6>{f.firstName}</h6>
                                 </td>
-                                <td>{f.sous_categorie.sous_categorie_name}</td>
+                                <td>{f.email}</td>
+                                <td>{f.phoneNumber}</td>
+                                <td>{f.type}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -327,9 +304,7 @@ function AllFormations() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      onClick={() =>
-                                        handleDeleteFormation(f.id)
-                                      }
+                                      onClick={() => handleDeleteCandidat(f.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -342,26 +317,22 @@ function AllFormations() {
                             );
                           })
                         ) : filteredData.length === 0 &&
-                          formations.length === 0 ? (
+                          candidats.length === 0 ? (
                           <></>
                         ) : (
-                          formations.length > 0 &&
-                          formationsPage.map((f, index) => {
+                          candidats.length > 0 &&
+                          candidatsPage.map((f, index) => {
                             return (
                               <tr key={index}>
                                 <td>
-                                  <h6>{f.name}</h6>
+                                  <h6>{f.lastName}</h6>
                                 </td>
-                                <td style={{ width: "30%" }}>
-                                  <h6>{f.description}</h6>
-                                </td>
-                                <td>{f.personnesCible}</td>
-                                <td>{f.price} DT</td>
-                                <td>{f.requirements}</td>
                                 <td>
-                                  {f.sous_categorie.categorie.categorie_name}
+                                  <h6>{f.firstName}</h6>
                                 </td>
-                                <td>{f.sous_categorie.sous_categorie_name}</td>
+                                <td>{f.email}</td>
+                                <td>{f.phoneNumber}</td>
+                                <td>{f.type}</td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -373,9 +344,7 @@ function AllFormations() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      onClick={() =>
-                                        handleDeleteFormation(f.id)
-                                      }
+                                      onClick={() => handleDeleteCandidat(f.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -428,8 +397,8 @@ function AllFormations() {
                   style={{ backgroundColor: "#D2D8EB" }}
                   className="shadow-lg p-5 mb-5 rounded"
                 >
-                  {formations.length > 0 &&
-                    formations.map((f, idx) => {
+                  {candidats.length > 0 &&
+                    candidats.map((f, idx) => {
                       return (
                         <Carousel.Item key={idx} className="row">
                           <div
@@ -443,58 +412,39 @@ function AllFormations() {
                               Modifier <i className="mdi mdi-tooltip-edit"></i>
                             </Button>
                             <Button
-                              onClick={() => handleDeleteFormation(f.id)}
+                              onClick={() => handleDeleteCandidat(f.id)}
                               className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
                             >
                               Supprimer <i className="mdi mdi-delete"></i>
                             </Button>
                           </div>
                           <div className="m-lg-5 m-md-5 m-sm-0 m-xs-0 p-sm-0 p-xs-0">
-                            <Card className="shadow-lg rounded m-5">
+                            <Card className="shadow-lg p-3 rounded">
                               <Card.Body>
                                 <Card.Title>
-                                  <h2>{f.name}</h2>
+                                  <h2>
+                                    {f.firstName} {f.lastName}
+                                  </h2>
                                 </Card.Title>
                                 <Card.Text className="d-flex justify-content-evenly row">
                                   <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Description :
+                                        Adresse E-mail :
                                       </span>{" "}
-                                      {f.description}
+                                      {f.email}
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Personnes cibles :
+                                        Numéro de téléphone :
                                       </span>{" "}
-                                      {f.personnesCible}
+                                      {f.phoneNumber}
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
-                                        Prix :
+                                        Type :
                                       </span>{" "}
-                                      {f.price} DT
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Prérequis :
-                                      </span>{" "}
-                                      {f.requirements}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Catégorie :
-                                      </span>{" "}
-                                      {
-                                        f.sous_categorie.categorie
-                                          .categorie_name
-                                      }
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Sous Catégorie :
-                                      </span>{" "}
-                                      {f.sous_categorie.sous_categorie_name}
+                                      {f.type}
                                     </p>
                                   </div>
                                 </Card.Text>
@@ -514,4 +464,4 @@ function AllFormations() {
   );
 }
 
-export default AllFormations;
+export default AllCandidats;

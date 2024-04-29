@@ -247,7 +247,7 @@ function AllMateriels() {
                               <Form.Control
                                 id="search"
                                 type="text"
-                                placeholder="Recherchez des administareurs ..."
+                                placeholder="Recherchez des matériaux ..."
                                 size="lg"
                                 name=""
                                 value={wordEntered}

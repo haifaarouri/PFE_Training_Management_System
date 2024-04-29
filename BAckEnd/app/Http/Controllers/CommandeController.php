@@ -40,7 +40,7 @@ class CommandeController extends Controller
             try {
                 $validator = Validator::make($request->all(), [
                     'date' => 'required|date',
-                    'quantity' => 'required|integer',
+                    'deliveryDate' => 'required|date',
                     'total' => 'required|numeric',
                     'paymentMethod' => 'required|string|max:255',
                 ]);
@@ -51,7 +51,7 @@ class CommandeController extends Controller
 
                 $commandeData = [
                     'date' => $request->input('date'),
-                    'quantity' => $request->input('quantity'),
+                    'deliveryDate' => $request->input('deliveryDate'),
                     'total' => $request->input('total'),
                     'paymentMethod' => $request->input('paymentMethod'),
                 ];
@@ -64,6 +64,7 @@ class CommandeController extends Controller
                             'name' => 'required|string|max:255',
                             'price' => 'required|numeric',
                             'category' => ['required', new ProductCategoryRule()],
+                            'quantity' => 'required|integer',
                             'supplierEmailFromDB' => 'required|email|max:255',
                         ]);
 
@@ -75,6 +76,7 @@ class CommandeController extends Controller
                             'name' => $produit['name'],
                             'price' => $produit['price'],
                             'category' => $produit['category'],
+                            'quantity' => $produit['quantity'],
                         ];
 
                         $newProduit = Produit::create($produitData);
@@ -87,6 +89,7 @@ class CommandeController extends Controller
                             'name' => 'required|string|max:255',
                             'price' => 'required|numeric',
                             'category' => ['required', new ProductCategoryRule()],
+                            'quantity' => 'required|integer',
                             'supplierName' => 'required|string|max:255',
                             'email' => 'required|email|max:255|unique:fournisseurs',
                             'supplierPhoneNumber' => 'required|string|max:8',
@@ -107,6 +110,7 @@ class CommandeController extends Controller
                             'name' => $produit['name'],
                             'price' => $produit['price'],
                             'category' => $produit['category'],
+                            'quantity' => $produit['quantity'],
                         ];
 
                         $newProduit = Produit::create($produitData);
@@ -173,17 +177,55 @@ class CommandeController extends Controller
                 }
 
                 return response()->json(['message' => 'Le statut de la commande est ' . $request->status . ' !']);
+            } else if ($request->status === "Confirmé" || $request->status === "Annulé" || $request->status === "Réceptionné") {
+                $commande = Commande::find($id);
+
+                $commande->status = $request->status;
+                $commande->save();
+
+                $assistanteAcceuil = User::where('role', '=', "AssistanceAcceuil")->get();
+
+                if (!$assistanteAcceuil) {
+                    return response()->json(['error' => "Pas d' assistant(e) d'acceuil !"], 404);
+                }
+
+                foreach ($assistanteAcceuil as $user) {
+                    event(new OrderStatusUpdated($commande, $user->id));
+
+                    //store user notification in DB 
+                    $notificationData = [
+                        'content_id' => $commande->id,
+                    ];
+
+                    $user->notifications()->create($notificationData);
+                }
+
+                return response()->json(['message' => 'Le statut de la commande est ' . $request->status . ' !']);
+            } else if ($request->status === "Confirmé") {
+                $commande = Commande::find($id);
+
+                $commande->status = $request->status;
+                $commande->save();
+
+                $serviceFinancier = User::where('role', '=', "ServiceFinancier")->get();
+
+                if (!$serviceFinancier) {
+                    return response()->json(['error' => "Pas de Service Financier !"], 404);
+                }
+
+                foreach ($serviceFinancier as $user) {
+                    event(new OrderStatusUpdated($commande, $user->id));
+
+                    //store user notification in DB 
+                    $notificationData = [
+                        'content_id' => $commande->id,
+                    ];
+
+                    $user->notifications()->create($notificationData);
+                }
+
+                return response()->json(['message' => 'Le statut de la commande est ' . $request->status . ' !']);
             }
-
-            // $commande = Commande::find($id);
-
-            // $commande->status = $request->status;
-            // $commande->save();
-
-            // \broadcast(new OrderStatusUpdated($commande));
-
-            // return response()->json(['message' => 'Commande est ' . $request->status . ' !']);
-
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
@@ -240,12 +282,13 @@ class CommandeController extends Controller
 
         $validator = Validator::make($request->all(), [
             'date' => 'required|date',
-            'quantity' => 'required|integer',
+            'deliveryDate' => 'required|date',
             'total' => 'required|numeric',
             'paymentMethod' => 'required|string|max:255',
             'produits.*.name' => 'required|string|max:255',
             'produits.*.price' => 'required|numeric',
             'produits.*.category' => ['required', new ProductCategoryRule()],
+            'produits.*.quantity' => 'required|integer',
             // 'produits.*.supplierEmailFromDB' => 'sometimes|email|max:255',
             'produits.*.fournisseur.name' => 'sometimes|string|max:255',
             'produits.*.fournisseur.email' => 'sometimes|email|max:255|unique:fournisseurs,email,' . $id,
@@ -265,7 +308,7 @@ class CommandeController extends Controller
 
         $commande->update([
             'date' => $request->input('date'),
-            'quantity' => $request->input('quantity'),
+            'deliveryDate' => $request->input('deliveryDate'),
             'total' => $request->input('total'),
             'paymentMethod' => $request->input('paymentMethod'),
         ]);
@@ -275,6 +318,7 @@ class CommandeController extends Controller
                 'name' => $produitInput['name'],
                 'price' => $produitInput['price'],
                 'category' => $produitInput['category'],
+                'quantity' => $produitInput['quantity'],
             ];
 
             if (isset($produitInput['id'])) {
@@ -359,7 +403,7 @@ class CommandeController extends Controller
             $produit->save();
         }
 
-        return response()->json(['message' => "Commande modifié avec succès !"], 200);
+        return response()->json(['message' => "Commande modifiée avec succès !"], 200);
     }
 
     public function readNotification($id)
@@ -380,21 +424,5 @@ class CommandeController extends Controller
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
     }
-
-    // public function destroy($id)
-    // {
-    //     if ($this->list_roles->contains(auth()->user()->role)) {
-    //         $Commande = Commande::find($id);
-    //         if (!$Commande) {
-    //             return response()->json(['error' => 'Commande avec cette ID non trouvé !'], 404);
-    //         }
-
-    //         $Commande->delete();
-    //         return response()->json(['message' => 'Commande supprimée avec succès !']);
-    //     } else {
-    //         // User does not have access, return a 403 response
-    //         return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
-    //     }
-    // }
 
 }

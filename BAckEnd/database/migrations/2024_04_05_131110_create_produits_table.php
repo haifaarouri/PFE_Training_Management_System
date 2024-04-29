@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('name');
             $table->double('price');
             $table->string('category');
+            $table->integer('quantity');
             $table->unsignedBigInteger('commande_id')->nullable();
             $table->foreign('commande_id')->references('id')->on('commandes')->onDelete('cascade')->onUpdate('cascade');
             $table->unsignedBigInteger('fournisseur_id')->nullable();

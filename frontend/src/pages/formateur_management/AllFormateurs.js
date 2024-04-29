@@ -324,7 +324,7 @@ function AllFormateurs() {
                                 <Form.Control
                                   id="search"
                                   type="text"
-                                  placeholder="Recherchez des administareurs ..."
+                                  placeholder="Recherchez des formateurs ..."
                                   size="lg"
                                   name=""
                                   value={wordEntered}

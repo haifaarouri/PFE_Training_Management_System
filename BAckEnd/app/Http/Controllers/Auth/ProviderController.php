@@ -37,7 +37,7 @@ class ProviderController extends Controller
                     $existingUser->email_verified_at = Carbon::now();
                     $existingUser->save();
                 }
-                $user = $existingUser;
+                $user = $existingUser->load('notifications');
             } else {
                 // Create a new user and set email_verified_at to now
                 $user = User::create([

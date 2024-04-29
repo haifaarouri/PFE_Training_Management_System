@@ -35,7 +35,7 @@ const EditCommande = () => {
   const { id } = params;
   const [commande, setCommande] = useState({
     date: "",
-    quantity: "",
+    deliveryDate: "",
     paymentMethod: "",
     total: "",
   });
@@ -64,6 +64,7 @@ const EditCommande = () => {
         name: "",
         price: "",
         category: "",
+        quantity: "",
         fournisseur: {
           name: "",
           email: "",
@@ -163,7 +164,7 @@ const EditCommande = () => {
       const formData = new FormData();
       formData.append("_method", "PUT");
       formData.append("date", commande.date);
-      formData.append("quantity", commande.quantity);
+      formData.append("deliveryDate", commande.deliveryDate);
       formData.append("paymentMethod", commande.paymentMethod);
       formData.append("total", commande.total);
       formData.append("produits", JSON.stringify(produits));
@@ -182,18 +183,18 @@ const EditCommande = () => {
 
       const res = await editCommande(id, formData);
 
-      if (res.data.message) {
+      if (res.message) {
         Swal.fire({
           icon: "success",
           title: "Commande modifiée avec succès !",
           showConfirmButton: false,
           timer: 2000,
         });
-        handleSuccess(res.data.message);
+        handleSuccess(res.message);
 
         setCommande({
           date: "",
-          quantity: "",
+          deliveryDate: "",
           paymentMethod: "",
           total: "",
         });
@@ -248,7 +249,7 @@ const EditCommande = () => {
                   </InputGroup>
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Quantité</Form.Label>
+                  <Form.Label>Date de livraison maximale </Form.Label>
                   <InputGroup className="mb-3">
                     <InputGroup.Text id="inputGroup-sizing-default">
                       <div className="input-group-prepend bg-transparent">
@@ -258,24 +259,25 @@ const EditCommande = () => {
                       </div>
                     </InputGroup.Text>
                     <Form.Control
-                      name="quantity"
-                      type="number"
-                      placeholder="Saisir la quantité"
-                      value={commande.quantity}
+                      name="deliveryDate"
+                      type="date"
+                      placeholder="Saisir la date de livraison max"
+                      value={commande.deliveryDate}
                       onChange={(e) =>
                         setCommande((prevCmd) => ({
                           ...prevCmd,
-                          quantity: e.target.value,
+                          deliveryDate: e.target.value,
                         }))
                       }
                       required
+                      min={new Date().toISOString().split("T")[0]}
                     />
                     <Form.Control.Feedback>
                       Cela semble bon !
                     </Form.Control.Feedback>
                     <Form.Control.Feedback type="invalid">
-                      Veuillez saisir la quantité des produits de catte commande
-                      !
+                      Veuillez saisir la date de livraison maximale de cette
+                      commande !
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
@@ -446,6 +448,35 @@ const EditCommande = () => {
                             </Form.Control.Feedback>
                             <Form.Control.Feedback type="invalid">
                               Veuillez sélectionner la catégorie de ce produit !
+                            </Form.Control.Feedback>
+                          </InputGroup>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Quantité</Form.Label>
+                          <InputGroup className="mb-3">
+                            <InputGroup.Text id="inputGroup-sizing-default">
+                              <div className="input-group-prepend bg-transparent">
+                                <span className="input-group-text bg-transparent border-right-0">
+                                  <FaCartPlus
+                                    className="text-primary"
+                                    style={{ fontSize: "1.5em" }}
+                                  />
+                                </span>
+                              </div>
+                            </InputGroup.Text>
+                            <Form.Control
+                              type="number"
+                              name="quantity"
+                              value={product.quantity}
+                              onChange={(e) => handleProductChange(index, e)}
+                              required
+                              placeholder="Saisir la quantité"
+                            />
+                            <Form.Control.Feedback>
+                              Cela semble bon !
+                            </Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid">
+                              Veuillez saisir la quantité de ce produit !
                             </Form.Control.Feedback>
                           </InputGroup>
                         </Form.Group>

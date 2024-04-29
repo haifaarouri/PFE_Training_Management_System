@@ -24,7 +24,7 @@ import { BsFillPinMapFill } from "react-icons/bs";
 import { fetchAllSuppliers } from "../services/CommandeServices";
 
 const CommandeModal = ({ show, handleClose }) => {
-  const [quantity, setQuantity] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
@@ -89,6 +89,7 @@ const CommandeModal = ({ show, handleClose }) => {
         name: "",
         price: "",
         category: "",
+        quantity: "",
         supplierName: "",
         email: "",
         supplierPhoneNumber: "",
@@ -147,9 +148,9 @@ const CommandeModal = ({ show, handleClose }) => {
 
       const formData = new FormData();
       formData.append("date", date);
-      formData.append("quantity", quantity);
       formData.append("paymentMethod", paymentMethod);
       formData.append("total", total);
+      formData.append("deliveryDate", deliveryDate);
       produits.forEach((product, index) => {
         Object.keys(product).forEach((key) => {
           formData.append(`produits[${index}][${key}]`, product[key]);
@@ -173,7 +174,6 @@ const CommandeModal = ({ show, handleClose }) => {
           });
 
           setPaymentMethod("");
-          setQuantity("");
           setTotal("");
           setProduits([]);
 
@@ -202,7 +202,6 @@ const CommandeModal = ({ show, handleClose }) => {
           });
 
           setPaymentMethod("");
-          setQuantity("");
           setTotal("");
           setProduits([]);
 
@@ -210,7 +209,6 @@ const CommandeModal = ({ show, handleClose }) => {
         }
       }
     } catch (error) {
-      console.log(error);
       if (error.response.data.error) {
         Object.values(error.response.data.error).forEach((element) => {
           handleError(element[0]);
@@ -262,7 +260,7 @@ const CommandeModal = ({ show, handleClose }) => {
             <Form.Text>C'est la date d'aujourd'hui par défaut.</Form.Text>
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Quantité</Form.Label>
+            <Form.Label>Date de livraison maximale </Form.Label>
             <InputGroup className="mb-3">
               <InputGroup.Text id="inputGroup-sizing-default">
                 <div className="input-group-prepend bg-transparent">
@@ -272,16 +270,18 @@ const CommandeModal = ({ show, handleClose }) => {
                 </div>
               </InputGroup.Text>
               <Form.Control
-                name="quantity"
-                type="number"
-                placeholder="Saisir la quantité"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                name="deliveryDate"
+                type="date"
+                placeholder="Saisir la date de livraison max"
+                value={deliveryDate}
+                onChange={(e) => setDeliveryDate(e.target.value)}
                 required
+                min={new Date().toISOString().split("T")[0]}
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
-                Veuillez saisir la quantité des produits de catte commande !
+                Veuillez saisir la date de livraison maximale de cette commande
+                !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
@@ -436,6 +436,35 @@ const CommandeModal = ({ show, handleClose }) => {
                       </Form.Control.Feedback>
                       <Form.Control.Feedback type="invalid">
                         Veuillez sélectionner la catégorie de ce produit !
+                      </Form.Control.Feedback>
+                    </InputGroup>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Quantité</Form.Label>
+                    <InputGroup className="mb-3">
+                      <InputGroup.Text id="inputGroup-sizing-default">
+                        <div className="input-group-prepend bg-transparent">
+                          <span className="input-group-text bg-transparent border-right-0">
+                            <FaCartPlus
+                              className="text-primary"
+                              style={{ fontSize: "1.5em" }}
+                            />
+                          </span>
+                        </div>
+                      </InputGroup.Text>
+                      <Form.Control
+                        type="number"
+                        name="quantity"
+                        value={product.quantity}
+                        onChange={(e) => handleProductChange(index, e)}
+                        required
+                        placeholder="Saisir la quantité"
+                      />
+                      <Form.Control.Feedback>
+                        Cela semble bon !
+                      </Form.Control.Feedback>
+                      <Form.Control.Feedback type="invalid">
+                        Veuillez saisir la quantité de ce produit !
                       </Form.Control.Feedback>
                     </InputGroup>
                   </Form.Group>

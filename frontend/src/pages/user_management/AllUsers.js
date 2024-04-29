@@ -272,7 +272,7 @@ function AllUsers() {
                                       ? `${u.profileImage}`
                                       : `http://localhost:8000/profilePictures/${u.profileImage}`
                                   }
-                                  alt={u.profileImage}
+                                  alt="Photo de profile"
                                 />
                               </td>
                               <td>
@@ -396,7 +396,7 @@ function AllUsers() {
                                       ? `${u.profileImage}`
                                       : `http://localhost:8000/profilePictures/${u.profileImage}`
                                   }
-                                  alt={u.profileImage}
+                                  alt="Photo de profile"
                                 />
                               </td>
                               <td>

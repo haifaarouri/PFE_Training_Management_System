@@ -13,6 +13,7 @@ class Produit extends Model
         'name',
         'price',
         'category',
+        'quantity',
     ];
 
     public function fournisseur()

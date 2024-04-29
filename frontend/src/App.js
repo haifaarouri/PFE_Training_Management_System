@@ -30,6 +30,9 @@ import pusher from "./services/pusherConfig";
 import { setNotifications } from "./store/slices/notificationsSlice";
 import { fetchAllUnreadNotifs } from "./services/CommandeServices";
 import EditFormation from "./pages/formation_management/EditFormation";
+import AllCandidats from "./pages/candidat_management/AllCandidat";
+import EditCandidat from "./pages/candidat_management/EditCandidat";
+import AllConfirmedCommandes from "./pages/commande_management/AllConfirmedCommandes";
 
 function App() {
   const persistRootData = localStorage.getItem("persist:root");
@@ -240,6 +243,18 @@ function App() {
             }
           />
           <Route
+            path="/confirmed-commandes"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "ServiceFinancier",
+                ]}
+              >
+                <AllConfirmedCommandes />
+              </RequireAuth>
+            }
+          />
+          <Route
             path="/edit-commande/:id"
             element={
               <RequireAuth
@@ -335,6 +350,44 @@ function App() {
             element={
               <RequireAuth>
                 <ProfileUser />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/candidats"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <AllCandidats />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/edit-candidat/:id"
+            element={
+              <RequireAuth
+                allowedRoles={[
+                  "Admin",
+                  "SuperAdmin",
+                  "PiloteDuProcessus",
+                  "Sales",
+                  "ChargéFormation",
+                  "CommunityManager",
+                  "AssistanceAcceuil",
+                  "ServiceFinancier",
+                ]}
+              >
+                <EditCandidat />
               </RequireAuth>
             }
           />
