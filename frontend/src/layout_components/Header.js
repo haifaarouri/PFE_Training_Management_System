@@ -10,7 +10,7 @@ import { IoIosNotifications } from "react-icons/io";
 import { toast } from "sonner";
 import { readNotification } from "../services/CommandeServices";
 
-function Header() {
+function Header({ onToggleSidebar }) {
   const [today, setToday] = useState(null);
   const [userAuth, setUserAuth] = useState(null);
   const dispatch = useDispatch();
@@ -28,7 +28,7 @@ function Header() {
     setToday(d);
 
     setUserAuth(result.user);
-    setListNotif(notifsRedux.notifications)
+    setListNotif(notifsRedux.notifications);
   }, [result.user]);
 
   const handleSuccess = (msg) => toast.success(msg);
@@ -74,13 +74,48 @@ function Header() {
     }
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.matchMedia("(min-width: 991px)").matches) {
+        if (window.scrollY >= 197) {
+          document
+            .getElementsByClassName("navbar")[0]
+            .classList.add("navbar-mini");
+          document
+            .getElementsByClassName("navbar")[0]
+            .classList.add("fixed-top");
+        } else {
+          document
+            .getElementsByClassName("navbar")[0]
+            .classList.remove("navbar-mini");
+          document
+            .getElementsByClassName("navbar")[0]
+            .classList.remove("fixed-top");
+        }
+      }
+      if (window.matchMedia("(max-width: 991px)").matches) {
+        document
+          .getElementsByClassName("navbar")[0]
+          .classList.add("navbar-mini");
+        document.getElementsByClassName("navbar")[0].classList.add("fixed-top");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   return (
     <nav className="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
       <div className="navbar-menu-wrapper d-flex align-items-center justify-content-end">
         <button
           className="navbar-toggler navbar-toggler align-self-center"
           type="button"
-          data-toggle="minimize"
+          // data-toggle="minimize"
+          onClick={onToggleSidebar}
         >
           <span className="mdi mdi-menu" />
         </button>

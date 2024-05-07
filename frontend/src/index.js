@@ -7,6 +7,12 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { persistor, store } from "./store/store";
 import { PersistGate } from "redux-persist/integration/react";
+import { registerLicense } from "@syncfusion/ej2-base";
+
+registerLicense(
+  "Ngo9BigBOggjHTQxAR8/V1NBaF5cXmZCe0x3Rnxbf1x0ZFNMYF5bR3RPMyBoS35RckVmWXlednRXRWJVWENw"
+);
+//licence key : ORg4AjUWIQA/Gnt2UFhhQlJBfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTX5WdkJjXX5WdH1TQGlY
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

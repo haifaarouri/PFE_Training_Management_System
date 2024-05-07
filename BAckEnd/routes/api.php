@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CandidatController;
 use App\Http\Controllers\CommandeController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FormateurController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\materielController;
@@ -114,4 +115,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-candidat/{id}', [CandidatController::class, 'update']);
     Route::post('/add-candidat', [CandidatController::class, 'store']);
     Route::delete('/delete-candidat/{id}', [CandidatController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/document', [DocumentController::class, 'store']);
 });

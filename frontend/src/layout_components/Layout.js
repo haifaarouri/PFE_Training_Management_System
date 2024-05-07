@@ -2,22 +2,31 @@ import { Outlet } from "react-router-dom";
 import Footer from "./Footer";
 import Header from "./Header";
 import SideBar from "./SideBar";
-// import { useSelector } from "react-redux";
-// import { useEffect, useState } from "react";
+import { useState } from "react";
 
 function Layout() {
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarVisible(!isSidebarVisible);
+  };
+
   //   const result = useSelector((state) => state.user);
   //   const [userAuth, setUserAuth] = useState(null);
   // console.log(result);
   //   useEffect(() => {
   //     setUserAuth(result);
   //   }, []);
-  // console.log(userAuth);
+
   return (
-    <div className="container-scroller d-flex">
-      <SideBar />
+    <div
+      className={`container-scroller d-flex ${
+        isSidebarVisible && "sidebar-icon-only"
+      }`}
+    >
+      <SideBar isSidebarVisible={isSidebarVisible} />
       <div className="container-fluid page-body-wrapper">
-        <Header />
+        <Header onToggleSidebar={toggleSidebar} />
         <div className="main-panel">
           <Outlet />
         </div>

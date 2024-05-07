@@ -4,6 +4,8 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { FaBookBookmark } from "react-icons/fa6";
 import { PiStudentFill } from "react-icons/pi";
+import { BsCalendarRange } from "react-icons/bs";
+import { IoDocumentAttachOutline } from "react-icons/io5";
 
 function SideBar() {
   const [userAuth, setUserAuth] = useState(null);
@@ -13,6 +15,63 @@ function SideBar() {
   useEffect(() => {
     setUserAuth(result.user);
   }, [result.user]);
+
+  const [hoveredItem, setHoveredItem] = useState(null);
+
+  const handleMouseEnter = (itemName) => {
+    setHoveredItem(itemName);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredItem(null);
+  };
+
+  const menuItems = [
+    { path: "/dashboard", icon: "mdi-view-quilt", title: "Dashboard" },
+    {
+      path: "/salles",
+      icon: "mdi-home-variant",
+      title: "Gestion des Salles",
+    },
+    {
+      path: "/materiaux",
+      icon: "mdi-laptop",
+      title: "Gestions des Materiaux",
+    },
+    {
+      path: "/formateurs",
+      icon: <GiTeacher />,
+      title: "Gestion des Formateurs",
+    },
+    {
+      path: "/formations",
+      icon: <FaBookBookmark />,
+      title: "Gestion des Formations",
+    },
+    {
+      path: "/candidats",
+      icon: <PiStudentFill size={22} />,
+      title: "Gestion des Candidats",
+    },
+    {
+      path:
+        userAuth && userAuth.role === "ServiceFinancier"
+          ? "/confirmed-commandes"
+          : "/commandes",
+      icon: "mdi-cart",
+      title: "Gestion des Commandes",
+    },
+    {
+      path: "/sessions",
+      icon: <BsCalendarRange size={20} />,
+      title: "Gestion des Sessions",
+    },
+    {
+      path: "/documents",
+      icon: <IoDocumentAttachOutline size={22} />,
+      title: "Gestion des Documents",
+    },
+  ];
 
   return (
     <nav className="sidebar sidebar-offcanvas" id="sidebar">
@@ -33,19 +92,18 @@ function SideBar() {
           </div>
           <span />
         </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/dashboard">
-            <i className="mdi mdi-view-quilt menu-icon" />
-            <span className="menu-title">Dashboard</span>
-            {/* <div className="badge badge-info badge-pill">2</div> */}
-          </Link>
-        </li>
         <li className="nav-item sidebar-category">
           <p>Pages</p>
           <span />
         </li>
         {userAuth && userAuth.role === "SuperAdmin" && (
-          <li className="nav-item">
+          <li
+            className={`nav-item ${
+              hoveredItem === "superAdmin" ? "hover-open" : ""
+            }`}
+            onMouseEnter={() => handleMouseEnter("superAdmin")}
+            onMouseLeave={handleMouseLeave}
+          >
             <Link
               className="nav-link"
               data-bs-toggle="collapse"
@@ -81,28 +139,32 @@ function SideBar() {
             </div>
           </li>
         )}
-        <li className="nav-item">
-          <Link className="nav-link" to="/salles">
-            <i className="mdi mdi-home-variant menu-icon" />
-            <span className="menu-title">Gestion des Salles</span>
-          </Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/materiaux">
-            <i className="mdi mdi-laptop menu-icon" />
-            <span className="menu-title">Gestions des Materiaux</span>
-          </Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/formateurs">
-            <i className="mdi menu-icon">
-              {" "}
-              <GiTeacher />
-            </i>
-            <span className="menu-title">Gestion des Formateurs</span>
-          </Link>
-        </li>
-        <li className="nav-item">
+        {menuItems.map((item) => (
+          <li
+            key={item.path}
+            className={`nav-item ${
+              hoveredItem === item.title ? "hover-open" : ""
+            }`}
+            onMouseEnter={() => handleMouseEnter(item.title)}
+            onMouseLeave={handleMouseLeave}
+          >
+            <Link className="nav-link" to={item.path}>
+              {typeof item.icon === "string" ? (
+                <i className={`mdi ${item.icon} menu-icon`} />
+              ) : (
+                <i className="menu-icon">{item.icon}</i>
+              )}
+              <span className="menu-title">{item.title}</span>
+            </Link>
+          </li>
+        ))}
+        {/* <li
+          className={`nav-item ${
+            hoveredItem === "Gestions des Commandes" ? "hover-open" : ""
+          }`}
+          onMouseEnter={() => handleMouseEnter("Gestions des Commandes")}
+          onMouseLeave={handleMouseLeave}
+        >
           <Link
             className="nav-link"
             to={
@@ -114,26 +176,6 @@ function SideBar() {
             <i className="mdi mdi-cart menu-icon" />
             <span className="menu-title">Gestions des Commandes</span>
           </Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/formations">
-            <i className="menu-icon">
-              <FaBookBookmark />
-            </i>
-            <span className="menu-title">Gestions des Formations</span>
-          </Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/candidats">
-            <i className="menu-icon">
-              <PiStudentFill size={22} />
-            </i>
-            <span className="menu-title">Gestions des Candidats</span>
-          </Link>
-        </li>
-        {/* <li className="nav-item sidebar-category">
-          <p>Pages</p>
-          <span />
         </li> */}
         {/* <li className="nav-item">
           <Link

@@ -5,17 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Candidat extends Model
+class Session extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'firstName',
-        'lastName',
-        'email',
-        'phoneNumber',
-        'type',
-    ];
+    public function jour_sessions()
+    {
+        return $this->hasMany(JourSession::class, 'session_id', 'id');
+    }
 
     public function attestations()
     {

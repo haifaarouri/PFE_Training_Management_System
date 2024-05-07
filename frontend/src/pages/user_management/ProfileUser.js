@@ -56,7 +56,7 @@ function ProfileUser() {
   const handleDataRecivedfromChild = (childData) => {
     handleSuccess(childData);
   };
-
+console.log(user);
   return (
     <div className="content-wrapper">
       <div className="row">

@@ -32,7 +32,7 @@ export const fetchAllUsers = async () => {
 export const fetchUserById = async (id) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.get(`user-id/${id}`);
+      const response = await axios.get(`/api/user-id/${id}`);
       return response.data;
     } else {
       const response = await apiFetch(`user-id/${id}`);
