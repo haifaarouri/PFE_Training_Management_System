@@ -7,6 +7,7 @@
 /public/MaterielPictures
 /public/MaterielDocs
 /public/TrainersCV
+/public/DocumentsTemplates
 /storage/*.key
 /vendor
 .env

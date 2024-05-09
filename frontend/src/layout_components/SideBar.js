@@ -7,7 +7,7 @@ import { PiStudentFill } from "react-icons/pi";
 import { BsCalendarRange } from "react-icons/bs";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 
-function SideBar() {
+function SideBar({isSidebarVisible}) {
   const [userAuth, setUserAuth] = useState(null);
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
@@ -74,7 +74,7 @@ function SideBar() {
   ];
 
   return (
-    <nav className="sidebar sidebar-offcanvas" id="sidebar">
+    <nav className={`sidebar sidebar-offcanvas ${isSidebarVisible && "active"}`} id="sidebar">
       <ul className="nav">
         <li className="nav-item sidebar-category">
           <div className="d-flex justify-content-center">

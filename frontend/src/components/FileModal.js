@@ -70,14 +70,16 @@ const FileModal = ({
           <h5 className="modal-title">
             {fileContent === "CV"
               ? "CV du formateur"
-              : "Fichier sélectionné pour les spécifications techniques du matériel"}
+              : fileContent !== "Template"
+              ? "Fichier sélectionné pour les spécifications techniques du matériel"
+              : "Document"}
           </h5>
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="row">
         {!urlFile ? (
           <iframe
-            src={`http://localhost:8000/materielDocs/${selectedFile}`}
+            src={`http://localhost:8000/DocumentsTemplates/${selectedFile}`}
             width="100%"
             height="600px"
             title="PDF Viewer"

@@ -119,4 +119,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/document', [DocumentController::class, 'store']);
+    Route::post('/upload-template', [DocumentController::class, 'uploadTemplate']);
+    Route::get('/documents-templates', [DocumentController::class, 'getAllTemplates']);
 });

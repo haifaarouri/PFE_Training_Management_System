@@ -73,6 +73,9 @@ function App() {
   const EditCandidat = lazy(() =>
     import("./pages/candidat_management/EditCandidat")
   );
+  const AllDocuments = lazy(() =>
+    import("./pages/document_management/AllDocuments")
+  );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -487,7 +490,7 @@ function App() {
               }
             />
             <Route
-              path="/documents"
+              path="/add-document"
               element={
                 <RequireAuth
                   allowedRoles={[
@@ -502,6 +505,25 @@ function App() {
                   ]}
                 >
                   <TemplateEditor />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/documents"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <AllDocuments />
                 </RequireAuth>
               }
             />

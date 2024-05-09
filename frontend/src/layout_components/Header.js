@@ -318,7 +318,8 @@ function Header({ onToggleSidebar }) {
         <button
           className="navbar-toggler navbar-toggler-right d-lg-none align-self-center"
           type="button"
-          data-toggle="offcanvas"
+          // data-toggle="offcanvas"
+          onClick={onToggleSidebar}
         >
           <span className="mdi mdi-menu" />
         </button>

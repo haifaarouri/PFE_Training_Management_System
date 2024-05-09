@@ -10,7 +10,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import { registerLicense } from "@syncfusion/ej2-base";
 
 registerLicense(
-  "Ngo9BigBOggjHTQxAR8/V1NBaF5cXmZCe0x3Rnxbf1x0ZFNMYF5bR3RPMyBoS35RckVmWXlednRXRWJVWENw"
+  "ORg4AjUWIQA/Gnt2UFhhQlJBfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTX5WdkJjXX5WdH1TQGlY"
 );
 //licence key : ORg4AjUWIQA/Gnt2UFhhQlJBfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTX5WdkJjXX5WdH1TQGlY
 
