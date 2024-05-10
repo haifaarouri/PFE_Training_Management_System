@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Categorie;
 use App\Models\Formation;
+use App\Models\JourFormation;
+use App\Models\ProgrammeFormation;
 use App\Models\SousCategorie;
+use App\Models\SousPartie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -21,7 +24,7 @@ class FormationController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $formations = Formation::with('sousCategorie.categorie')->get();
+            $formations = Formation::with('sousCategorie.categorie', 'programme', 'programme.jourFormations', 'programme.jourFormations.sousParties')->get();
             return response()->json($formations);
         } else {
             // User does not have access, return a 403 response
@@ -43,52 +46,83 @@ class FormationController extends Controller
 
     public function store(Request $request)
     {
-        if ($this->list_roles->contains(auth()->user()->role)) {
-            try {
-                $request->validate([
-                    'name' => 'required|string|max:255',
-                    'description' => 'required|string',
-                    'personnesCible' => 'required|string|max:255',
-                    'price' => 'required|numeric',
-                    'categorie_name' => 'required|string|max:255',
-                    'sous_categorie_name' => 'required|string|max:255',
-                ]);
-
-                // Create or find the category
-                $categorie = Categorie::firstOrCreate([
-                    'categorie_name' => $request->input('categorie_name')
-                ]);
-
-                // Create or find the subcategory within the found/created category
-                $sousCategorie = $categorie->sousCategories()->firstOrCreate([
-                    'sous_categorie_name' => $request->input('sous_categorie_name')
-                ]);
-
-                $requirements = [];
-                foreach (json_decode($request->input('requirements'), true) as $key => $value) {
-                    $requirements[$key] = $value;
-                }
-
-                $requirementsStr = implode(',', $requirements);
-
-                // Create the formation within the found/created subcategory
-                $formation = $sousCategorie->formations()->create([
-                    'name' => $request->input('name'),
-                    'description' => $request->input('description'),
-                    'personnesCible' => $request->input('personnesCible'),
-                    'price' => $request->input('price'),
-                    'requirements' => $requirementsStr,
-                ]);
-
-                return response()->json($formation, 201);
-
-            } catch (\Exception $e) {
-                \Log::error('Error : ' . $e->getMessage());
-                dd($e->getMessage());
-                return response()->json(['error' => 'Erreur lors de l\'ajout de la formation !'], 500);
-            }
-        } else {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        if (is_string($request->input('programme'))) {
+            $programme = json_decode($request->input('programme'), true);
+            $request->merge(['programme' => $programme]);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'reference' => 'required|string|max:255',
+            'entitled' => 'required|string|max:255',
+            'description' => 'required|string',
+            'numberOfDays' => 'required|integer',
+            'personnesCible' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'certificationOrganization' => 'required|string|max:255',
+            'courseMaterial' => 'required|string|max:255',
+            'categorie_name' => 'required|string|max:255',
+            'sous_categorie_name' => 'required|string|max:255',
+            'programme' => 'required|array',
+            'programme.title' => 'required|string',
+            'programme.jours' => 'required|array',
+            'programme.jours.*.dayName' => 'required|string',
+            'programme.jours.*.sousParties' => 'required|array',
+            'programme.jours.*.sousParties.*.description' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        try {
+            $categorie = Categorie::firstOrCreate(['categorie_name' => $request->input('categorie_name')]);
+            $sousCategorie = $categorie->sousCategories()->firstOrCreate(['sous_categorie_name' => $request->input('sous_categorie_name')]);
+
+            $requirements = [];
+            foreach (json_decode($request->input('requirements'), true) as $key => $value) {
+                $requirements[$key] = $value;
+            }
+
+            $requirementsStr = implode(',', $requirements);
+
+            $formation = $sousCategorie->formations()->create([
+                'reference' => $request->input('reference'),
+                'entitled' => $request->input('entitled'),
+                'numberOfDays' => $request->input('numberOfDays'),
+                'description' => $request->input('description'),
+                'personnesCible' => $request->input('personnesCible'),
+                'price' => $request->input('price'),
+                'requirements' => $requirementsStr,
+                'certificationOrganization' => $request->input('certificationOrganization'),
+                'courseMaterial' => $request->input('courseMaterial'),
+            ]);
+
+            $programmeData = $request->input('programme');
+
+            $programme = $formation->programme()->create([
+                'title' => $programmeData['title']
+            ]);
+
+            foreach ($programmeData['jours'] as $jourData) {
+                $jour = $programme->jourFormations()->create([
+                    'dayName' => $jourData['dayName']
+                ]);
+
+                foreach ($jourData['sousParties'] as $sousPartieData) {
+                    $jour->sousParties()->create([
+                        'description' => $sousPartieData['description']
+                    ]);
+                }
+            }
+
+            return response()->json($formation, 201);
+        } catch (\Exception $e) {
+            \Log::error('Error : ' . $e->getMessage());
+            return response()->json(['error' => 'Erreur lors de l\'ajout de la formation !'], 500);
         }
     }
 
