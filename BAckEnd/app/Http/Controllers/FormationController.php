@@ -63,7 +63,7 @@ class FormationController extends Controller
             'personnesCible' => 'required|string|max:255',
             'price' => 'required|numeric',
             'certificationOrganization' => 'required|string|max:255',
-            'courseMaterial' => 'required|string|max:255',
+            'courseMaterial' => 'required|file|mimes:pdf|max:2048',
             'categorie_name' => 'required|string|max:255',
             'sous_categorie_name' => 'required|string|max:255',
             'programme' => 'required|array',
@@ -89,37 +89,42 @@ class FormationController extends Controller
 
             $requirementsStr = implode(',', $requirements);
 
-            $formation = $sousCategorie->formations()->create([
-                'reference' => $request->input('reference'),
-                'entitled' => $request->input('entitled'),
-                'numberOfDays' => $request->input('numberOfDays'),
-                'description' => $request->input('description'),
-                'personnesCible' => $request->input('personnesCible'),
-                'price' => $request->input('price'),
-                'requirements' => $requirementsStr,
-                'certificationOrganization' => $request->input('certificationOrganization'),
-                'courseMaterial' => $request->input('courseMaterial'),
-            ]);
+            if ($request->hasFile('courseMaterial')) {
+                $fileName = time() . $request->file('courseMaterial')->getClientOriginalName();
+                $request->courseMaterial->move(public_path('CoursesMaterials'), $fileName);
 
-            $programmeData = $request->input('programme');
-
-            $programme = $formation->programme()->create([
-                'title' => $programmeData['title']
-            ]);
-
-            foreach ($programmeData['jours'] as $jourData) {
-                $jour = $programme->jourFormations()->create([
-                    'dayName' => $jourData['dayName']
+                $formation = $sousCategorie->formations()->create([
+                    'reference' => $request->input('reference'),
+                    'entitled' => $request->input('entitled'),
+                    'numberOfDays' => $request->input('numberOfDays'),
+                    'description' => $request->input('description'),
+                    'personnesCible' => $request->input('personnesCible'),
+                    'price' => $request->input('price'),
+                    'requirements' => $requirementsStr,
+                    'certificationOrganization' => $request->input('certificationOrganization'),
+                    'courseMaterial' => $fileName,
                 ]);
 
-                foreach ($jourData['sousParties'] as $sousPartieData) {
-                    $jour->sousParties()->create([
-                        'description' => $sousPartieData['description']
-                    ]);
-                }
-            }
+                $programmeData = $request->input('programme');
 
-            return response()->json($formation, 201);
+                $programme = $formation->programme()->create([
+                    'title' => $programmeData['title']
+                ]);
+
+                foreach ($programmeData['jours'] as $jourData) {
+                    $jour = $programme->jourFormations()->create([
+                        'dayName' => $jourData['dayName']
+                    ]);
+
+                    foreach ($jourData['sousParties'] as $sousPartieData) {
+                        $jour->sousParties()->create([
+                            'description' => $sousPartieData['description']
+                        ]);
+                    }
+                }
+
+                return response()->json($formation, 201);
+            }
         } catch (\Exception $e) {
             \Log::error('Error : ' . $e->getMessage());
             return response()->json(['error' => 'Erreur lors de l\'ajout de la formation !'], 500);
@@ -129,7 +134,7 @@ class FormationController extends Controller
     public function show($id)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
-            $formation = Formation::with('sousCategorie.categorie')->find($id);
+            $formation = Formation::with('sousCategorie.categorie', 'programme', 'programme.jourFormations', 'programme.jourFormations.sousParties')->find($id);
             if (!$formation) {
                 return response()->json(['error' => 'formation avec cette ID non trouvé !'], 404);
             }
@@ -156,49 +161,95 @@ class FormationController extends Controller
 
     public function update(Request $request, $id)
     {
-        if ($this->list_roles->contains(auth()->user()->role)) {
-            try {
-                $formation = Formation::find($id);
-                if (!$formation) {
-                    return response()->json(['error' => 'Formation with this ID not found!'], 404);
-                }
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
 
-                $validator = Validator::make($request->all(), [
-                    'name' => 'required|string|max:255',
-                    'description' => 'required|string',
-                    'personnesCible' => 'required|string|max:255',
-                    'price' => 'required|numeric',
-                    'categorie_name' => 'required|string|max:255',
-                    'sous_categorie_name' => 'required|string|max:255',
-                ]);
+        if (is_string($request->input('programme'))) {
+            $programme = json_decode($request->input('programme'), true);
+            $request->merge(['programme' => $programme]);
+        }
 
-                if ($validator->fails()) {
-                    return response()->json(['error' => $validator->errors()], 400);
-                }
+        $validator = Validator::make($request->all(), [
+            'reference' => 'required|string|max:255',
+            'entitled' => 'required|string|max:255',
+            'description' => 'required|string',
+            'numberOfDays' => 'required|integer',
+            'personnesCible' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'certificationOrganization' => 'required|string|max:255',
+            'categorie_name' => 'required|string|max:255',
+            'sous_categorie_name' => 'required|string|max:255',
+            'programme' => 'required|array',
+            'programme.title' => 'required|string',
+            'programme.jour_formations' => 'required|array',
+            'programme.jour_formations.*.dayName' => 'required|string',
+            'programme.jour_formations.*.sous_parties' => 'required|array',
+            'programme.jour_formations.*.sous_parties.*.description' => 'required|string',
+        ]);
 
-                $categorie = Categorie::firstOrCreate([
-                    'categorie_name' => $request->input('categorie_name')
-                ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
 
-                $sousCategorie = $categorie->sousCategories()->firstOrCreate([
-                    'sous_categorie_name' => $request->input('sous_categorie_name')
-                ]);
-
-                $formation->update([
-                    'name' => $request->input('name'),
-                    'description' => $request->input('description'),
-                    'personnesCible' => $request->input('personnesCible'),
-                    'price' => $request->input('price'),
-                    'sous_categorie_id' => $sousCategorie->id,
-                ]);
-
-                return response()->json($formation, 200);
-            } catch (\Exception $e) {
-                \Log::error('Error updating formation: ' . $e->getMessage());
-                return response()->json(['error' => 'Error updating the formation!'], 500);
+        try {
+            $formation = Formation::find($id);
+            if (!$formation) {
+                return response()->json(['error' => 'Formation not found!'], 404);
             }
-        } else {
-            return response()->json(['error' => "You do not have access to this route!"], 403);
+
+            $requirements = [];
+            foreach (json_decode($request->input('requirements'), true) as $key => $value) {
+                $requirements[$key] = $value;
+            }
+
+            $requirementsStr = implode(',', $requirements);
+
+            $formation->update([
+                'reference' => $request->input('reference'),
+                'entitled' => $request->input('entitled'),
+                'numberOfDays' => $request->input('numberOfDays'),
+                'description' => $request->input('description'),
+                'personnesCible' => $request->input('personnesCible'),
+                'price' => $request->input('price'),
+                'requirements' => $requirementsStr,
+                'certificationOrganization' => $request->input('certificationOrganization'),
+                'courseMaterial' => $request->input('courseMaterial'),
+            ]);
+
+            if ($request->hasFile('courseMaterial')) {
+                $fileName = time() . $request->file('courseMaterial')->getClientOriginalName();
+                $request->file('courseMaterial')->move(public_path('CoursesMaterials'), $fileName);
+                $formation->courseMaterial = $fileName;
+                $formation->save();
+            }
+
+            // Update Programme
+            $programmeData = $request->input('programme');
+            $programme = $formation->programme()->updateOrCreate(
+                ['formation_id' => $formation->id],
+                ['title' => $programmeData['title']]
+            );
+
+            // Update JourFormations and SousParties
+            foreach ($programmeData['jour_formations'] as $jourData) {
+                $jour = $programme->jourFormations()->updateOrCreate(
+                    ['programme_formation_id' => $programme->id, 'dayName' => $jourData['dayName']],
+                    ['dayName' => $jourData['dayName']]
+                );
+
+                foreach ($jourData['sous_parties'] as $sousPartieData) {
+                    $jour->sousParties()->updateOrCreate(
+                        ['jour_formation_id' => $jour->id, 'description' => $sousPartieData['description']],
+                        ['description' => $sousPartieData['description']]
+                    );
+                }
+            }
+
+            return response()->json($formation, 200);
+        } catch (\Exception $e) {
+            \Log::error('Error updating formation: ' . $e->getMessage());
+            return response()->json(['error' => 'Error updating the formation!'], 500);
         }
     }
 

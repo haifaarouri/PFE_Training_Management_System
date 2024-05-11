@@ -33,7 +33,6 @@ const FormationModal = ({ show, handleClose }) => {
     personnesCible: "",
     price: "",
     certificationOrganization: "",
-    courseMaterial: "",
     categorieId: "",
     sousCategorieId: "",
     categorie_name: "",
@@ -102,7 +101,7 @@ const FormationModal = ({ show, handleClose }) => {
       const form = formRef.current;
       if (
         form.checkValidity() === false ||
-        formData.courseMaterial.size > 2000000
+        courseMaterial.size > 2000000
       ) {
         event.preventDefault();
         event.stopPropagation();
@@ -122,7 +121,7 @@ const FormationModal = ({ show, handleClose }) => {
         personnesCible: formData.personnesCible,
         price: formData.price,
         certificationOrganization: formData.certificationOrganization,
-        courseMaterial: formData.courseMaterial,
+        courseMaterial: courseMaterial,
         categorie_name: newCategory ? newCategory : formData.categorie_name,
         sous_categorie_name: newSousCategory
           ? newSousCategory
@@ -149,7 +148,7 @@ const FormationModal = ({ show, handleClose }) => {
         "certificationOrganization",
         formData.certificationOrganization
       );
-      formDataToken.append("courseMaterial", formData.courseMaterial);
+      formDataToken.append("courseMaterial", courseMaterial);
       formDataToken.append(
         "categorie_name",
         newCategory ? newCategory : formData.categorie_name
@@ -197,7 +196,6 @@ const FormationModal = ({ show, handleClose }) => {
               personnesCible: "",
               price: "",
               certificationOrganization: "",
-              courseMaterial: "",
               categorieId: "",
               sousCategorieId: "",
               categorie_name: "",
@@ -247,7 +245,6 @@ const FormationModal = ({ show, handleClose }) => {
               personnesCible: "",
               price: "",
               certificationOrganization: "",
-              courseMaterial: "",
               categorieId: "",
               sousCategorieId: "",
               categorie_name: "",
@@ -587,7 +584,7 @@ const FormationModal = ({ show, handleClose }) => {
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Support du cours</Form.Label>
-            <InputGroup className="mb-3">
+            <InputGroup className="mb-3 d-flex flex-column justify-content-center">
               <div
                 className="d-flex flex-column justify-content-center align-items-center"
                 style={{
@@ -629,10 +626,10 @@ const FormationModal = ({ show, handleClose }) => {
                   Taille maximale du fichier est 2MB
                 </Form.Text>
                 <MdCloudUpload color="#1475cf" size={60} />
-                <p>Sélectionner les specifications techniques de matériel</p>
+                <p>Sélectionner le Support du cours de cette formation</p>
               </div>
               <section
-                className="d-flex justify-content-between align-items-center"
+                className="d-flex justify-content-center align-items-center"
                 style={{
                   margin: "10px 0",
                   padding: "15px 20px",
@@ -652,21 +649,21 @@ const FormationModal = ({ show, handleClose }) => {
                     }}
                   />
                 </span>
+                <Button
+                  onClick={handleShowFileModal}
+                  className="btn btn-inverse-info btn-icon mx-2"
+                >
+                  <i
+                    className="mdi mdi-eye text-primary"
+                    style={{ fontSize: "1.5em" }}
+                  />
+                </Button>
               </section>
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
                 Veuillez Séléctionner le Support du cours de cette formation !
               </Form.Control.Feedback>
             </InputGroup>
-            <Button
-              onClick={handleShowFileModal}
-              className="btn btn-inverse-info btn-icon mt-3 mx-3"
-            >
-              <i
-                className="mdi mdi-eye text-primary"
-                style={{ fontSize: "1.5em" }}
-              />
-            </Button>
             {errorMsg && <Alert variant="danger">{errorMsg}</Alert>}
           </Form.Group>
           <FileModal

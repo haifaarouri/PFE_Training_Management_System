@@ -8,6 +8,7 @@
 /public/MaterielDocs
 /public/TrainersCV
 /public/DocumentsTemplates
+/public/CoursesMaterials
 /storage/*.key
 /vendor
 .env

@@ -9,6 +9,7 @@ import {
   deleteFormation,
   fetchAllFormations,
 } from "../../services/FormationServices";
+import FileModal from "../../components/FileModal";
 require("moment/locale/fr");
 
 function AllFormations() {
@@ -32,6 +33,8 @@ function AllFormations() {
   const [showCarousel, setShowCarousel] = useState(false);
   const [showDispoModal, setShowDispoModal] = useState(false);
   const [otherFilters, setOtherFilters] = useState(false);
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState("");
 
   useEffect(() => {
     const u = async () => {
@@ -67,6 +70,12 @@ function AllFormations() {
 
   const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
+
+  const handleShowFileModal = (courseMaterial) => {
+    setShowFileModal(true);
+    setSelectedFile(courseMaterial);
+  };
+  const handleCloseFileModal = () => setShowFileModal(false);
 
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -288,13 +297,17 @@ function AllFormations() {
                     <table className="table table-striped table-hover">
                       <thead>
                         <tr>
-                          <th>Titre de la formation</th>
+                          <th>Réference</th>
+                          <th>Intitulé</th>
                           <th>Description</th>
+                          <th>Nombre de jours</th>
                           <th>Personnes Cibles</th>
                           <th>Prix</th>
                           <th>Prérequis</th>
+                          <th>Organisme de certification</th>
                           <th>Catégorie</th>
                           <th>Sous Catégorie</th>
+                          <th>Support du cours</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -304,18 +317,43 @@ function AllFormations() {
                             return (
                               <tr key={index}>
                                 <td>
-                                  <h6>{f.name}</h6>
+                                  <h6>{f.reference}</h6>
                                 </td>
-                                <td style={{ width: "30%" }}>
+                                <td>
+                                  <h6>{f.entitled}</h6>
+                                </td>
+                                <td style={{ width: "20%" }}>
                                   <h6>{f.description}</h6>
                                 </td>
+                                <td>{f.numberOfDays}</td>
                                 <td>{f.personnesCible}</td>
                                 <td>{f.price} DT</td>
                                 <td>{f.requirements}</td>
+                                <td>{f.certificationOrganization}</td>
                                 <td>
                                   {f.sous_categorie.categorie.categorie_name}
                                 </td>
                                 <td>{f.sous_categorie.sous_categorie_name}</td>
+                                <td style={{ width: "10%" }}>
+                                  {f.courseMaterial && (
+                                    <Button
+                                      onClick={handleShowFileModal}
+                                      className="btn btn-inverse-primary"
+                                    >
+                                      <span>Ouvrir</span>
+                                      <i
+                                        className="mdi mdi-eye"
+                                        style={{ fontSize: "1.5em" }}
+                                      />
+                                    </Button>
+                                  )}
+                                </td>
+                                <FileModal
+                                  show={showFileModal}
+                                  handleClose={handleCloseFileModal}
+                                  selectedFile={f.courseMaterial}
+                                  fileContent="CourseMaterial"
+                                />
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -350,18 +388,45 @@ function AllFormations() {
                             return (
                               <tr key={index}>
                                 <td>
-                                  <h6>{f.name}</h6>
+                                  <h6>{f.reference}</h6>
                                 </td>
-                                <td style={{ width: "30%" }}>
+                                <td>
+                                  <h6>{f.entitled}</h6>
+                                </td>
+                                <td style={{ width: "20%" }}>
                                   <h6>{f.description}</h6>
                                 </td>
+                                <td>{f.numberOfDays}</td>
                                 <td>{f.personnesCible}</td>
                                 <td>{f.price} DT</td>
                                 <td>{f.requirements}</td>
+                                <td>{f.certificationOrganization}</td>
                                 <td>
                                   {f.sous_categorie.categorie.categorie_name}
                                 </td>
                                 <td>{f.sous_categorie.sous_categorie_name}</td>
+                                <td style={{ width: "10%" }}>
+                                  {f.courseMaterial && (
+                                    <Button
+                                      onClick={() =>
+                                        handleShowFileModal(f.courseMaterial)
+                                      }
+                                      className="btn btn-inverse-primary"
+                                    >
+                                      <span>Ouvrir</span>
+                                      <i
+                                        className="mdi mdi-eye"
+                                        style={{ fontSize: "1.5em" }}
+                                      />
+                                    </Button>
+                                  )}
+                                </td>
+                                <FileModal
+                                  show={showFileModal}
+                                  handleClose={handleCloseFileModal}
+                                  selectedFile={selectedFile}
+                                  fileContent="CourseMaterial"
+                                />
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
@@ -453,7 +518,9 @@ function AllFormations() {
                             <Card className="shadow-lg rounded m-5">
                               <Card.Body>
                                 <Card.Title>
-                                  <h2>{f.name}</h2>
+                                  <h2>
+                                    {f.reference} - {f.entitled}
+                                  </h2>
                                 </Card.Title>
                                 <Card.Text className="d-flex justify-content-evenly row">
                                   <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
@@ -471,6 +538,12 @@ function AllFormations() {
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
+                                        Nombre des jours :
+                                      </span>{" "}
+                                      {f.numberOfDays}
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
                                         Prix :
                                       </span>{" "}
                                       {f.price} DT
@@ -480,6 +553,12 @@ function AllFormations() {
                                         Prérequis :
                                       </span>{" "}
                                       {f.requirements}
+                                    </p>
+                                    <p>
+                                      <span className="text-primary fw-bold">
+                                        Nom de l'organisme de certification :
+                                      </span>{" "}
+                                      {f.certificationOrganization}
                                     </p>
                                     <p>
                                       <span className="text-primary fw-bold">
@@ -497,6 +576,19 @@ function AllFormations() {
                                       {f.sous_categorie.sous_categorie_name}
                                     </p>
                                   </div>
+                                  {f.courseMaterial && (
+                                    <>
+                                      <span className="text-primary fw-bold">
+                                        Support du cours :
+                                      </span>
+                                      <iframe
+                                        src={`http://localhost:8000/CoursesMaterials/${f.courseMaterial}`}
+                                        width="100%"
+                                        height="600px"
+                                        title="PDF Viewer"
+                                      ></iframe>
+                                    </>
+                                  )}
                                 </Card.Text>
                               </Card.Body>
                             </Card>
