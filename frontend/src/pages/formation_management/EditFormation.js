@@ -133,7 +133,7 @@ const EditFormation = () => {
       const formDatatoSend = new FormData();
       formDatatoSend.append("_method", "PUT");
       formDatatoSend.append("reference", formData.reference);
-      formDatatoSend.append("entitled", formData.name);
+      formDatatoSend.append("entitled", formData.entitled);
       formDatatoSend.append("description", formData.description);
       formDatatoSend.append("numberOfDays", formData.numberOfDays);
       formDatatoSend.append("personnesCible", formData.personnesCible);

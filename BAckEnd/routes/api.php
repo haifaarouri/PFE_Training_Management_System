@@ -6,6 +6,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FormateurController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\materielController;
+use App\Http\Controllers\PartenaireController;
 use App\Http\Controllers\SalleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -104,7 +105,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 });
 
 // if (Auth::check() && !Auth::user()->provider==="google") {
-    // Broadcast::routes(['middleware' => ['auth:sanctum']]);
+// Broadcast::routes(['middleware' => ['auth:sanctum']]);
 // }
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
@@ -121,4 +122,12 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/document', [DocumentController::class, 'store']);
     Route::post('/upload-template', [DocumentController::class, 'uploadTemplate']);
     Route::get('/documents-templates', [DocumentController::class, 'getAllTemplates']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/partenaires', [PartenaireController::class, 'index']);
+    Route::get('/partenaire-id/{id}', [PartenaireController::class, 'show']);
+    Route::put('/update-partenaire/{id}', [PartenaireController::class, 'update']);
+    Route::post('/add-partenaire', [PartenaireController::class, 'store']);
+    Route::delete('/delete-partenaire/{id}', [PartenaireController::class, 'destroy']);
 });

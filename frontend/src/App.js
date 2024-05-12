@@ -76,6 +76,9 @@ function App() {
   const AllDocuments = lazy(() =>
     import("./pages/document_management/AllDocuments")
   );
+  const AllPartenaires = lazy(() =>
+    import("./pages/partenaire_management/AllPartenaires")
+  );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -524,6 +527,25 @@ function App() {
                   ]}
                 >
                   <AllDocuments />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/partenaires"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <AllPartenaires />
                 </RequireAuth>
               }
             />

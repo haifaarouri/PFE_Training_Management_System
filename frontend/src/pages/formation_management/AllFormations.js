@@ -10,6 +10,8 @@ import {
   fetchAllFormations,
 } from "../../services/FormationServices";
 import FileModal from "../../components/FileModal";
+import { GrPlan } from "react-icons/gr";
+import ProgrammeFormationModal from "../../components/ProgrammeFormationModal";
 require("moment/locale/fr");
 
 function AllFormations() {
@@ -31,10 +33,10 @@ function AllFormations() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
-  const [showDispoModal, setShowDispoModal] = useState(false);
-  const [otherFilters, setOtherFilters] = useState(false);
   const [showFileModal, setShowFileModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState("");
+  const [showProgrammeModal, setShowProgrammeModal] = useState(false);
+  const [programme, setProgramme] = useState("");
 
   useEffect(() => {
     const u = async () => {
@@ -48,11 +50,27 @@ function AllFormations() {
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
     setWordEntered(searchWord);
-    if (columnName && columnName !== "Colonne") {
+    if (
+      columnName &&
+      columnName !== "Colonne" &&
+      columnName !== "price" &&
+      columnName !== "numberOfDays"
+    ) {
       const newFilter =
         formations.length > 0 &&
         formations.filter((formation) =>
           formation[columnName].toLowerCase().includes(searchWord.toLowerCase())
+        );
+      setFilteredData(newFilter);
+    } else if (
+      columnName &&
+      columnName !== "Colonne" &&
+      (columnName === "price" || columnName === "numberOfDays")
+    ) {
+      const newFilter =
+        formations.length > 0 &&
+        formations.filter(
+          (formation) => formation[columnName] === parseInt(searchWord)
         );
       setFilteredData(newFilter);
     } else {
@@ -76,6 +94,12 @@ function AllFormations() {
     setSelectedFile(courseMaterial);
   };
   const handleCloseFileModal = () => setShowFileModal(false);
+
+  const handleShowProgrammeModal = (p) => {
+    setShowProgrammeModal(true);
+    setProgramme(p);
+  };
+  const handleCloseProgrammeModal = () => setShowProgrammeModal(false);
 
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -229,26 +253,26 @@ function AllFormations() {
                               <Form.Select
                                 style={{ border: "none" }}
                                 value={columnName}
-                                onChange={(e) => {
-                                  if (e.target.options[6].selected) {
-                                    setShowDispoModal(true);
-                                    setOtherFilters(false);
-                                  } else {
-                                    setShowDispoModal(false);
-                                    setOtherFilters(true);
-                                  }
-                                  return setColumnName(e.target.value);
-                                }}
+                                onChange={(e) => setColumnName(e.target.value)}
                                 required
                               >
                                 <option value="">Colonne</option>
-                                <option value="lastName">Nom</option>
-                                <option value="firstName">Prénom</option>
-                                <option value="email">E-mail</option>
-                                <option value="type">Type</option>
-                                <option value="speciality">Spécialité</option>
-                                <option value="disponibility">
-                                  Disponibilité
+                                <option value="reference">Réference</option>
+                                <option value="entitled">Intitulé</option>
+                                <option value="personneCible">
+                                  Personnes cibles
+                                </option>
+                                <option value="requiremnts">Prérequis</option>
+                                <option value="certificationOrganisme">
+                                  Organisme de certification
+                                </option>
+                                <option value="category">Catégorie</option>
+                                <option value="sousCategory">
+                                  Sous catégorie
+                                </option>
+                                <option value="price">Prix</option>
+                                <option value="numberOfDays">
+                                  Nombre de jours
                                 </option>
                               </Form.Select>
                             </InputGroup>
@@ -257,18 +281,16 @@ function AllFormations() {
                         <div className="input-field second-wrap">
                           <Form.Group>
                             <InputGroup>
-                              {!showDispoModal && (
-                                <Form.Control
-                                  id="search"
-                                  type="text"
-                                  placeholder="Recherchez des formations ..."
-                                  size="lg"
-                                  name=""
-                                  value={wordEntered}
-                                  onChange={handleFilter}
-                                  required
-                                />
-                              )}
+                              <Form.Control
+                                id="search"
+                                type="text"
+                                placeholder="Recherchez des formations ..."
+                                size="lg"
+                                name=""
+                                value={wordEntered}
+                                onChange={handleFilter}
+                                required
+                              />
                             </InputGroup>
                           </Form.Group>
                         </div>
@@ -308,6 +330,7 @@ function AllFormations() {
                           <th>Catégorie</th>
                           <th>Sous Catégorie</th>
                           <th>Support du cours</th>
+                          <th>Programme de la formation</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -322,7 +345,7 @@ function AllFormations() {
                                 <td>
                                   <h6>{f.entitled}</h6>
                                 </td>
-                                <td style={{ width: "20%" }}>
+                                <td>
                                   <h6>{f.description}</h6>
                                 </td>
                                 <td>{f.numberOfDays}</td>
@@ -334,10 +357,12 @@ function AllFormations() {
                                   {f.sous_categorie.categorie.categorie_name}
                                 </td>
                                 <td>{f.sous_categorie.sous_categorie_name}</td>
-                                <td style={{ width: "10%" }}>
+                                <td>
                                   {f.courseMaterial && (
                                     <Button
-                                      onClick={handleShowFileModal}
+                                      onClick={() =>
+                                        handleShowFileModal(f.courseMaterial)
+                                      }
                                       className="btn btn-inverse-primary"
                                     >
                                       <span>Ouvrir</span>
@@ -348,13 +373,33 @@ function AllFormations() {
                                     </Button>
                                   )}
                                 </td>
+                                <td>
+                                  {f.programme && (
+                                    <Button
+                                      onClick={() =>
+                                        handleShowProgrammeModal(f.programme)
+                                      }
+                                      className="btn btn-inverse-info"
+                                    >
+                                      <span>Programme</span>
+                                      <i style={{ fontSize: "1.5em" }}>
+                                        <GrPlan />
+                                      </i>
+                                    </Button>
+                                  )}
+                                </td>
+                                <ProgrammeFormationModal
+                                  show={showProgrammeModal}
+                                  handleClose={handleCloseProgrammeModal}
+                                  programme={programme}
+                                />
                                 <FileModal
                                   show={showFileModal}
                                   handleClose={handleCloseFileModal}
-                                  selectedFile={f.courseMaterial}
+                                  selectedFile={selectedFile}
                                   fileContent="CourseMaterial"
                                 />
-                                <td style={{ width: "15%" }}>
+                                <td>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       variant="outline-primary"
@@ -393,7 +438,7 @@ function AllFormations() {
                                 <td>
                                   <h6>{f.entitled}</h6>
                                 </td>
-                                <td style={{ width: "20%" }}>
+                                <td>
                                   <h6>{f.description}</h6>
                                 </td>
                                 <td>{f.numberOfDays}</td>
@@ -405,7 +450,7 @@ function AllFormations() {
                                   {f.sous_categorie.categorie.categorie_name}
                                 </td>
                                 <td>{f.sous_categorie.sous_categorie_name}</td>
-                                <td style={{ width: "10%" }}>
+                                <td>
                                   {f.courseMaterial && (
                                     <Button
                                       onClick={() =>
@@ -421,13 +466,33 @@ function AllFormations() {
                                     </Button>
                                   )}
                                 </td>
+                                <td>
+                                  {f.programme && (
+                                    <Button
+                                      onClick={() =>
+                                        handleShowProgrammeModal(f.programme)
+                                      }
+                                      className="btn btn-inverse-info"
+                                    >
+                                      <span>Programme</span>
+                                      <i style={{ fontSize: "1.5em" }}>
+                                        <GrPlan />
+                                      </i>
+                                    </Button>
+                                  )}
+                                </td>
+                                <ProgrammeFormationModal
+                                  show={showProgrammeModal}
+                                  handleClose={handleCloseProgrammeModal}
+                                  programme={programme}
+                                />
                                 <FileModal
                                   show={showFileModal}
                                   handleClose={handleCloseFileModal}
                                   selectedFile={selectedFile}
                                   fileContent="CourseMaterial"
                                 />
-                                <td style={{ width: "15%" }}>
+                                <td>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       variant="outline-primary"
@@ -524,57 +589,79 @@ function AllFormations() {
                                 </Card.Title>
                                 <Card.Text className="d-flex justify-content-evenly row">
                                   <div className="mt-5 mb-5 col-sm-12 col-md-12 col-lg-6">
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Description :
-                                      </span>{" "}
-                                      {f.description}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Personnes cibles :
-                                      </span>{" "}
-                                      {f.personnesCible}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Nombre des jours :
-                                      </span>{" "}
-                                      {f.numberOfDays}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Prix :
-                                      </span>{" "}
-                                      {f.price} DT
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Prérequis :
-                                      </span>{" "}
-                                      {f.requirements}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Nom de l'organisme de certification :
-                                      </span>{" "}
-                                      {f.certificationOrganization}
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Catégorie :
-                                      </span>{" "}
-                                      {
-                                        f.sous_categorie.categorie
-                                          .categorie_name
-                                      }
-                                    </p>
-                                    <p>
-                                      <span className="text-primary fw-bold">
-                                        Sous Catégorie :
-                                      </span>{" "}
-                                      {f.sous_categorie.sous_categorie_name}
-                                    </p>
+                                    <div className="d-flex justify-content-between">
+                                      <div>
+                                        <p>
+                                          <span className="text-primary fw-bold">
+                                            Description :
+                                          </span>{" "}
+                                          {f.description}
+                                        </p>
+                                        <p>
+                                          <span className="text-primary fw-bold">
+                                            Personnes cibles :
+                                          </span>{" "}
+                                          {f.personnesCible}
+                                        </p>
+                                        <p>
+                                          <span className="text-primary fw-bold">
+                                            Nombre des jours :
+                                          </span>{" "}
+                                          {f.numberOfDays}
+                                        </p>
+                                        <p>
+                                          <span className="text-primary fw-bold">
+                                            Prix :
+                                          </span>{" "}
+                                          {f.price} DT
+                                        </p>
+                                        <p>
+                                          <span className="text-primary fw-bold">
+                                            Prérequis :
+                                          </span>{" "}
+                                          {f.requirements}
+                                        </p>
+                                        <p>
+                                          <span className="text-primary fw-bold">
+                                            Nom de l'organisme de certification
+                                            :
+                                          </span>{" "}
+                                          {f.certificationOrganization}
+                                        </p>
+                                        <p>
+                                          <span className="text-primary fw-bold">
+                                            Catégorie :
+                                          </span>{" "}
+                                          {
+                                            f.sous_categorie.categorie
+                                              .categorie_name
+                                          }
+                                        </p>
+                                        <p>
+                                          <span className="text-primary fw-bold">
+                                            Sous Catégorie :
+                                          </span>{" "}
+                                          {f.sous_categorie.sous_categorie_name}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        {f.programme.title}
+                                        {f.programme.jour_formations.map(
+                                          (j, i) => (
+                                            <div key={i}>
+                                              <p>{j.dayName}</p>
+                                              {j.sous_parties.map(
+                                                (sp, index) => (
+                                                  <p key={index}>
+                                                    {sp.description}
+                                                  </p>
+                                                )
+                                              )}
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
                                   {f.courseMaterial && (
                                     <>

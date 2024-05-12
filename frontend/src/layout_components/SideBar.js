@@ -6,6 +6,7 @@ import { FaBookBookmark } from "react-icons/fa6";
 import { PiStudentFill } from "react-icons/pi";
 import { BsCalendarRange } from "react-icons/bs";
 import { IoDocumentAttachOutline } from "react-icons/io5";
+import { VscOrganization } from "react-icons/vsc";
 
 function SideBar({isSidebarVisible}) {
   const [userAuth, setUserAuth] = useState(null);
@@ -70,6 +71,11 @@ function SideBar({isSidebarVisible}) {
       path: "/documents",
       icon: <IoDocumentAttachOutline size={22} />,
       title: "Gestion des Documents",
+    },
+    {
+      path: "/partenaires",
+      icon: <VscOrganization size={22} />,
+      title: "Gestion des Partenaires",
     },
   ];
 
