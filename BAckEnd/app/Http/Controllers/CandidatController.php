@@ -36,7 +36,7 @@ class CandidatController extends Controller
                 $validator = Validator::make($request->all(), [
                     'firstName' => 'required|string|max:255',
                     'lastName' => 'required|string|max:255',
-                    'email' => 'required|string|unique:Candidats|max:255',
+                    'email' => 'required|string|email|unique:Candidats|max:255',
                     'phoneNumber' => 'required|string|max:255|min:8',
                     'type' => ['required', new CandidatTypeRule()],
                 ]);
@@ -91,7 +91,7 @@ class CandidatController extends Controller
                 $validator = Validator::make($request->all(), [
                     'firstName' => 'required|string|max:255',
                     'lastName' => 'required|string|max:255',
-                    'email' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255',
                     'phoneNumber' => 'required|string|max:255|min:8',
                     'type' => ['required', new CandidatTypeRule()],
                 ]);

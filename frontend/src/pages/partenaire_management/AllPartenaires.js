@@ -5,8 +5,13 @@ import { Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 // import FormateurModal from "../../components/FormateurModal";
-import { fetchAllPartenaires } from "../../services/PartenaireServices";
+import {
+  assignFormation,
+  deletePartenaire,
+  fetchAllPartenaires,
+} from "../../services/PartenaireServices";
 import PartenaireModal from "../../components/PartenaireModal";
+import { FaLink } from "react-icons/fa";
 
 function Allparteniares() {
   const [parteniares, setParteniares] = useState([]);
@@ -86,7 +91,7 @@ function Allparteniares() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-formateur/${id}`);
+    navigate(`/edit-partenaire/${id}`);
   };
 
   const fetchData = async () => {
@@ -108,35 +113,35 @@ function Allparteniares() {
     u();
   }, [showModal]);
 
-  //   const handleDeleteFormateur = async (id) => {
-  //     Swal.fire({
-  //       title: "Êtes-vous sûr?",
-  //       text: "Vous ne pourrez pas revenir en arrière !",
-  //       icon: "warning",
-  //       showCancelButton: true,
-  //       confirmButtonColor: "#3085d6",
-  //       cancelButtonColor: "#d33",
-  //       confirmButtonText: "Oui, supprimer!",
-  //     }).then(async (result) => {
-  //       if (result.isConfirmed) {
-  //         try {
-  //           const res = await deleteFormateur(id);
-  //           Swal.fire({
-  //             title: "Supprimé avec succès!",
-  //             text: "Formateur est supprimé !",
-  //             icon: "success",
-  //           });
-  //           const d = await fetchData();
-  //           setParteniares(d);
-  //           handleSuccess(res.message);
-  //         } catch (error) {
-  //           if (error && error.response.status === 422) {
-  //             handleError(error.response.data.message);
-  //           }
-  //         }
-  //       }
-  //     });
-  //   };
+  const handleDeletePartenaire = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, supprimer!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await deletePartenaire(id);
+          Swal.fire({
+            title: "Supprimé avec succès!",
+            text: "Partenaire est supprimé !",
+            icon: "success",
+          });
+          const d = await fetchData();
+          setParteniares(d);
+          handleSuccess(res.message);
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
 
   const prevPage = () => {
     if (currentPage !== 1) {
@@ -152,6 +157,10 @@ function Allparteniares() {
     if (currentPage !== numberPages) {
       setCurrentPage(currentPage + 1);
     }
+  };
+
+  const assignFormationToPartenaire = async (partenaireId, formationId) => {
+    const r = await assignFormation(partenaireId, formationId);
   };
 
   return (
@@ -190,12 +199,13 @@ function Allparteniares() {
                             required
                           >
                             <option value="">Colonne</option>
-                            <option value="lastName">Nom</option>
-                            <option value="firstName">Prénom</option>
+                            <option value="companyName">
+                              Nom de l'entreprise
+                            </option>
+                            <option value="contactName">Nom du contact</option>
                             <option value="email">E-mail</option>
-                            <option value="type">Type</option>
-                            <option value="speciality">Spécialité</option>
-                            <option value="disponibility">Disponibilité</option>
+                            <option value="webSite">Site web</option>
+                            <option value="adresse">Adresse</option>
                           </Form.Select>
                         </InputGroup>
                       </Form.Group>
@@ -241,47 +251,44 @@ function Allparteniares() {
                 <table className="table table-striped table-hover">
                   <thead>
                     <tr>
-                      <th>Nom</th>
-                      <th>Prénom</th>
+                      <th>Nom de l'entreprise</th>
+                      <th>Nom du contact</th>
                       <th>E-mail</th>
                       <th>Numéro de téléphone</th>
-                      <th>Nombre d'année d'expérience</th>
-                      <th>Type</th>
-                      <th>Spécialité(s)</th>
-                      <th>Certificats</th>
-                      <th>CV</th>
-                      <th>Disponibilité(s)</th>
+                      <th>Fax</th>
+                      <th>Site web</th>
+                      <th>Adresse</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredData.length > 0 ? (
-                      filteredData.map((f, index) => {
+                      filteredData.map((p, index) => {
                         return (
                           <tr key={index} className="text-center">
                             <td>
-                              <h6>{f.lastName}</h6>
+                              <h6>{p.companyName}</h6>
                             </td>
                             <td>
-                              <h6>{f.firstName}</h6>
+                              <h6>{p.contactName}</h6>
                             </td>
-                            <td>{f.email}</td>
-                            <td>{f.phoneNumber}</td>
-                            <td style={{ width: "5%" }}>{f.experience}</td>
-                            <td>{f.type}</td>
-                            <td>{f.speciality}</td>
+                            <td>{p.email}</td>
+                            <td>{p.phoneNumber}</td>
+                            <td>{p.fax}</td>
+                            <td>{p.webSite}</td>
+                            <td>{p.adresse}</td>
                             <td style={{ width: "15%" }}>
                               <div className="d-flex flex-column justify-content-center">
                                 <Button
                                   variant="outline-primary"
-                                  onClick={() => handleButtonEdit(f.id)}
+                                  onClick={() => handleButtonEdit(p.id)}
                                   className="btn btn-sm mb-2"
                                 >
                                   Modifier{" "}
                                   <i className="mdi mdi-tooltip-edit"></i>
                                 </Button>
                                 <Button
-                                  //   onClick={() => handleDeleteFormateur(f.id)}
+                                  onClick={() => handleDeletePartenaire(p.id)}
                                   variant="outline-danger"
                                   className="btn btn-sm"
                                 >
@@ -297,32 +304,44 @@ function Allparteniares() {
                       <></>
                     ) : (
                       parteniares.length > 0 &&
-                      parteniaresPage.map((f, index) => {
+                      parteniaresPage.map((p, index) => {
                         return (
                           <tr key={index} className="text-center">
                             <td>
-                              <h6>{f.lastName}</h6>
+                              <h6>{p.companyName}</h6>
                             </td>
                             <td>
-                              <h6>{f.firstName}</h6>
+                              <h6>{p.contactName}</h6>
                             </td>
-                            <td>{f.email}</td>
-                            <td>{f.phoneNumber}</td>
-                            <td style={{ width: "5%" }}>{f.experience}</td>
-                            <td>{f.type}</td>
-                            <td>{f.speciality}</td>
+                            <td>{p.email}</td>
+                            <td>{p.phoneNumber}</td>
+                            <td>{p.fax}</td>
+                            <td>{p.webSite}</td>
+                            <td>{p.adresse}</td>
                             <td style={{ width: "15%" }}>
                               <div className="d-flex flex-column justify-content-center">
                                 <Button
                                   variant="outline-primary"
-                                  onClick={() => handleButtonEdit(f.id)}
+                                  onClick={() => handleButtonEdit(p.id)}
                                   className="btn btn-sm mb-2"
                                 >
                                   Modifier{" "}
                                   <i className="mdi mdi-tooltip-edit"></i>
                                 </Button>
                                 <Button
-                                  //   onClick={() => handleDeleteFormateur(f.id)}
+                                  onClick={() =>
+                                    assignFormationToPartenaire(p.id, 15)
+                                  }
+                                  variant="outline-warning"
+                                  className="btn btn-sm mb-2"
+                                >
+                                  Assigner une formation{" "}
+                                  <i>
+                                    <FaLink />
+                                  </i>
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeletePartenaire(p.id)}
                                   variant="outline-danger"
                                   className="btn btn-sm"
                                 >

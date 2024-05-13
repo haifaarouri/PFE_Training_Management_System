@@ -130,4 +130,5 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-partenaire/{id}', [PartenaireController::class, 'update']);
     Route::post('/add-partenaire', [PartenaireController::class, 'store']);
     Route::delete('/delete-partenaire/{id}', [PartenaireController::class, 'destroy']);
+    Route::post('/assign-formation/{id}', [PartenaireController::class, 'assignFormationsToPartenaire']);
 });

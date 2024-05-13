@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Formation;
 use App\Models\Partenaire;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -34,7 +35,7 @@ class PartenaireController extends Controller
                 $validator = Validator::make($request->all(), [
                     'companyName' => 'required|string|max:255',
                     'contactName' => 'required|string|max:255',
-                    'email' => 'required|string|unique:Partenaires|max:255',
+                    'email' => 'required|string|email|unique:Partenaires|max:255',
                     'phoneNumber' => 'required|string|max:255|min:8',
                     'fax' => 'required|string|max:255',
                     'webSite' => 'required|string|max:255',
@@ -93,9 +94,9 @@ class PartenaireController extends Controller
                 $validator = Validator::make($request->all(), [
                     'companyName' => 'required|string|max:255',
                     'contactName' => 'required|string|max:255',
-                    'email' => 'required|string|unique:Partenaires|max:255',
+                    'email' => 'required|string|email|max:255',
                     'phoneNumber' => 'required|string|max:255|min:8',
-                    'fax' => 'required|string|max:255r',
+                    'fax' => 'required|string|max:255',
                     'webSite' => 'required|string|max:255',
                     'adresse' => 'required|string|max:255',
                 ]);
@@ -115,7 +116,7 @@ class PartenaireController extends Controller
 
                 return response()->json($partenaire, 200);
             } catch (\Exception $e) {
-                \Log::error('Error uploading file: ' . $e->getMessage());
+                \Log::error('Error: ' . $e->getMessage());
                 dd($e->getMessage());
                 return response()->json(['error' => 'Erreur lors de la mise à jour du Partenaire !'], 500);
             }
@@ -135,6 +136,24 @@ class PartenaireController extends Controller
 
             $partenaire->delete();
             return response()->json(['message' => 'Partenaire supprimée avec succès !']);
+        } else {
+            // User does not have access, return a 403 response
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+    }
+
+    public function assignFormationsToPartenaire(Request $request, $partenaireId)
+    {
+        if ($this->list_roles->contains(auth()->user()->role)) {
+            $formationId = $request->input('formation_id');
+            $formation = Formation::find($formationId);
+            if (!$formation) {
+                return response()->json(['error' => 'Formation non trouvée !'], 404);
+            }
+            $formation->partenaire_id = $partenaireId;
+            $formation->save();
+
+            return response()->json(['message' => 'Formation assignée avec succès !']);
         } else {
             // User does not have access, return a 403 response
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);

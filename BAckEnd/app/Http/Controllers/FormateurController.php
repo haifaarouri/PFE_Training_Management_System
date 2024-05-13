@@ -38,7 +38,7 @@ class FormateurController extends Controller
                 $validator = Validator::make($request->all(), [
                     'firstName' => 'required|string|max:255',
                     'lastName' => 'required|string|max:255',
-                    'email' => 'required|string|unique:formateurs|max:255',
+                    'email' => 'required|string|email|unique:formateurs|max:255',
                     'phoneNumber' => 'required|string|max:255|min:8',
                     'experience' => 'required|integer',
                     'type' => ['required', new TypeFormateurRule()],
@@ -161,7 +161,7 @@ class FormateurController extends Controller
                 $validator = Validator::make($request->all(), [
                     'firstName' => 'required|string|max:255',
                     'lastName' => 'required|string|max:255',
-                    'email' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255',
                     'phoneNumber' => 'required|string|max:255|min:8',
                     'experience' => 'required|integer',
                     'type' => ['required', new TypeFormateurRule()],
