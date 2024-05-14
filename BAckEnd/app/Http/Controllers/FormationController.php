@@ -269,4 +269,18 @@ class FormationController extends Controller
         }
     }
 
+    public function getFormationByRef($ref)
+    {
+        if ($this->list_roles->contains(auth()->user()->role)) {
+            $formation = Formation::firstWhere('reference', $ref);
+            if (!$formation) {
+                return response()->json(['error' => 'Formation avec cette réference non trouvée !'], 404);
+            }
+            return response()->json($formation);
+        } else {
+            // User does not have access, return a 403 response
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+    }
+
 }

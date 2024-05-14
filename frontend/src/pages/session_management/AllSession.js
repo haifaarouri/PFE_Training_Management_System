@@ -1,11 +1,15 @@
 import { Calendar, Views, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import "./calendar.css"
+import "./calendar.css";
+import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import { useCallback, useEffect, useState } from "react";
+import EventCreationModal from "../../components/EventCreationModal";
 
 const AllSessions = () => {
   const localizer = momentLocalizer(moment);
-
+  const DragAndDropCalendar = withDragAndDrop(Calendar);
   const MOCK_EVENTS = [
     {
       id: 1,
@@ -14,190 +18,130 @@ const AllSessions = () => {
       end: "2024-05-15T18:15:58",
       description:
         "Etiam vel augue. Vestibulum rutrum rutrum neque. Aenean auctor gravida sem.\n\nPraesent id massa id nisl venenatis lacinia. Aenean sit amet justo. Morbi ut odio.",
-      color: "#C97D60",
+      color: "#0DCAF0",
     },
     {
       id: 2,
       title: "Event 2",
-      start: "2024-05-15T13:30:02",
-      end: "2024-05-15T17:30:20",
+      start: "2024-05-16T13:30:02",
+      end: "2024-05-16T17:30:20",
       description:
         "Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum.\n\nIn hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo.\n\nAliquam quis turpis eget elit sodales scelerisque. Mauris sit amet eros. Suspendisse accumsan tortor quis turpis.",
-      color: "green",
-    },
-    {
-      id: 3,
-      title: "Event 3",
-      start: "2024-05-16T10:53:12Z",
-      end: "2024-05-16T14:22:42Z",
-      description:
-        "Integer tincidunt ante vel ipsum. Praesent blandit lacinia erat. Vestibulum sed magna at nunc commodo placerat.",
-      color: "gray",
-    },
-    {
-      id: 4,
-      title: "Event 4",
-      start: "2024-05-17T12:49:36Z",
-      end: "2024-05-17T15:19:49Z",
-      description:
-        "Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus vestibulum sagittis sapien. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.\n\nEtiam vel augue. Vestibulum rutrum rutrum neque. Aenean auctor gravida sem.\n\nPraesent id massa id nisl venenatis lacinia. Aenean sit amet justo. Morbi ut odio.",
-      color: "indigo",
-    },
-    {
-      id: 5,
-      title: "Event 5",
-      start: "2024-05-17T09:35:30Z",
-      end: "2024-05-17T11:57:17Z",
-      description:
-        "Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.\n\nIn congue. Etiam justo. Etiam pretium iaculis justo.",
-      color: "red",
-    },
-    {
-      id: 6,
-      title: "Event 6",
-      start: "2024-05-18T10:26:34Z",
-      end: "2024-05-18T17:43:06Z",
-      description:
-        "Curabitur in libero ut massa volutpat convallis. Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo. Maecenas pulvinar lobortis est.\n\nPhasellus sit amet erat. Nulla tempus. Vivamus in felis eu sapien cursus vestibulum.\n\nProin eu mi. Nulla ac enim. In tempor, turpis nec euismod scelerisque, quam turpis adipiscing lorem, vitae mattis nibh ligula nec sem.",
-      color: "green",
-    },
-    {
-      id: 7,
-      title: "Event 7",
-      start: "2024-05-19T10:00:34Z",
-      end: "2024-05-19T13:38:51Z",
-      description:
-        "Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo. In blandit ultrices enim. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.\n\nProin interdum mauris non ligula pellentesque ultrices. Phasellus id sapien in sapien iaculis congue. Vivamus metus arcu, adipiscing molestie, hendrerit at, vulputate vitae, nisl.",
-      color: "red",
-    },
-    {
-      id: 8,
-      title: "Event 8",
-      start: "2024-05-19T15:00:34Z",
-      end: "2024-05-19T18:38:51Z",
-      description:
-        "Praesent id massa id nisl venenatis lacinia. Aenean sit amet justo. Morbi ut odio.",
-      color: "green",
-    },
-    {
-      id: 9,
-      title: "Event 9",
-      start: "2024-05-20T15:00:34Z",
-      end: "2024-05-20T20:38:51Z",
-      description:
-        "Fusce posuere felis sed lacus. Morbi sem mauris, laoreet ut, rhoncus aliquet, pulvinar sed, nisl. Nunc rhoncus dui vel sem.\n\nSed sagittis. Nam congue, risus semper porta volutpat, quam pede lobortis ligula, sit amet eleifend pede libero quis orci. Nullam molestie nibh in lectus.\n\nPellentesque at nulla. Suspendisse potenti. Cras in purus eu magna vulputate luctus.",
-      color: "#C97D60",
-    },
-    {
-      id: 10,
-      title: "Event 10",
-      start: "2024-05-14T10:00:15Z",
-      end: "2024-05-14T20:00:15Z",
-      description:
-        "Praesent blandit. Nam nulla. Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede.",
-      color: "gray",
-    },
-    {
-      id: 11,
-      title: "Event 11",
-      start: "2024-05-21T14:33:28Z",
-      end: "2024-05-21T18:02:09Z",
-      description:
-        "Proin interdum mauris non ligula pellentesque ultrices. Phasellus id sapien in sapien iaculis congue. Vivamus metus arcu, adipiscing molestie, hendrerit at, vulputate vitae, nisl.\n\nAenean lectus. Pellentesque eget nunc. Donec quis orci eget orci vehicula condimentum.",
-      color: "#C97D60",
-    },
-    {
-      id: 12,
-      title: "Event 12",
-      start: "2024-05-22T18:33:28Z",
-      end: "2024-05-22T21:02:09Z",
-      description:
-        "Maecenas tristique, est et tempus semper, est quam pharetra magna, ac consequat metus sapien ut nunc. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris viverra diam vitae quam. Suspendisse potenti.\n\nNullam porttitor lacus at turpis. Donec posuere metus vitae ipsum. Aliquam non mauris.",
-      color: "red",
-    },
-    {
-      id: 13,
-      title: "Event 13",
-      start: "2024-05-23T18:33:28Z",
-      end: "2024-05-23T21:02:09Z",
-      description:
-        "Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.",
-      color: "gray",
-    },
-    {
-      id: 14,
-      title: "Event 14",
-      start: "2024-05-24T18:33:28Z",
-      end: "2024-05-24T21:02:09Z",
-      description:
-        "Sed ante. Vivamus tortor. Duis mattis egestas metus.\n\nAenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.",
-      color: "blue",
-    },
-    {
-      id: 15,
-      title: "Event 15",
-      start: "2024-05-25T18:33:28Z",
-      end: "2024-05-25T21:02:09Z",
-      description:
-        "Vestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.",
-      color: "green",
-    },
-    {
-      id: 16,
-      title: "Event 16",
-      start: "2024-05-26T10:55:04Z",
-      end: "2024-05-26T14:08:11Z",
-      description:
-        "Morbi porttitor lorem id ligula. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem.\n\nFusce consequat. Nulla nisl. Nunc nisl.",
-      color: "gray",
-    },
-    {
-      id: 17,
-      title: "Event 17",
-      start: "2024-05-27T10:55:04Z",
-      end: "2024-05-27T14:08:11Z",
-      description:
-        "Duis bibendum. Morbi non quam nec dui luctus rutrum. Nulla tellus.\n\nIn sagittis dui vel nisl. Duis ac nibh. Fusce lacus purus, aliquet at, feugiat non, pretium quis, lectus.",
-      color: "green",
-    },
-    {
-      id: 18,
-      title: "Event 18",
-      start: "2024-05-28T10:55:04Z",
-      end: "2024-05-28T14:08:11Z",
-      description:
-        "Donec diam neque, vestibulum eget, vulputate ut, ultrices vel, augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi. Integer ac neque.\n\nDuis bibendum. Morbi non quam nec dui luctus rutrum. Nulla tellus.",
-      color: "red",
-    },
-    {
-      id: 19,
-      title: "Event 19",
-      start: "2024-05-29T09:38:43Z",
-      end: "2024-05-29T14:19:38Z",
-      description:
-        "Cras non velit nec nisi vulputate nonummy. Maecenas tincidunt lacus at velit. Vivamus vel nulla eget eros elementum pellentesque.\n\nQuisque porta volutpat erat. Quisque erat eros, viverra eget, congue eget, semper rutrum, nulla. Nunc purus.",
-      color: "indigo",
-    },
-    {
-      id: 20,
-      title: "Event 20",
-      start: "2024-05-30T09:38:43Z",
-      end: "2024-05-30T18:19:38Z",
-      description:
-        "Phasellus sit amet erat. Nulla tempus. Vivamus in felis eu sapien cursus vestibulum.\n\nProin eu mi. Nulla ac enim. In tempor, turpis nec euismod scelerisque, quam turpis adipiscing lorem, vitae mattis nibh ligula nec sem.",
-      color: "green",
+      color: "#0DCAF0",
     },
   ];
-
-  const events = MOCK_EVENTS.map((event) => {
+  const myEvents = MOCK_EVENTS.map((event) => {
     // dates must be in this format : new Date(Y, M, D, H, MIN)
     return {
+      id: event.id,
       title: event.title,
       start: new Date(event.start),
       end: new Date(event.end),
       color: event.color,
+      isDraggable: true,
+      isResizable: true,
     };
   });
+  const [events, setEvents] = useState(myEvents);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [modalPosition, setModalPosition] = useState({
+    top: "",
+    left: "",
+  });
+
+  const onChangeEventTime = useCallback((start, end, eventId) => {
+    setEvents((prevEvents) => {
+      return prevEvents.map((event) => {
+        if (event.id === eventId) {
+          return {
+            ...event,
+            start: new Date(start),
+            end: new Date(end),
+          };
+        }
+        return event;
+      });
+    });
+  }, []);
+
+  const onEventDrop = useCallback(
+    ({ event, start, end }) => {
+      onChangeEventTime(start, end, event.id);
+    },
+    [onChangeEventTime]
+  );
+
+  const onEventResize = useCallback(
+    ({ event, start, end }) => {
+      onChangeEventTime(start, end, event.id);
+    },
+    [onChangeEventTime]
+  );
+
+  const handleSelectSlot = (slotInfo, event) => {
+    const bounds = event.target.getBoundingClientRect();
+    setModalPosition({
+      top: bounds.top + window.scrollY,
+      left: bounds.left + window.scrollX,
+    });
+    setSelectedSlot(slotInfo);
+    setModalOpen(true);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!selectedSlot || !modalOpen) return;
+
+      const calendarElement = document.querySelector(".rbc-time-slot"); // Adjust selector as needed
+      if (calendarElement) {
+        const bounds = calendarElement.getBoundingClientRect();
+        setModalPosition({
+          top: bounds.top + window.scrollY,
+          left: bounds.left + window.scrollX,
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [selectedSlot, modalOpen]);
+
+  // const handleSelectSlot = (slotInfo) => {
+  //   const bounds =
+  //     slotInfo.bounds ||
+  //     (slotInfo.action && slotInfo.action.target.getBoundingClientRect()); // This method is used to get the position of the slot relative to the viewport, which allows you to position the modal accurately.
+
+  //   // Create a temporary event for visual feedback
+  //   const tempEvent = {
+  //     id: "temp",
+  //     title: "New Event",
+  //     start: slotInfo.start,
+  //     end: slotInfo.end,
+  //     color: "#7991e2",
+  //     isTemporary: true,
+  //   };
+
+  //   // Update events to include this temporary event
+  //   setEvents((prevEvents) => [
+  //     ...prevEvents.filter((event) => !event.isTemporary),
+  //     tempEvent,
+  //   ]);
+  //   setSelectedSlot(slotInfo);
+  //   setModalPosition({ top: bounds.top, left: bounds.left + bounds.width }); // Adjust as needed
+  //   setModalOpen(true);
+  // };
+
+  const addNewEvent = (newEvent) => {
+    setEvents((prevEvents) => [
+      ...prevEvents.filter((event) => !event.isTemporary), // Remove temporary event
+      { ...newEvent, id: prevEvents.length + 1, color: "#0DCAF0" }, // Add new event
+    ]);
+    setModalOpen(false);
+  };
 
   return (
     <div className="content-wrapper">
@@ -205,7 +149,7 @@ const AllSessions = () => {
         <div className="col-lg-12 grid-margin stretch-card">
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
-              <Calendar
+              {/* <Calendar
                 localizer={localizer}
                 events={events}
                 startAccessor="start"
@@ -222,6 +166,49 @@ const AllSessions = () => {
                 }}
                 onSelectEvent={(event) => alert(event.title)}
                 views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+                defaultDate={new Date()}
+                defaultView={"week"}
+                min={moment().toDate()}
+                step={15}
+                timeslots={4}
+              /> */}
+              <DragAndDropCalendar
+                defaultDate={new Date()}
+                defaultView={Views.WEEK}
+                events={events}
+                localizer={localizer}
+                onEventDrop={onEventDrop}
+                onEventResize={onEventResize}
+                resizableAccessor="isResizable"
+                draggableAccessor="isDraggable"
+                resizable
+                style={{ height: "1000px" }}
+                // eventPropGetter={(event) => ({
+                //   style: { backgroundColor: event.color },
+                // })}
+                views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+                onSelectSlot={handleSelectSlot}
+                selectable={true}
+                eventPropGetter={(event, start, end, isSelected) => ({
+                  style: isSelected
+                    ? {
+                        backgroundColor: "#7991e2",
+                        borderColor: "#223e9c",
+                        borderStyle: "dashed",
+                      }
+                    : { backgroundColor: event.color },
+                })}
+              />
+              <EventCreationModal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onSave={addNewEvent}
+                slotInfo={selectedSlot}
+                style={{
+                  position: "fixed",
+                  top: modalPosition.top + "px",
+                  left: modalPosition.left + "px",
+                }}
               />
             </div>
           </div>

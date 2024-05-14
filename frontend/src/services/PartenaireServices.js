@@ -1,3 +1,4 @@
+import Swal from "sweetalert2";
 import { apiFetch } from "./api";
 import axios from "./axios";
 
@@ -96,7 +97,6 @@ export const assignFormation = async (partenaireId, formationId) => {
         }
       );
 
-      console.log(response.data);
       return response.data;
     } else {
       const headers = {
@@ -113,14 +113,17 @@ export const assignFormation = async (partenaireId, formationId) => {
         `/api/assign-formation/${partenaireId}`,
         { formation_id: formationId },
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
         }
       );
       return response;
     }
   } catch (error) {
-    console.log("Error assign Formation to Partenaire :", error);
+    Swal.fire({
+      icon: "error",
+      title: error.response.data.error,
+      showConfirmButton: false,
+      timer: 2000,
+    });
   }
 };

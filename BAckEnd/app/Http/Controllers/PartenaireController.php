@@ -20,7 +20,7 @@ class PartenaireController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $partenaires = Partenaire::all();
+            $partenaires = Partenaire::with('formations')->get();
             return response()->json($partenaires);
         } else {
             // User does not have access, return a 403 response

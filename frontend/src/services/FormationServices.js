@@ -29,6 +29,20 @@ export const fetchFormationById = async (id) => {
   }
 };
 
+export const fetchFormationByRef = async (ref) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/formation-ref/${ref}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`formation-ref/${ref}`);
+      return response;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const fetchAllCategories = async () => {
   try {
     if (!localStorage.getItem("token")) {

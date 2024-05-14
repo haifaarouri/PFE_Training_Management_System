@@ -4,14 +4,13 @@ import Button from "react-bootstrap/Button";
 import { Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
-// import FormateurModal from "../../components/FormateurModal";
 import {
-  assignFormation,
   deletePartenaire,
   fetchAllPartenaires,
 } from "../../services/PartenaireServices";
 import PartenaireModal from "../../components/PartenaireModal";
 import { FaLink } from "react-icons/fa";
+import AssignFormationModal from "../../components/AssignFormationModal";
 
 function Allparteniares() {
   const [parteniares, setParteniares] = useState([]);
@@ -30,6 +29,9 @@ function Allparteniares() {
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
+  const [showAssignFormationModal, setShowAssignFormationModal] =
+    useState(false);
+  const [partenaireId, setpartenaireId] = useState(null);
 
   useEffect(() => {
     const u = async () => {
@@ -65,6 +67,13 @@ function Allparteniares() {
 
   const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
+
+  const handleShowAssignFormationModalModal = (partenaireId) => {
+    setShowAssignFormationModal(true);
+    setpartenaireId(partenaireId);
+  };
+  const handleCloseAssignFormationModalModal = () =>
+    setShowAssignFormationModal(false);
 
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -157,10 +166,6 @@ function Allparteniares() {
     if (currentPage !== numberPages) {
       setCurrentPage(currentPage + 1);
     }
-  };
-
-  const assignFormationToPartenaire = async (partenaireId, formationId) => {
-    const r = await assignFormation(partenaireId, formationId);
   };
 
   return (
@@ -258,6 +263,7 @@ function Allparteniares() {
                       <th>Fax</th>
                       <th>Site web</th>
                       <th>Adresse</th>
+                      <th>Formations assignées</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -277,6 +283,17 @@ function Allparteniares() {
                             <td>{p.fax}</td>
                             <td>{p.webSite}</td>
                             <td>{p.adresse}</td>
+                            <td>
+                              {p.formations.length > 0 ? (
+                                p.formations.map((f) => (
+                                  <p key={f.id}>
+                                    {f.reference} - {f.entitled}
+                                  </p>
+                                ))
+                              ) : (
+                                <p>Pas de Formations</p>
+                              )}
+                            </td>
                             <td style={{ width: "15%" }}>
                               <div className="d-flex flex-column justify-content-center">
                                 <Button
@@ -288,6 +305,18 @@ function Allparteniares() {
                                   <i className="mdi mdi-tooltip-edit"></i>
                                 </Button>
                                 <Button
+                                  onClick={() =>
+                                    handleShowAssignFormationModalModal(p.id)
+                                  }
+                                  variant="outline-warning"
+                                  className="btn btn-sm mb-2"
+                                >
+                                  Assigner une formation{" "}
+                                  <i>
+                                    <FaLink />
+                                  </i>
+                                </Button>
+                                <Button
                                   onClick={() => handleDeletePartenaire(p.id)}
                                   variant="outline-danger"
                                   className="btn btn-sm"
@@ -296,6 +325,11 @@ function Allparteniares() {
                                 </Button>
                               </div>
                             </td>
+                            <AssignFormationModal
+                              show={showAssignFormationModal}
+                              handleClose={handleCloseAssignFormationModalModal}
+                              partenaireId={partenaireId}
+                            />
                           </tr>
                         );
                       })
@@ -318,6 +352,17 @@ function Allparteniares() {
                             <td>{p.fax}</td>
                             <td>{p.webSite}</td>
                             <td>{p.adresse}</td>
+                            <td>
+                              {p.formations.length > 0 ? (
+                                p.formations.map((f) => (
+                                  <p key={f.id}>
+                                    {f.reference} - {f.entitled}
+                                  </p>
+                                ))
+                              ) : (
+                                <p>Pas de Formations</p>
+                              )}
+                            </td>
                             <td style={{ width: "15%" }}>
                               <div className="d-flex flex-column justify-content-center">
                                 <Button
@@ -330,7 +375,7 @@ function Allparteniares() {
                                 </Button>
                                 <Button
                                   onClick={() =>
-                                    assignFormationToPartenaire(p.id, 15)
+                                    handleShowAssignFormationModalModal(p.id)
                                   }
                                   variant="outline-warning"
                                   className="btn btn-sm mb-2"
@@ -349,6 +394,11 @@ function Allparteniares() {
                                 </Button>
                               </div>
                             </td>
+                            <AssignFormationModal
+                              show={showAssignFormationModal}
+                              handleClose={handleCloseAssignFormationModalModal}
+                              partenaireId={partenaireId}
+                            />
                           </tr>
                         );
                       })
