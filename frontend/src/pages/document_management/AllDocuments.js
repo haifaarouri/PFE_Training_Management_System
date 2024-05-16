@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import { ToastContainer, toast } from "react-toastify";
-import Swal from "sweetalert2";
 import { fetchAllDocuments } from "../../services/DocumentServices";
 import FileModal from "../../components/FileModal";
-import DocViewer from "@cyntler/react-doc-viewer";
+import { HiDocumentPlus } from "react-icons/hi2";
 
 function Alldocuments() {
   const [documents, setDocuments] = useState([]);
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
   const [showFileModal, setShowFileModal] = useState(false);
   const [file, setFile] = useState(null);
 
@@ -29,33 +27,6 @@ function Alldocuments() {
     u();
   }, []);
 
-  const handleShowAddModal = () => setShowModal(true);
-  const handleCloseAddModal = () => setShowModal(false);
-
-  const handleSuccess = (msg) =>
-    toast.success(msg, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-
-  const handleError = (err) =>
-    toast.error(err, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-
   const handleButtonEdit = (id) => {
     navigate(`/edit-formateur/${id}`);
   };
@@ -69,15 +40,6 @@ function Alldocuments() {
       console.log("Error fetching documents :", error);
     }
   };
-
-  useEffect(() => {
-    const u = async () => {
-      const d = await fetchData();
-      setDocuments(d);
-    };
-
-    u();
-  }, [showModal]);
 
   //   const handleDeleteFormateur = async (id) => {
   //     Swal.fire({
@@ -120,13 +82,13 @@ function Alldocuments() {
                 <h4 className="card-title mb-5 mt-2">
                   Liste de tous les documents (modèles)
                 </h4>
-                <Button
-                  variant="outline-success"
-                  className="btn btn-sm m-3 mt-1"
-                  onClick={handleShowAddModal}
+                <Link
+                  className="btn btn-outline-success btn-sm m-3 mt-1" 
+                  to="/add-document"
                 >
-                  Ajouter un document
-                </Button>
+                  Ajouter un document <br/>
+                  <HiDocumentPlus size={25}/>
+                </Link>
               </div>
               <div className="table-responsive">
                 <table className="table table-striped table-hover">

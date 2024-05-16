@@ -14,10 +14,16 @@ return new class extends Migration {
     {
         Schema::create('sessions', function (Blueprint $table) {
             $table->id();
-            $table->date('startDate');
-            $table->date('endDate');
+            $table->string('title');
+            $table->dateTime('startDate');
+            $table->dateTime('endDate');
+            $table->integer('duration');
             $table->string('sessionMode');
-            $table->boolean('consecutive');
+            $table->string('reference');
+            $table->string('location');
+            $table->string('status');
+            $table->unsignedBigInteger('formation_id');
+            $table->foreign('formation_id')->references('id')->on('formations')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }

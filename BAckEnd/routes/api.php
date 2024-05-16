@@ -8,6 +8,7 @@ use App\Http\Controllers\FormationController;
 use App\Http\Controllers\materielController;
 use App\Http\Controllers\PartenaireController;
 use App\Http\Controllers\SalleController;
+use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -132,4 +133,12 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/add-partenaire', [PartenaireController::class, 'store']);
     Route::delete('/delete-partenaire/{id}', [PartenaireController::class, 'destroy']);
     Route::post('/assign-formation/{id}', [PartenaireController::class, 'assignFormationsToPartenaire']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/sessions', [SessionController::class, 'index']);
+    Route::get('/session-id/{id}', [SessionController::class, 'show']);
+    Route::put('/update-session/{id}', [SessionController::class, 'update']);
+    Route::post('/add-session', [SessionController::class, 'store']);
+    Route::delete('/delete-session/{id}', [SessionController::class, 'destroy']);
 });

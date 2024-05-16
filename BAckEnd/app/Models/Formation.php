@@ -37,4 +37,9 @@ class Formation extends Model
     {
         return $this->hasOne(ProgrammeFormation::class, 'formation_id', 'id');
     }
+
+    public function sessions()
+    {
+        return $this->hasMany(Session::class);
+    }
 }
