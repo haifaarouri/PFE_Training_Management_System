@@ -6,9 +6,14 @@ import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { useCallback, useEffect, useState } from "react";
 import EventCreationModal from "../../components/EventCreationModal";
-import { fetchAllSessions } from "../../services/SessionServices";
+import {
+  fetchAllSessions,
+  fetchSessionById,
+} from "../../services/SessionServices";
 import Swal from "sweetalert2";
 import { Modal, Button, Tooltip, OverlayTrigger } from "react-bootstrap";
+import { BiSolidCalendarEdit } from "react-icons/bi";
+import SessionEditModal from "../../components/SessionEditModal";
 
 const CustomEvent = ({ event }) => {
   return (
@@ -56,6 +61,41 @@ const EventOverlay = ({ event }) => {
 };
 
 const EventModal = ({ show, onHide, event }) => {
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [sessionToEdit, setSessionToEdit] = useState({});
+  const [session, setSession] = useState(event);
+
+  const handleShowEditModal = (s) => {
+    if (s && s.id) {
+      setShowEditModal(true);
+      setSessionToEdit(s);
+    } else {
+      console.error("Invalid session data", s);
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setSessionToEdit({});
+  };
+
+  const fetchData = async (eventId) => {
+    if (!eventId) return;
+    try {
+      const response = await fetchSessionById(eventId);
+      setSession(response);
+    } catch (error) {
+      console.error("Error fetching session details:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (show && event) {
+      setSession(event);
+      fetchData(event.id);
+    }
+  }, [show, event, showEditModal]);
+
   return (
     <Modal
       show={show}
@@ -69,21 +109,34 @@ const EventModal = ({ show, onHide, event }) => {
           id="contained-modal-title-vcenter"
           style={{ color: "#223e9c" }}
         >
-          {event.title}
+          {session.title}
         </Modal.Title>
       </Modal.Header>
+      <SessionEditModal
+        onOpen={showEditModal}
+        onClose={handleCloseEditModal}
+        session={sessionToEdit}
+      />
       <Modal.Body>
-        <h5 style={{ color: "#1097ff" }}>Formation de {event.reference}</h5>
-        {event.start && event.end && (
+        <div className="d-flex justify-content-between mb-3">
+          <h5 style={{ color: "#1097ff" }}>Formation de {session.reference}</h5>
+          <Button
+            className="btn-sm btn-inverse-info"
+            onClick={() => handleShowEditModal(session)}
+          >
+            Modifier <BiSolidCalendarEdit size={22} />
+          </Button>
+        </div>
+        {session.startDate && session.endDate && (
           <>
-            <p>Date et heure de début : {formatDateToFrench(event.start)}</p>
-            <p>Date et heure de fin : {formatDateToFrench(event.end)}</p>
+            <p>Date et heure de début : {formatDateToFrench(session.startDate)}</p>
+            <p>Date et heure de fin : {formatDateToFrench(session.endDate)}</p>
           </>
         )}
-        <p>Localisation : {event.location}</p>
-        <p>Durée en heures : {event.duration}</p>
-        <p>Mode de la session : {event.sessionMode}</p>
-        <p>Statut de la session : {event.status}</p>
+        <p>Localisation : {session.location}</p>
+        <p>Durée en heures : {session.duration}</p>
+        <p>Mode de la session : {session.sessionMode}</p>
+        <p>Statut de la session : {session.status}</p>
       </Modal.Body>
       <Modal.Footer>
         <Button onClick={onHide} variant="info">
@@ -113,12 +166,10 @@ const AllSessions = () => {
     try {
       const response = await fetchAllSessions();
       const fetchedEvents = response.map((session) => ({
-        // ...session,
         id: session.id,
         title: session.title,
         start: new Date(session.startDate),
         end: new Date(session.endDate),
-        // color: "#0DCAF0",
         isDraggable: true,
         isResizable: true,
         duration: session.duration,
@@ -147,7 +198,7 @@ const AllSessions = () => {
     };
 
     u();
-  }, [showModal]);
+  }, [showModal, modalShow]);
 
   const onChangeEventTime = useCallback((start, end, eventId) => {
     setSessions((prevEvents) => {
