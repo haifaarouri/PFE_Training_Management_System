@@ -3,12 +3,12 @@ import { GiTeacher } from "react-icons/gi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { FaBookBookmark } from "react-icons/fa6";
-import { PiStudentFill } from "react-icons/pi";
+import { PiStudent, PiStudentFill } from "react-icons/pi";
 import { BsCalendarRange } from "react-icons/bs";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { VscOrganization } from "react-icons/vsc";
 
-function SideBar({isSidebarVisible}) {
+function SideBar({ isSidebarVisible }) {
   const [userAuth, setUserAuth] = useState(null);
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
@@ -77,10 +77,18 @@ function SideBar({isSidebarVisible}) {
       icon: <VscOrganization size={22} />,
       title: "Gestion des Partenaires",
     },
+    {
+      path: "/participants",
+      icon: <PiStudent size={22} />,
+      title: "Gestion des Participants",
+    },
   ];
 
   return (
-    <nav className={`sidebar sidebar-offcanvas ${isSidebarVisible && "active"}`} id="sidebar">
+    <nav
+      className={`sidebar sidebar-offcanvas ${isSidebarVisible && "active"}`}
+      id="sidebar"
+    >
       <ul className="nav">
         <li className="nav-item sidebar-category">
           <div className="d-flex justify-content-center">

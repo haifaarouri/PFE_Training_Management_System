@@ -33,6 +33,11 @@ class Session extends Model
 
     public function attestations()
     {
-        return $this->hasMany(AttestationDePrésence::class);
+        return $this->hasMany(CertificateOfAttendance::class);
+    }
+
+    public function participants()
+    {
+        return $this->belongsToMany(Participant::class, 'participant_session');
     }
 }

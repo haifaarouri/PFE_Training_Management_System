@@ -7,6 +7,7 @@ use App\Http\Controllers\FormateurController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\materielController;
 use App\Http\Controllers\PartenaireController;
+use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\SalleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UserController;
@@ -118,6 +119,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-candidat/{id}', [CandidatController::class, 'update']);
     Route::post('/add-candidat', [CandidatController::class, 'store']);
     Route::delete('/delete-candidat/{id}', [CandidatController::class, 'destroy']);
+    Route::post('/candidats/{candidatId}/formations/{formationId}', [CandidatController::class, 'registerToFormation']);
+    Route::put('/update-register-status/{candidatId}/{formationId}', [CandidatController::class, 'updateRegisterStatus']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
@@ -141,4 +144,15 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-session/{id}', [SessionController::class, 'update']);
     Route::post('/add-session', [SessionController::class, 'store']);
     Route::delete('/delete-session/{id}', [SessionController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/participants', [ParticipantController::class, 'index']);
+    Route::post('/add-participant', [ParticipantController::class, 'store']);
+    Route::get('/participant-id/{id}', [ParticipantController::class, 'show']);
+    Route::put('/update-participant/{id}', [ParticipantController::class, 'update']);
+    Route::delete('/delete-participant/{id}', [ParticipantController::class, 'destroy']);
+    Route::post('/convert-participant/{candidatId}', [ParticipantController::class, 'convertToParticipant']);
+    Route::post('/participate-session/{participantId}/{sessionId}', [ParticipantController::class, 'participateToSession']);
+    Route::put('/update-session-status/{participantId}/{sessionId}', [ParticipantController::class, 'updateSessionStatus']);
 });

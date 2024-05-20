@@ -7,7 +7,7 @@ import { FaBuilding, FaChalkboardTeacher, FaPhoneAlt } from "react-icons/fa";
 import { TfiEmail } from "react-icons/tfi";
 import { IoLocationSharp } from "react-icons/io5";
 
-const CandidatModal = ({ show, handleClose }) => {
+const ParticipantModal = ({ show, handleClose }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,7 +36,7 @@ const CandidatModal = ({ show, handleClose }) => {
       theme: "light",
     });
 
-  const handleAddcandidat = async (event) => {
+  const handleAddParticipant = async (event) => {
     event.preventDefault();
     await csrf();
     try {
@@ -62,7 +62,7 @@ const CandidatModal = ({ show, handleClose }) => {
       type === "Organisme" && formData.append("companyName", companyName);
 
       if (!localStorage.getItem("token")) {
-        const res = await axios.post("/api/add-candidat", formData, {
+        const res = await axios.post("/api/add-participant", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -71,7 +71,7 @@ const CandidatModal = ({ show, handleClose }) => {
         if (res.status === 201) {
           Swal.fire({
             icon: "success",
-            title: "Candidat ajouté avec succès !",
+            title: "Participant ajouté avec succès !",
             showConfirmButton: false,
             timer: 1500,
           });
@@ -94,14 +94,14 @@ const CandidatModal = ({ show, handleClose }) => {
           headers["Authorization"] = `Bearer ${token}`;
         }
 
-        const response = await axios.post("/api/add-candidat", formData, {
+        const response = await axios.post("/api/add-participant", formData, {
           headers: headers,
         });
 
         if (response.status === 201) {
           Swal.fire({
             icon: "success",
-            title: "Candidat ajouté avec succès !",
+            title: "Participant ajouté avec succès !",
             showConfirmButton: false,
             timer: 2000,
           });
@@ -142,7 +142,7 @@ const CandidatModal = ({ show, handleClose }) => {
       <Modal.Header closeButton>
         <Modal.Title>
           <h5 className="modal-title">
-            Formulaire pour ajouter un nouveau Candidat
+            Formulaire pour ajouter un nouveau Participant
           </h5>
         </Modal.Title>
       </Modal.Header>
@@ -152,7 +152,7 @@ const CandidatModal = ({ show, handleClose }) => {
           noValidate
           validated={validated}
           className="p-4"
-          onSubmit={handleAddcandidat}
+          onSubmit={handleAddParticipant}
         >
           <Form.Group className="mb-3">
             <Form.Label>Nom</Form.Label>
@@ -177,7 +177,7 @@ const CandidatModal = ({ show, handleClose }) => {
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
-                Veuillez saisir le nom du candidat !
+                Veuillez saisir le nom du Participant !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
@@ -204,7 +204,7 @@ const CandidatModal = ({ show, handleClose }) => {
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
-                Veuillez saisir le prénom du candidat !
+                Veuillez saisir le prénom du Participant !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
@@ -231,7 +231,7 @@ const CandidatModal = ({ show, handleClose }) => {
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
-                Veuillez saisir l'e-mail du candidat !
+                Veuillez saisir l'e-mail du Participant !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
@@ -259,7 +259,7 @@ const CandidatModal = ({ show, handleClose }) => {
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
-                Veuillez saisir le numéro de téléphone du candidat qui doit
+                Veuillez saisir le numéro de téléphone du Participant qui doit
                 compter 8 caractères !
               </Form.Control.Feedback>
             </InputGroup>
@@ -287,7 +287,7 @@ const CandidatModal = ({ show, handleClose }) => {
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
-                Veuillez saisir l'adresse du candidat !
+                Veuillez saisir l'adresse du Participant !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
@@ -310,13 +310,13 @@ const CandidatModal = ({ show, handleClose }) => {
                 onChange={(e) => setType(e.target.value)}
                 required
               >
-                <option>Selectionner le Type du candidat</option>
+                <option>Selectionner le Type du Participant</option>
                 <option value="Particulier">Particulier</option>
                 <option value="Organisme">Organisme</option>
               </Form.Select>
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
-                Veuillez sélectionner le type du candidat !
+                Veuillez sélectionner le type du Participant !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
@@ -344,7 +344,7 @@ const CandidatModal = ({ show, handleClose }) => {
                 />
                 <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
                 <Form.Control.Feedback type="invalid">
-                  Veuillez saisir le nom de l'entreprise du candidat !
+                  Veuillez saisir le nom de l'entreprise du Participant !
                 </Form.Control.Feedback>
               </InputGroup>
             </Form.Group>
@@ -369,4 +369,4 @@ const CandidatModal = ({ show, handleClose }) => {
   );
 };
 
-export default CandidatModal;
+export default ParticipantModal;

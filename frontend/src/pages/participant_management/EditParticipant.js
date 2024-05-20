@@ -5,20 +5,20 @@ import axios from "../../services/axios";
 import Swal from "sweetalert2";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  editCandidat,
-  fetchCandidatById,
-} from "../../services/CandidatServices";
+  editParticipant,
+  fetchParticipantById,
+} from "../../services/ParticipantServices";
 import { FaChalkboardTeacher, FaPhoneAlt, FaBuilding } from "react-icons/fa";
 import { TfiEmail } from "react-icons/tfi";
 import { IoLocationSharp } from "react-icons/io5";
 
-const EditCandidat = () => {
+const EditParticipant = () => {
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const navigate = useNavigate();
   const params = useParams();
   const { id } = params;
-  const [candidat, setCandidat] = useState({
+  const [participant, setParticipant] = useState({
     firstName: "",
     lastName: "",
     email: "",
@@ -29,13 +29,13 @@ const EditCandidat = () => {
   });
 
   useEffect(() => {
-    const fetchCandidat = async () => {
-      const candidatData = await fetchCandidatById(id);
-      setCandidat(candidatData);
+    const fetchParticipant = async () => {
+      const participantData = await fetchParticipantById(id);
+      setParticipant(participantData);
     };
 
     if (id) {
-      fetchCandidat();
+      fetchParticipant();
     }
   }, [id]);
 
@@ -57,15 +57,15 @@ const EditCandidat = () => {
       theme: "light",
     });
 
-  const handleUpdateCandidat = async (event) => {
+  const handleUpdateParticipant = async (event) => {
     event.preventDefault();
     await csrf();
     try {
       const form = formRef.current;
       if (
         form.checkValidity() === false ||
-        isWhitespace(candidat.phoneNumber) ||
-        isWhitespace(candidat.email)
+        isWhitespace(participant.phoneNumber) ||
+        isWhitespace(participant.email)
       ) {
         event.preventDefault();
         event.stopPropagation();
@@ -75,26 +75,26 @@ const EditCandidat = () => {
 
       const formData = new FormData();
       formData.append("_method", "PUT");
-      formData.append("firstName", candidat.firstName);
-      formData.append("lastName", candidat.lastName);
-      formData.append("email", candidat.email);
-      formData.append("phoneNumber", candidat.phoneNumber);
-      formData.append("type", candidat.type);
-      formData.append("address", candidat.address);
-      candidat.type === "Organisme" &&
-        formData.append("companyName", candidat.companyName);
+      formData.append("firstName", participant.firstName);
+      formData.append("lastName", participant.lastName);
+      formData.append("email", participant.email);
+      formData.append("phoneNumber", participant.phoneNumber);
+      formData.append("type", participant.type);
+      formData.append("address", participant.address);
+      participant.type === "Organisme" &&
+        formData.append("companyName", participant.companyName);
 
-      const res = await editCandidat(id, formData);
+      const res = await editParticipant(id, formData);
 
       if (res) {
         Swal.fire({
           icon: "success",
-          title: "Candidat modifié avec succès !",
+          title: "Participant modifié avec succès !",
           showConfirmButton: false,
           timer: 2000,
         });
 
-        setCandidat({
+        setParticipant({
           firstName: "",
           lastName: "",
           email: "",
@@ -104,7 +104,7 @@ const EditCandidat = () => {
           companyName: "",
         });
 
-        navigate("/candidats");
+        navigate("/Participants");
       }
     } catch (error) {
       if (error && error.response.status === 422) {
@@ -125,15 +125,15 @@ const EditCandidat = () => {
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
               <h4 className="card-title mb-5 mt-2">
-                Mettre à jour les informations du candidat {candidat.firstName}{" "}
-                {candidat.lastName}
+                Mettre à jour les informations du Participant{" "}
+                {participant.firstName} {participant.lastName}
               </h4>
               <Form
                 ref={formRef}
                 noValidate
                 validated={validated}
                 className="p-4"
-                onSubmit={handleUpdateCandidat}
+                onSubmit={handleUpdateParticipant}
               >
                 <Form.Group className="mb-3">
                   <Form.Label>Nom</Form.Label>
@@ -152,9 +152,9 @@ const EditCandidat = () => {
                       name="firstName"
                       type="text"
                       placeholder="Saisir le nom"
-                      value={candidat.firstName}
+                      value={participant.firstName}
                       onChange={(e) =>
-                        setCandidat((prevF) => ({
+                        setParticipant((prevF) => ({
                           ...prevF,
                           firstName: e.target.value,
                         }))
@@ -165,7 +165,7 @@ const EditCandidat = () => {
                       Cela semble bon !
                     </Form.Control.Feedback>
                     <Form.Control.Feedback type="invalid">
-                      Veuillez saisir le nom du candidat !
+                      Veuillez saisir le nom du Participant !
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
@@ -186,9 +186,9 @@ const EditCandidat = () => {
                       name="lastName"
                       type="text"
                       placeholder="Saisir le prénom"
-                      value={candidat.lastName}
+                      value={participant.lastName}
                       onChange={(e) =>
-                        setCandidat((prevF) => ({
+                        setParticipant((prevF) => ({
                           ...prevF,
                           lastName: e.target.value,
                         }))
@@ -199,7 +199,7 @@ const EditCandidat = () => {
                       Cela semble bon !
                     </Form.Control.Feedback>
                     <Form.Control.Feedback type="invalid">
-                      Veuillez saisir le prénom du candidat !
+                      Veuillez saisir le prénom du Participant !
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
@@ -220,9 +220,9 @@ const EditCandidat = () => {
                       name="email"
                       type="email"
                       placeholder="Saisir l'adresse e-mail"
-                      value={candidat.email}
+                      value={participant.email}
                       onChange={(e) =>
-                        setCandidat((prevF) => ({
+                        setParticipant((prevF) => ({
                           ...prevF,
                           email: e.target.value,
                         }))
@@ -233,7 +233,7 @@ const EditCandidat = () => {
                       Cela semble bon !
                     </Form.Control.Feedback>
                     <Form.Control.Feedback type="invalid">
-                      Veuillez saisir l'e-mail du candidat !
+                      Veuillez saisir l'e-mail du Participant !
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
@@ -254,9 +254,9 @@ const EditCandidat = () => {
                       name="phoneNumber"
                       type="text"
                       placeholder="Saisir la numéro de téléphone"
-                      value={candidat.phoneNumber}
+                      value={participant.phoneNumber}
                       onChange={(e) =>
-                        setCandidat((prevF) => ({
+                        setParticipant((prevF) => ({
                           ...prevF,
                           phoneNumber: e.target.value,
                         }))
@@ -268,7 +268,7 @@ const EditCandidat = () => {
                       Cela semble bon !
                     </Form.Control.Feedback>
                     <Form.Control.Feedback type="invalid">
-                      Veuillez saisir le numéro de téléphone du candidat qui
+                      Veuillez saisir le numéro de téléphone du Participant qui
                       doit compter 8 caractères !
                     </Form.Control.Feedback>
                   </InputGroup>
@@ -290,9 +290,9 @@ const EditCandidat = () => {
                       name="address"
                       type="text"
                       placeholder="Saisir l'adresse"
-                      value={candidat.address}
+                      value={participant.address}
                       onChange={(e) =>
-                        setCandidat((prevF) => ({
+                        setParticipant((prevF) => ({
                           ...prevF,
                           address: e.target.value,
                         }))
@@ -303,7 +303,7 @@ const EditCandidat = () => {
                       Cela semble bon !
                     </Form.Control.Feedback>
                     <Form.Control.Feedback type="invalid">
-                      Veuillez saisir l'adresse du candidat !
+                      Veuillez saisir l'adresse du Participant !
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
@@ -322,16 +322,16 @@ const EditCandidat = () => {
                     </InputGroup.Text>
                     <Form.Select
                       name="type"
-                      value={candidat.type}
+                      value={participant.type}
                       onChange={(e) =>
-                        setCandidat((prevF) => ({
+                        setParticipant((prevF) => ({
                           ...prevF,
                           type: e.target.value,
                         }))
                       }
                       required
                     >
-                      <option>Selectionner le Type du candidat</option>
+                      <option>Selectionner le Type du Participant</option>
                       <option value="Particulier">Particulier</option>
                       <option value="Organisme">Organisme</option>
                     </Form.Select>
@@ -339,11 +339,11 @@ const EditCandidat = () => {
                       Cela semble bon !
                     </Form.Control.Feedback>
                     <Form.Control.Feedback type="invalid">
-                      Veuillez sélectionner le type du candidat !
+                      Veuillez sélectionner le type du Participant !
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
-                {candidat.type === "Organisme" && (
+                {participant.type === "Organisme" && (
                   <Form.Group className="mb-3">
                     <Form.Label>Nom de l'entreprise</Form.Label>
                     <InputGroup className="mb-3">
@@ -361,9 +361,9 @@ const EditCandidat = () => {
                         name="companyName"
                         type="text"
                         placeholder="Saisir le nom de l'entreprise"
-                        value={candidat.companyName}
+                        value={participant.companyName}
                         onChange={(e) =>
-                          setCandidat((prevF) => ({
+                          setParticipant((prevF) => ({
                             ...prevF,
                             companyName: e.target.value,
                           }))
@@ -374,7 +374,7 @@ const EditCandidat = () => {
                         Cela semble bon !
                       </Form.Control.Feedback>
                       <Form.Control.Feedback type="invalid">
-                        Veuillez saisir le nom de l'entreprise du candidat !
+                        Veuillez saisir le nom de l'entreprise du Participant !
                       </Form.Control.Feedback>
                     </InputGroup>
                   </Form.Group>
@@ -397,4 +397,4 @@ const EditCandidat = () => {
   );
 };
 
-export default EditCandidat;
+export default EditParticipant;

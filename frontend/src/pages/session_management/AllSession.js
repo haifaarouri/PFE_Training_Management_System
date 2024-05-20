@@ -7,6 +7,7 @@ import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { useCallback, useEffect, useState } from "react";
 import EventCreationModal from "../../components/EventCreationModal";
 import {
+  deleteSession,
   fetchAllSessions,
   fetchSessionById,
 } from "../../services/SessionServices";
@@ -14,6 +15,8 @@ import Swal from "sweetalert2";
 import { Modal, Button, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { BiSolidCalendarEdit } from "react-icons/bi";
 import SessionEditModal from "../../components/SessionEditModal";
+import { AiFillDelete } from "react-icons/ai";
+import { ToastContainer, toast } from "react-toastify";
 
 const CustomEvent = ({ event }) => {
   return (
@@ -96,6 +99,60 @@ const EventModal = ({ show, onHide, event }) => {
     }
   }, [show, event, showEditModal]);
 
+  const handleSuccess = (msg) =>
+    toast.success(msg, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
+  const handleError = (err) =>
+    toast.error(err, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
+  const handleDeleteSession = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, supprimer!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await deleteSession(id);
+          Swal.fire({
+            title: "Supprimé avec succès!",
+            text: "Session est supprimée !",
+            icon: "success",
+          });
+          // const d = await fetchData();
+          // setSalles(d);
+          handleSuccess(res.message);
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
+
   return (
     <Modal
       show={show}
@@ -104,6 +161,7 @@ const EventModal = ({ show, onHide, event }) => {
       aria-labelledby="contained-modal-title-vcenter"
       centered
     >
+      <ToastContainer />
       <Modal.Header closeButton>
         <Modal.Title
           id="contained-modal-title-vcenter"
@@ -120,16 +178,26 @@ const EventModal = ({ show, onHide, event }) => {
       <Modal.Body>
         <div className="d-flex justify-content-between mb-3">
           <h5 style={{ color: "#1097ff" }}>Formation de {session.reference}</h5>
-          <Button
-            className="btn-sm btn-inverse-info"
-            onClick={() => handleShowEditModal(session)}
-          >
-            Modifier <BiSolidCalendarEdit size={22} />
-          </Button>
+          <div className="d-flex justify-content-between">
+            <Button
+              className="btn-sm btn-icon btn-inverse-info mx-3"
+              onClick={() => handleShowEditModal(session)}
+            >
+              <BiSolidCalendarEdit size={25} />
+            </Button>
+            <Button
+              className="btn-sm btn-icon btn-inverse-danger"
+              onClick={() => handleDeleteSession(session.id)}
+            >
+              <AiFillDelete size={26} />
+            </Button>
+          </div>
         </div>
         {session.startDate && session.endDate && (
           <>
-            <p>Date et heure de début : {formatDateToFrench(session.startDate)}</p>
+            <p>
+              Date et heure de début : {formatDateToFrench(session.startDate)}
+            </p>
             <p>Date et heure de fin : {formatDateToFrench(session.endDate)}</p>
           </>
         )}

@@ -3,39 +3,39 @@ import { apiFetch } from "./api";
 import axios from "./axios";
 import Swal from "sweetalert2";
 
-export const fetchAllCandidats = async () => {
+export const fetchAllParticipants = async () => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.get("/api/candidats");
+      const response = await axios.get("/api/participants");
       return response.data;
     } else {
-      const response = await apiFetch("candidats");
+      const response = await apiFetch("participants");
       return response;
     }
   } catch (error) {
-    console.log("Error fetching candidats :", error);
+    console.log("Error fetching Participants :", error);
   }
 };
 
-export const fetchCandidatById = async (id) => {
+export const fetchParticipantById = async (id) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.get(`/api/candidat-id/${id}`);
+      const response = await axios.get(`/api/participant-id/${id}`);
       return response.data;
     } else {
-      const response = await apiFetch(`candidat-id/${id}`);
+      const response = await apiFetch(`participant-id/${id}`);
       return response;
     }
   } catch (error) {
-    console.log("Error fetching candidat with this id :", error);
+    console.log("Error fetching Participant with this id :", error);
   }
 };
 
-export const editCandidat = async (id, formData) => {
+export const editParticipant = async (id, formData) => {
   try {
     if (!localStorage.getItem("token")) {
       const response = await axios.post(
-        `/api/update-candidat/${id}`,
+        `/api/update-participant/${id}`,
         formData,
         {
           headers: {
@@ -56,7 +56,7 @@ export const editCandidat = async (id, formData) => {
         headers["Authorization"] = `Bearer ${token}`;
       }
       const response = await axios.post(
-        `/api/update-candidat/${id}`,
+        `/api/update-participant/${id}`,
         formData,
         {
           headers: headers,
@@ -65,23 +65,23 @@ export const editCandidat = async (id, formData) => {
       return response;
     }
   } catch (error) {
-    console.log("Error editing candidat with this id :", error);
+    console.log("Error editing Participant with this id :", error);
   }
 };
 
-export const deleteCandidat = async (id) => {
+export const deleteParticipant = async (id) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.delete(`/api/delete-candidat/${id}`);
+      const response = await axios.delete(`/api/delete-participant/${id}`);
       return response.data;
     } else {
-      const response = await apiFetch(`delete-candidat/${id}`, {
+      const response = await apiFetch(`delete-Participant/${id}`, {
         method: "DELETE",
       });
       return response;
     }
   } catch (error) {
-    console.log("Error deleting candidat with this id :", error);
+    console.log("Error deleting Participant with this id :", error);
   }
 };
 
@@ -97,11 +97,11 @@ const handleError = (err) =>
     theme: "light",
   });
 
-export const convertToParticipant = async (candidatId) => {
+export const convertToParticipant = async (ParticipantId) => {
   try {
     if (!localStorage.getItem("token")) {
       const response = await axios.post(
-        `/api/convert-participant/${candidatId}`,
+        `/api/convert-participant/${ParticipantId}`,
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -121,7 +121,7 @@ export const convertToParticipant = async (candidatId) => {
         headers["Authorization"] = `Bearer ${token}`;
       }
       const response = await axios.post(
-        `/api/convert-participant/${candidatId}`,
+        `/api/convert-participant/${ParticipantId}`,
         {
           headers: headers,
         }

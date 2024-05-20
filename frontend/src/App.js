@@ -82,6 +82,12 @@ function App() {
   const EditPartenaire = lazy(() =>
     import("./pages/partenaire_management/EditPartenaire")
   );
+  const AllParticipants = lazy(() =>
+    import("./pages/participant_management/AllParticipants")
+  );
+  const EditParticipant = lazy(() =>
+  import("./pages/participant_management/EditParticipant")
+);
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -568,6 +574,44 @@ function App() {
                   ]}
                 >
                   <EditPartenaire />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/participants"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <AllParticipants />
+                </RequireAuth>
+              }
+            />
+             <Route
+              path="/edit-participant/:id"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <EditParticipant />
                 </RequireAuth>
               }
             />

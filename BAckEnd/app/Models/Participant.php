@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Candidat extends Model
+class Participant extends Model
 {
     use HasFactory;
 
@@ -19,15 +19,10 @@ class Candidat extends Model
         'companyName'
     ];
 
-    public function attestations()
+    public function sessions()
     {
-        return $this->hasMany(CertificateOfAttendance::class);
-    }
-
-    public function formations()
-    {
-        return $this->belongsToMany(Formation::class, 'candidat_formation')
-            ->withPivot('registerDate', 'registerStatus', 'motivation', 'paymentMethod')
+        return $this->belongsToMany(Session::class, 'participant_session')
+            ->withPivot('participationStatus')
             ->withTimestamps();
     }
 }

@@ -12,29 +12,25 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
-  convertToParticipant,
-  deleteCandidat,
-  fetchAllCandidats,
-} from "../../services/CandidatServices";
-import CandidatModal from "../../components/CandidatModal";
-import { GiArchiveRegister } from "react-icons/gi";
-import CandidatFormationModal from "../../components/CandidatFormationModal";
-import { MdEdit } from "react-icons/md";
-import EditStatusModal from "../../components/EditStatusModal";
-import { TbTransformFilled } from "react-icons/tb";
+  deleteParticipant,
+  fetchAllParticipants,
+} from "../../services/ParticipantServices";
+import ParticipantModal from "../../components/ParticipantModal";
+import { FaCalendarCheck } from "react-icons/fa";
+import ParticipateSessionModal from "../../components/ParticipateSessionModal";
 
-function AllCandidats() {
-  const [candidats, setCandidats] = useState([]);
+function AllParticipants() {
+  const [Participants, setParticipants] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const candidatsPerPage = 2;
-  const lastIndex = currentPage * candidatsPerPage;
-  const firstIndex = lastIndex - candidatsPerPage;
-  const candidatsPage =
-    candidats.length > 0 && candidats.slice(firstIndex, lastIndex);
+  const ParticipantsPerPage = 2;
+  const lastIndex = currentPage * ParticipantsPerPage;
+  const firstIndex = lastIndex - ParticipantsPerPage;
+  const ParticipantsPage =
+    Participants.length > 0 && Participants.slice(firstIndex, lastIndex);
   const numberPages = Math.ceil(
-    candidats.length > 0 && candidats.length / candidatsPerPage
+    Participants.length > 0 && Participants.length / ParticipantsPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
@@ -42,16 +38,13 @@ function AllCandidats() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
-  const [showregisterToFormation, setShowregisterToFormation] = useState(false);
-  const [candidatToRegister, setCandidatToRegister] = useState(null);
-  const [showEditStatus, setShowEditStatus] = useState(false);
-  const [candidatIdToEditStatus, setCandidatIdToEditStatus] = useState("");
-  const [formatioIdToEdit, setFormatioIdToEdit] = useState("");
+  const [showSession, setShowSession] = useState(false);
+  const [ParticipantId, setParticipantId] = useState("");
 
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setCandidats(d);
+      setParticipants(d);
     };
 
     u();
@@ -62,15 +55,15 @@ function AllCandidats() {
     setWordEntered(searchWord);
     if (columnName && columnName !== "Colonne") {
       const newFilter =
-        candidats.length > 0 &&
-        candidats.filter((formateur) =>
+        Participants.length > 0 &&
+        Participants.filter((formateur) =>
           formateur[columnName].toLowerCase().includes(searchWord.toLowerCase())
         );
       setFilteredData(newFilter);
     } else {
       const newFilter =
-        candidats.length > 0 &&
-        candidats.filter((formateur) => {
+        Participants.length > 0 &&
+        Participants.filter((formateur) => {
           const formateurFields = Object.values(formateur)
             .join(" ")
             .toLowerCase();
@@ -108,29 +101,29 @@ function AllCandidats() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-candidat/${id}`);
+    navigate(`/edit-participant/${id}`);
   };
 
   const fetchData = async () => {
     try {
-      const response = await fetchAllCandidats();
+      const response = await fetchAllParticipants();
 
       return response;
     } catch (error) {
-      console.log("Error fetching candidats :", error);
+      console.log("Error fetching Participants :", error);
     }
   };
 
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setCandidats(d);
+      setParticipants(d);
     };
 
     u();
-  }, [showModal, showEditStatus]);
+  }, [showModal, showSession]);
 
-  const handleDeleteCandidat = async (id) => {
+  const handleDeleteParticipant = async (id) => {
     Swal.fire({
       title: "Êtes-vous sûr?",
       text: "Vous ne pourrez pas revenir en arrière !",
@@ -142,14 +135,14 @@ function AllCandidats() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await deleteCandidat(id);
+          const res = await deleteParticipant(id);
           Swal.fire({
             title: "Supprimé avec succès!",
-            text: "Candidat est supprimé !",
+            text: "Participant est supprimé !",
             icon: "success",
           });
           const d = await fetchData();
-          setCandidats(d);
+          setParticipants(d);
           handleSuccess(res.message);
         } catch (error) {
           if (error && error.response.status === 422) {
@@ -186,58 +179,14 @@ function AllCandidats() {
     setShowList(false);
   };
 
-  const handleShowRegisterToFormationModal = (c) => {
-    setShowregisterToFormation(true);
-    setCandidatToRegister(c);
+  const handleShowSessions = (ParticipantId) => {
+    setShowSession(true);
+    setParticipantId(ParticipantId);
   };
 
-  const handleCloseRegisterToFormationModal = () => {
-    setShowregisterToFormation(false);
-    setCandidatToRegister(null);
-  };
-
-  const handleShowEditRegisterStatus = (candidatId, formationId) => {
-    setShowEditStatus(true);
-    setCandidatIdToEditStatus(candidatId);
-    setFormatioIdToEdit(formationId);
-  };
-
-  const handleCloseEditRegisterStatus = () => {
-    setShowEditStatus(false);
-    setCandidatIdToEditStatus("");
-    setFormatioIdToEdit("");
-  };
-
-  const handleConvertToParticipant = (candidatId) => {
-    Swal.fire({
-      title: "Êtes-vous sûr?",
-      text: "Si ce candidat a confirmé au moins une inscription à une formation !",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Oui, convertir!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const res = await convertToParticipant(candidatId);
-          if (res) {
-            Swal.fire({
-              title: "Converti avec succès!",
-              text: "Candidat est converti à un participant !",
-              icon: "success",
-            });
-            const d = await fetchData();
-            setCandidats(d);
-            handleSuccess(res.message);
-          }
-        } catch (error) {
-          if (error && error.response.status === 422) {
-            handleError(error.response.data.message);
-          }
-        }
-      }
-    });
+  const handleCloseSessions = () => {
+    setShowSession(false);
+    setParticipantId("");
   };
 
   return (
@@ -249,14 +198,14 @@ function AllCandidats() {
               <ToastContainer />
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
-                  Liste de tous les Candidats
+                  Liste de tous les Participants
                 </h4>
                 <Button
                   variant="outline-success"
                   className="btn btn-sm m-3 mt-1"
                   onClick={handleShowAddModal}
                 >
-                  Ajouter un Candidat
+                  Ajouter un Participant
                 </Button>
               </div>
               <div className="d-flex justify-content-end px-3 py-3">
@@ -275,14 +224,9 @@ function AllCandidats() {
                   </Button>
                 </div>
               </div>
-              <CandidatModal
+              <ParticipantModal
                 show={showModal}
                 handleClose={handleCloseAddModal}
-              />
-              <CandidatFormationModal
-                show={showregisterToFormation}
-                handleClose={handleCloseRegisterToFormationModal}
-                candidatId={candidatToRegister?.id}
               />
               {showList && (
                 <>
@@ -314,7 +258,7 @@ function AllCandidats() {
                               <Form.Control
                                 id="search"
                                 type="text"
-                                placeholder="Recherchez des candidats ..."
+                                placeholder="Recherchez des Participants ..."
                                 size="lg"
                                 name=""
                                 value={wordEntered}
@@ -356,7 +300,7 @@ function AllCandidats() {
                           <th>Adresse</th>
                           <th>Type</th>
                           <th>Entreprise</th>
-                          <th>Formations</th>
+                          <th>Sessions</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -377,7 +321,7 @@ function AllCandidats() {
                                 <td>{f.type}</td>
                                 <td>{f.companyName}</td>
                                 <td style={{ width: "30%" }}>
-                                  {f.formations.length > 0 &&
+                                  {/* {f.formations.length > 0 &&
                                     f.formations.map((form) => (
                                       <p
                                         key={form.id}
@@ -412,7 +356,7 @@ function AllCandidats() {
                                           <MdEdit size={25} />
                                         </Button>
                                       </p>
-                                    ))}
+                                    ))} */}
                                 </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -425,27 +369,17 @@ function AllCandidats() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      variant="outline-success"
-                                      onClick={() =>
-                                        handleShowRegisterToFormationModal(f)
-                                      }
-                                      className="btn btn-sm mb-2"
-                                    >
-                                      Inscrire à une formation{" "}
-                                      <GiArchiveRegister />
-                                    </Button>
-                                    <Button
                                       variant="outline-warning"
-                                      onClick={() =>
-                                        handleConvertToParticipant(f.id)
-                                      }
+                                      onClick={() => handleShowSessions(f.id)}
                                       className="btn btn-sm mb-2"
                                     >
-                                      Convertir à un participant
-                                      <TbTransformFilled size={20} />
+                                      Assigner à une session
+                                      <FaCalendarCheck />
                                     </Button>
                                     <Button
-                                      onClick={() => handleDeleteCandidat(f.id)}
+                                      onClick={() =>
+                                        handleDeleteParticipant(f.id)
+                                      }
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -458,11 +392,11 @@ function AllCandidats() {
                             );
                           })
                         ) : filteredData.length === 0 &&
-                          candidats.length === 0 ? (
+                          Participants.length === 0 ? (
                           <></>
                         ) : (
-                          candidats.length > 0 &&
-                          candidatsPage.map((f, index) => {
+                          Participants.length > 0 &&
+                          ParticipantsPage.map((f, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -477,7 +411,7 @@ function AllCandidats() {
                                 <td>{f.type}</td>
                                 <td>{f.companyName}</td>
                                 <td style={{ width: "30%" }}>
-                                  {f.formations.length > 0 &&
+                                  {/* {f.formations.length > 0 &&
                                     f.formations.map((form) => (
                                       <p
                                         key={form.id}
@@ -512,7 +446,7 @@ function AllCandidats() {
                                           <MdEdit size={25} />
                                         </Button>
                                       </p>
-                                    ))}
+                                    ))} */}
                                 </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -525,27 +459,17 @@ function AllCandidats() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      variant="outline-success"
-                                      onClick={() =>
-                                        handleShowRegisterToFormationModal(f)
-                                      }
-                                      className="btn btn-sm mb-2"
-                                    >
-                                      Inscrire à une formation{" "}
-                                      <GiArchiveRegister size={20} />
-                                    </Button>
-                                    <Button
                                       variant="outline-warning"
-                                      onClick={() =>
-                                        handleConvertToParticipant(f.id)
-                                      }
+                                      onClick={() => handleShowSessions(f.id)}
                                       className="btn btn-sm mb-2"
                                     >
-                                      Convertir à un participant
-                                      <TbTransformFilled size={20} />
+                                      Assigner à une session
+                                      <FaCalendarCheck />
                                     </Button>
                                     <Button
-                                      onClick={() => handleDeleteCandidat(f.id)}
+                                      onClick={() =>
+                                        handleDeleteParticipant(f.id)
+                                      }
                                       variant="outline-danger"
                                       className="btn btn-sm"
                                     >
@@ -554,11 +478,10 @@ function AllCandidats() {
                                     </Button>
                                   </div>
                                 </td>
-                                <EditStatusModal
-                                  show={showEditStatus}
-                                  candidatId={candidatIdToEditStatus}
-                                  formationId={formatioIdToEdit}
-                                  handleClose={handleCloseEditRegisterStatus}
+                                <ParticipateSessionModal
+                                  show={showSession}
+                                  ParticipantId={ParticipantId}
+                                  handleClose={handleCloseSessions}
                                 />
                               </tr>
                             );
@@ -604,8 +527,8 @@ function AllCandidats() {
                   style={{ backgroundColor: "#D2D8EB" }}
                   className="shadow-lg p-5 mb-5 rounded"
                 >
-                  {candidats.length > 0 &&
-                    candidats.map((f, idx) => {
+                  {Participants.length > 0 &&
+                    Participants.map((f, idx) => {
                       return (
                         <Carousel.Item key={idx} className="row">
                           <div
@@ -619,7 +542,7 @@ function AllCandidats() {
                               Modifier <i className="mdi mdi-tooltip-edit"></i>
                             </Button>
                             <Button
-                              onClick={() => handleDeleteCandidat(f.id)}
+                              onClick={() => handleDeleteParticipant(f.id)}
                               className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
                             >
                               Supprimer <i className="mdi mdi-delete"></i>
@@ -667,7 +590,7 @@ function AllCandidats() {
                                         {f.companyName}
                                       </p>
                                     )}
-                                    {f.formations.length > 0 && (
+                                    {/* {f.formations.length > 0 && (
                                       <>
                                         <span className="text-primary fw-bold">
                                           Liste des formations inscrit :
@@ -706,7 +629,7 @@ function AllCandidats() {
                                           </p>
                                         ))}
                                       </>
-                                    )}
+                                    )} */}
                                   </div>
                                 </Card.Text>
                               </Card.Body>
@@ -725,4 +648,4 @@ function AllCandidats() {
   );
 }
 
-export default AllCandidats;
+export default AllParticipants;
