@@ -75,7 +75,7 @@ export const deleteParticipant = async (id) => {
       const response = await axios.delete(`/api/delete-participant/${id}`);
       return response.data;
     } else {
-      const response = await apiFetch(`delete-Participant/${id}`, {
+      const response = await apiFetch(`delete-participant/${id}`, {
         method: "DELETE",
       });
       return response;

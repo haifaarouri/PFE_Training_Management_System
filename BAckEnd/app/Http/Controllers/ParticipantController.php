@@ -23,7 +23,7 @@ class ParticipantController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $participants = Participant::all();
+            $participants = Participant::with('sessions')->get();
             return response()->json($participants);
         } else {
             // User does not have access, return a 403 response
@@ -187,8 +187,9 @@ class ParticipantController extends Controller
         }
     }
 
-    public function participateToSession(Request $request, $participantId, $sessionId)
+    public function participateToSession($participantId, $sessionId)
     {
+        \Log::info(auth()->user());
         if (!$this->list_roles->contains(auth()->user()->role)) {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
@@ -218,13 +219,18 @@ class ParticipantController extends Controller
 
         try {
             $attributes = [
-                'participationStatus' => $request->input('participationStatus'),
+                'participationStatus' => "EnAttente",
             ];
             $participant->sessions()->attach($sessionId, $attributes);
             return response()->json(['message' => 'Participant inscrit à la session avec succès !']);
+        } catch (\PDOException $e) {
+            if ($e->getCode() == 23000) {
+                return response()->json(['error' => 'Ce participant est déjà assigné à cette session !'], 400);
+            }
+            return response()->json(['error' => 'Erreur lors de la participation du participant à la formation.'], 500);
         } catch (\Exception $e) {
             \Log::error('Error attaching participant to session: ' . $e->getMessage());
-            return response()->json(['error' => 'Erreur lors de l\'inscription du participant à la session.'], 500);
+            return response()->json(['error' => 'Erreur lors de la participation du participant à la session.'], 500);
         }
     }
 
@@ -235,7 +241,7 @@ class ParticipantController extends Controller
         }
 
         $participant = Participant::find($participantId);
-        $status = $request->input('status');
+        $status = $request->input('registerStatus');
 
         if ($participant) {
             $participant->sessions()->updateExistingPivot($sessionId, ['participationStatus' => $status]);

@@ -18,6 +18,8 @@ import {
 import ParticipantModal from "../../components/ParticipantModal";
 import { FaCalendarCheck } from "react-icons/fa";
 import ParticipateSessionModal from "../../components/ParticipateSessionModal";
+import { MdEdit } from "react-icons/md";
+import EditStatusModal from "../../components/EditStatusModal";
 
 function AllParticipants() {
   const [Participants, setParticipants] = useState([]);
@@ -39,7 +41,11 @@ function AllParticipants() {
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
   const [showSession, setShowSession] = useState(false);
-  const [ParticipantId, setParticipantId] = useState("");
+  const [participantId, setParticipantId] = useState("");
+  const [participantIdToEditStatus, setParticipantIdToEditStatus] =
+    useState("");
+  const [sessionIdToEdit, setSessionIdToEdit] = useState("");
+  const [showEditStatus, setShowEditStatus] = useState(false);
 
   useEffect(() => {
     const u = async () => {
@@ -145,6 +151,7 @@ function AllParticipants() {
           setParticipants(d);
           handleSuccess(res.message);
         } catch (error) {
+          console.log(error);
           if (error && error.response.status === 422) {
             handleError(error.response.data.message);
           }
@@ -179,14 +186,26 @@ function AllParticipants() {
     setShowList(false);
   };
 
-  const handleShowSessions = (ParticipantId) => {
+  const handleShowSessions = (participantId) => {
     setShowSession(true);
-    setParticipantId(ParticipantId);
+    setParticipantId(participantId);
   };
 
   const handleCloseSessions = () => {
     setShowSession(false);
     setParticipantId("");
+  };
+
+  const handleShowEditParticipationStatus = (participantId, sessionId) => {
+    setShowEditStatus(true);
+    setParticipantIdToEditStatus(participantId);
+    setSessionIdToEdit(sessionId);
+  };
+
+  const handleCloseEditParticipationStatus = () => {
+    setShowEditStatus(false);
+    setParticipantIdToEditStatus("");
+    setSessionIdToEdit("");
   };
 
   return (
@@ -200,13 +219,13 @@ function AllParticipants() {
                 <h4 className="card-title mb-5 mt-2">
                   Liste de tous les Participants
                 </h4>
-                <Button
+                {/* <Button
                   variant="outline-success"
                   className="btn btn-sm m-3 mt-1"
                   onClick={handleShowAddModal}
                 >
                   Ajouter un Participant
-                </Button>
+                </Button> */}
               </div>
               <div className="d-flex justify-content-end px-3 py-3">
                 <div className="btn-group">
@@ -321,32 +340,32 @@ function AllParticipants() {
                                 <td>{f.type}</td>
                                 <td>{f.companyName}</td>
                                 <td style={{ width: "30%" }}>
-                                  {/* {f.formations.length > 0 &&
-                                    f.formations.map((form) => (
+                                  {f.sessions.length > 0 &&
+                                    f.sessions.map((form) => (
                                       <p
                                         key={form.id}
                                         className="rounded border border-primary p-2"
                                       >
-                                        {form.reference} - {form.entitled}
+                                        {form.title} - {form.reference}
                                         <br />
-                                        Statut d'inscription :{" "}
+                                        Statut de participation :{" "}
                                         <Badge
                                           pill
                                           bg={
-                                            form.pivot.registerStatus ===
+                                            form.pivot.participationStatus ===
                                               "EnAttente" ||
-                                            form.pivot.registerStatus ===
-                                              "Annulé"
+                                            form.pivot.participationStatus ===
+                                              "Absent"
                                               ? "danger"
                                               : "success"
                                           }
                                         >
-                                          {form.pivot.registerStatus}
+                                          {form.pivot.participationStatus}
                                         </Badge>
                                         <Button
                                           variant="outline-primary"
                                           onClick={() =>
-                                            handleShowEditRegisterStatus(
+                                            handleShowEditParticipationStatus(
                                               f.id,
                                               form.id
                                             )
@@ -356,7 +375,7 @@ function AllParticipants() {
                                           <MdEdit size={25} />
                                         </Button>
                                       </p>
-                                    ))} */}
+                                    ))}
                                 </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -369,7 +388,7 @@ function AllParticipants() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      variant="outline-warning"
+                                      variant="outline-success"
                                       onClick={() => handleShowSessions(f.id)}
                                       className="btn btn-sm mb-2"
                                     >
@@ -411,32 +430,32 @@ function AllParticipants() {
                                 <td>{f.type}</td>
                                 <td>{f.companyName}</td>
                                 <td style={{ width: "30%" }}>
-                                  {/* {f.formations.length > 0 &&
-                                    f.formations.map((form) => (
+                                  {f.sessions.length > 0 &&
+                                    f.sessions.map((form) => (
                                       <p
                                         key={form.id}
                                         className="rounded border border-primary p-2"
                                       >
-                                        {form.reference} - {form.entitled}
+                                        {form.title} - {form.reference}
                                         <br />
-                                        Statut d'inscription :{" "}
+                                        Statut de participation :{" "}
                                         <Badge
                                           pill
                                           bg={
-                                            form.pivot.registerStatus ===
+                                            form.pivot.participationStatus ===
                                               "EnAttente" ||
-                                            form.pivot.registerStatus ===
-                                              "Annulé"
+                                            form.pivot.participationStatus ===
+                                              "Absent"
                                               ? "danger"
                                               : "success"
                                           }
                                         >
-                                          {form.pivot.registerStatus}
+                                          {form.pivot.participationStatus}
                                         </Badge>
                                         <Button
                                           variant="outline-primary"
                                           onClick={() =>
-                                            handleShowEditRegisterStatus(
+                                            handleShowEditParticipationStatus(
                                               f.id,
                                               form.id
                                             )
@@ -446,7 +465,7 @@ function AllParticipants() {
                                           <MdEdit size={25} />
                                         </Button>
                                       </p>
-                                    ))} */}
+                                    ))}
                                 </td>
                                 <td style={{ width: "15%" }}>
                                   <div className="d-flex flex-column justify-content-center">
@@ -459,7 +478,7 @@ function AllParticipants() {
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
                                     <Button
-                                      variant="outline-warning"
+                                      variant="outline-success"
                                       onClick={() => handleShowSessions(f.id)}
                                       className="btn btn-sm mb-2"
                                     >
@@ -480,8 +499,17 @@ function AllParticipants() {
                                 </td>
                                 <ParticipateSessionModal
                                   show={showSession}
-                                  ParticipantId={ParticipantId}
+                                  participantId={participantId}
                                   handleClose={handleCloseSessions}
+                                />
+                                <EditStatusModal
+                                  show={showEditStatus}
+                                  participantId={participantIdToEditStatus}
+                                  sessionId={sessionIdToEdit}
+                                  handleClose={
+                                    handleCloseEditParticipationStatus
+                                  }
+                                  statusType="ParticipationStatus"
                                 />
                               </tr>
                             );
@@ -590,46 +618,43 @@ function AllParticipants() {
                                         {f.companyName}
                                       </p>
                                     )}
-                                    {/* {f.formations.length > 0 && (
+                                    {f.sessions.length > 0 && (
                                       <>
                                         <span className="text-primary fw-bold">
-                                          Liste des formations inscrit :
+                                          Liste des sessions :
                                         </span>
-                                        {f.formations.map((form) => (
-                                          <p key={form.id}>
+                                        {f.sessions.map((session) => (
+                                          <p key={session.id}>
                                             <span className="text-primary">
-                                              {f.formations.indexOf(form) + 1}/
+                                              {f.sessions.indexOf(session) + 1}/
                                               {"  "}
-                                              {form.reference} - {form.entitled}{" "}
+                                              {session.title} -{" "}
+                                              {session.reference}
                                             </span>
                                             <br />
-                                            Date d'inscription :{" "}
-                                            {form.pivot.registerDate} <br />
-                                            Statut d'inscription :{" "}
+                                            Statut de participation :{" "}
                                             <Badge
                                               pill
                                               bg={
-                                                form.pivot.registerStatus ===
+                                                session.pivot
+                                                  .participationStatus ===
                                                   "EnAttente" ||
-                                                form.pivot.registerStatus ===
+                                                session.pivot
+                                                  .participationStatus ===
                                                   "Annulé"
                                                   ? "danger"
                                                   : "success"
                                               }
                                             >
-                                              {form.pivot.registerStatus}
+                                              {
+                                                session.pivot
+                                                  .participationStatus
+                                              }
                                             </Badge>{" "}
-                                            <br />
-                                            Motivation : {
-                                              form.pivot.motivation
-                                            }{" "}
-                                            <br />
-                                            Méthode de paiement :{" "}
-                                            {form.pivot.paymentMethod}
                                           </p>
                                         ))}
                                       </>
-                                    )} */}
+                                    )}
                                   </div>
                                 </Card.Text>
                               </Card.Body>

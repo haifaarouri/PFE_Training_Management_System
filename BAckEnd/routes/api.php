@@ -153,6 +153,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-participant/{id}', [ParticipantController::class, 'update']);
     Route::delete('/delete-participant/{id}', [ParticipantController::class, 'destroy']);
     Route::post('/convert-participant/{candidatId}', [ParticipantController::class, 'convertToParticipant']);
-    Route::post('/participate-session/{participantId}/{sessionId}', [ParticipantController::class, 'participateToSession']);
+    Route::get('/participate-session/{participantId}/{sessionId}', [ParticipantController::class, 'participateToSession']);
     Route::put('/update-session-status/{participantId}/{sessionId}', [ParticipantController::class, 'updateSessionStatus']);
 });
