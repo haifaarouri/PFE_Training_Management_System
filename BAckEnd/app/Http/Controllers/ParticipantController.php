@@ -189,7 +189,6 @@ class ParticipantController extends Controller
 
     public function participateToSession($participantId, $sessionId)
     {
-        \Log::info(auth()->user());
         if (!$this->list_roles->contains(auth()->user()->role)) {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
@@ -209,6 +208,11 @@ class ParticipantController extends Controller
 
         if (!$candidat) {
             return response()->json(['error' => 'Aucun candidat correspondant trouvé pour cet email !'], 404);
+        }
+
+        // Vérifier si le nombre maximum de participants est atteint
+        if ($session->participants()->count() >= $session->max_participants) {
+            return response()->json(['error' => 'La session a atteint le nombre maximum de participants !'], 400);
         }
 
         // Check if the session's formation is one of the formations the candidat has confirmed

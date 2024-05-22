@@ -4,12 +4,15 @@ import { BsCalendar2PlusFill } from "react-icons/bs";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
 import { ToastContainer, toast } from "react-toastify";
-import { FaBook, FaCalendarDay } from "react-icons/fa";
+import { FaBook, FaCalendarDay, FaPlusCircle } from "react-icons/fa";
 import { IoLocation } from "react-icons/io5";
 import { BiCalendarCheck, BiSolidCalendarCheck } from "react-icons/bi";
 import { GiTeacher } from "react-icons/gi";
 import "react-toastify/dist/ReactToastify.css";
 import { fetchAllFormations } from "../services/FormationServices";
+import { PiStudentFill } from "react-icons/pi";
+import { MdDeleteForever } from "react-icons/md";
+import { LuCalendarClock } from "react-icons/lu";
 
 const EventCreationModal = ({
   isOpen,
@@ -29,9 +32,21 @@ const EventCreationModal = ({
   const [location, setLocation] = useState("");
   const [status, setStatus] = useState("");
   const [sessionMode, setSessionMode] = useState("");
+  const [max_participants, setMaxParticipants] = useState("");
   const [validated, setValidated] = useState(false);
   const [formations, setFormations] = useState([]);
   const nowISO = new Date().toISOString().slice(0, 16);
+  const [jours, setJours] = useState([{ day: "", startTime: "", endTime: "" }]);
+
+  const handleAddJour = () => {
+    setJours([...jours, { day: "", startTime: "", endTime: "" }]);
+  };
+
+  const handleJourChange = (index, field, value) => {
+    const newJours = [...jours];
+    newJours[index][field] = value;
+    setJours(newJours);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -97,6 +112,20 @@ const EventCreationModal = ({
       return;
     }
 
+    // Validate each jour day is within the session start and end dates
+    const sessionStart = new Date(startDate).setHours(0, 0, 0, 0);
+    const sessionEnd = new Date(endDate).setHours(23, 59, 59, 999);
+    for (let jour of jours) {
+      const jourDate = new Date(jour.day).setHours(0, 0, 0, 0);
+      if (jourDate < sessionStart || jourDate > sessionEnd) {
+        Swal.fire({
+          icon: "error",
+          text: "Chaque jour de la session doit se situer entre les dates de début et de fin de la session !",
+        });
+        return;
+      }
+    }
+
     try {
       const form = formRef.current;
       if (form.checkValidity() === false) {
@@ -117,6 +146,12 @@ const EventCreationModal = ({
         .slice(0, 16);
       const formattedEndDate = toUTCDate(endDate).toISOString().slice(0, 16);
 
+      // const formattedJours = jours.map((jour) => ({
+      //   day: new Date(jour.day).toISOString().slice(0, 10),
+      //   startTime: jour.startTime,
+      //   endTime: jour.endTime,
+      // }));
+
       const formData = new FormData();
       formData.append("title", title);
       formData.append("startDate", formattedStartDate);
@@ -126,6 +161,14 @@ const EventCreationModal = ({
       formData.append("location", location);
       formData.append("status", status);
       formData.append("sessionMode", sessionMode);
+      formData.append("max_participants", max_participants);
+      // formData.append("jours", JSON.stringify(formattedJours));
+      // Append each jour object in the jours array
+      jours.forEach((jour, index) => {
+        formData.append(`jours[${index}][day]`, jour.day);
+        formData.append(`jours[${index}][startTime]`, jour.startTime);
+        formData.append(`jours[${index}][endTime]`, jour.endTime);
+      });
 
       if (!localStorage.getItem("token")) {
         console.log("ffff");
@@ -151,6 +194,8 @@ const EventCreationModal = ({
           setLocation("");
           setStatus("");
           setSessionMode("");
+          setMaxParticipants("");
+          setJours([]);
 
           onClose();
         }
@@ -184,12 +229,15 @@ const EventCreationModal = ({
           setLocation("");
           setStatus("");
           setSessionMode("");
+          setMaxParticipants("");
+          setJours([]);
 
           onClose();
         }
       }
     } catch (error) {
       if (error) {
+        console.log(error);
         if (error.response.data.error) {
           Object.values(error.response.data.error).forEach((element) => {
             handleError(element[0]);
@@ -202,6 +250,14 @@ const EventCreationModal = ({
           text: "Quelque chose s'est mal passé !",
         });
       }
+    }
+  };
+
+  const removeJour = (index) => {
+    if (index !== 0) {
+      const newJour = [...jours];
+      newJour.splice(index, 1);
+      setJours(newJour);
     }
   };
 
@@ -465,6 +521,111 @@ const EventCreationModal = ({
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Nombre maximum de participants</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <PiStudentFill
+                      className="text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="number"
+                placeholder="Saisir le nombre limite de participants"
+                value={max_participants}
+                onChange={(e) => setMaxParticipants(e.target.value)}
+                min={1}
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir le nombre limite de participants pour cette
+                session !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Jour(s)</Form.Label>
+            {jours.map((jour, index) => (
+              <div className="d-flex" key={index}>
+                <div className="flex-grow-1 me-3">
+                  <Form.Label>Date du jour</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text>
+                      <LuCalendarClock
+                        className="text-primary"
+                        style={{ fontSize: "1.5em" }}
+                      />
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="date"
+                      value={jour.day}
+                      onChange={(e) =>
+                        handleJourChange(index, "day", e.target.value)
+                      }
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                  </InputGroup>
+                </div>
+                <div className="flex-grow-1 me-3">
+                  <Form.Label>Heure de début</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text>
+                      <LuCalendarClock
+                        className="text-primary"
+                        style={{ fontSize: "1.5em" }}
+                      />
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="time"
+                      value={jour.startTime}
+                      onChange={(e) =>
+                        handleJourChange(index, "startTime", e.target.value)
+                      }
+                    />
+                  </InputGroup>
+                </div>
+                <div className="flex-grow-1">
+                  <Form.Label>Heure de fin</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text>
+                      <LuCalendarClock
+                        className="text-primary"
+                        style={{ fontSize: "1.5em" }}
+                      />
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="time"
+                      value={jour.endTime}
+                      onChange={(e) =>
+                        handleJourChange(index, "endTime", e.target.value)
+                      }
+                    />
+                  </InputGroup>
+                </div>
+                {index !== 0 && (
+                  <Button
+                    onClick={() => removeJour(index)}
+                    className="btn btn-sm btn-rounded btn-inverse-danger m-3"
+                  >
+                    <MdDeleteForever size={30} />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </Form.Group>
+          <div className="d-flex justify-content-end">
+            <Button
+              className="mb-3 mt-0 btn btn-rounded btn-inverse-info"
+              onClick={handleAddJour}
+            >
+              Ajouter un jour <FaPlusCircle size={25} />
+            </Button>
+          </div>
           <div className="mt-5 d-flex justify-content-center">
             <Button
               type="submit"

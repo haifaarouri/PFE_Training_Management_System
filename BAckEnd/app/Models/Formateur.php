@@ -40,4 +40,9 @@ class Formateur extends Model
     {
         return $this->hasMany(Disponibility::class, 'formateur_id', 'id');
     }
+
+    public function Sessions()
+    {
+        return $this->belongsToMany(Session::class, 'formateur_session');
+    }
 }

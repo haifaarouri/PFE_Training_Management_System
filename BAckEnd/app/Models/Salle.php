@@ -30,4 +30,9 @@ class Salle extends Model
         }
         $this->attributes['disposition'] = $value;
     }
+
+    public function jourSessions()
+    {
+        return $this->hasMany(JourSession::class, 'salle_id', 'id');
+    }
 }

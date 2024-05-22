@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      *
@@ -18,8 +17,8 @@ return new class extends Migration
             $table->date('day');
             $table->time('startTime');
             $table->time('endTime');
-            $table->unsignedBigInteger('session_id')->nullable();
-            $table->foreign('session_id')->references('id')->on('sessions')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('session_id')->constrained()->onDelete('cascade');
+            $table->foreignId('salle_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
     }

@@ -22,6 +22,7 @@ return new class extends Migration {
             $table->string('reference');
             $table->string('location');
             $table->string('status');
+            $table->integer('max_participants');
             $table->unsignedBigInteger('formation_id');
             $table->foreign('formation_id')->references('id')->on('formations')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();

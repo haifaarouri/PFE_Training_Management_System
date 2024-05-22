@@ -4,13 +4,20 @@ import { BsCalendar2PlusFill } from "react-icons/bs";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
 import { ToastContainer, toast } from "react-toastify";
-import { FaBook, FaCalendarDay } from "react-icons/fa";
+import { FaBook, FaCalendarDay, FaPlusCircle } from "react-icons/fa";
 import { IoLocation } from "react-icons/io5";
 import { BiCalendarCheck, BiSolidCalendarCheck } from "react-icons/bi";
 import { GiTeacher } from "react-icons/gi";
 import "react-toastify/dist/ReactToastify.css";
 import { fetchAllFormations } from "../services/FormationServices";
-import { editSession, fetchSessionById } from "../services/SessionServices";
+import {
+  editSession,
+  fetchSessionById,
+  fetchSessionDays,
+} from "../services/SessionServices";
+import { PiStudentFill } from "react-icons/pi";
+import { MdDeleteForever } from "react-icons/md";
+import { LuCalendarClock } from "react-icons/lu";
 
 const SessionEditModal = ({ onOpen, onClose, session }) => {
   const [sessionDB, setSessionDB] = useState({
@@ -24,11 +31,31 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
     location: "",
     status: "",
     formation_id: "",
+    max_participants: "",
   });
   const [validated, setValidated] = useState(false);
   const [formations, setFormations] = useState([]);
   const nowISO = new Date().toISOString().slice(0, 16);
   const formRef = useRef();
+  const [jours, setJours] = useState([]);
+
+  const handleAddJour = () => {
+    setJours([...jours, { day: "", startTime: "", endTime: "" }]);
+  };
+
+  const handleJourChange = (index, field, value) => {
+    const newJours = [...jours];
+    newJours[index][field] = value;
+    setJours(newJours);
+  };
+
+  const removeJour = (index) => {
+    if (index !== 0) {
+      const newJour = [...jours];
+      newJour.splice(index, 1);
+      setJours(newJour);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,8 +78,20 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
       }
     };
 
+    const fetchDays = async () => {
+      if (session && session.id) {
+        try {
+          const response = await fetchSessionDays(session.id);
+          setJours(response);
+        } catch (error) {
+          console.error("Error fetching days:", error);
+        }
+      }
+    };
+
     fetchData();
     fetchSession();
+    fetchDays();
   }, [session, onOpen]);
 
   if (!session || !onOpen) return null;
@@ -103,6 +142,20 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
         .toISOString()
         .slice(0, 16);
 
+      // Validate each jour day is within the session start and end dates
+      const sessionStart = new Date(sessionDB.startDate).setHours(0, 0, 0, 0);
+      const sessionEnd = new Date(sessionDB.endDate).setHours(23, 59, 59, 999);
+      for (let jour of jours) {
+        const jourDate = new Date(jour.day).setHours(0, 0, 0, 0);
+        if (jourDate < sessionStart || jourDate > sessionEnd) {
+          Swal.fire({
+            icon: "error",
+            text: "Chaque jour de la session doit se situer entre les dates de début et de fin de la session !",
+          });
+          return;
+        }
+      }
+
       const formData = new FormData();
       formData.append("_method", "PUT");
       formData.append("title", sessionDB.title);
@@ -113,6 +166,21 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
       formData.append("location", sessionDB.location);
       formData.append("status", sessionDB.status);
       formData.append("sessionMode", sessionDB.sessionMode);
+      formData.append("max_participants", sessionDB.max_participants);
+      // Append each jour object in the jours array
+      jours.forEach((jour, index) => {
+        // Ensure time is in HH:mm format
+        const formattedStartTime = new Date(
+          "1970-01-01T" + jour.startTime
+        ).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+        const formattedEndTime = new Date(
+          "1970-01-01T" + jour.endTime
+        ).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+        formData.append(`jours[${index}][day]`, jour.day);
+        formData.append(`jours[${index}][startTime]`, formattedStartTime);
+        formData.append(`jours[${index}][endTime]`, formattedEndTime);
+      });
 
       const res = await editSession(sessionDB.id, formData);
 
@@ -135,7 +203,9 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
           location: "",
           status: "",
           formation_id: "",
+          max_participants: "",
         });
+        setJours([]);
 
         onClose();
       }
@@ -442,6 +512,117 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Nombre maximum de participants</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <PiStudentFill
+                      className="text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="number"
+                placeholder="Saisir le nombre limite de participants"
+                value={sessionDB.max_participants}
+                onChange={(e) =>
+                  setSessionDB((prev) => ({
+                    ...prev,
+                    max_participants: e.target.value,
+                  }))
+                }
+                min={1}
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir le nombre limite de participants pour cette
+                session !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Jour(s)</Form.Label>
+            {jours.length > 0 &&
+              jours.map((jour, index) => (
+                <div className="d-flex" key={index}>
+                  <div className="flex-grow-1 me-3">
+                    <Form.Label>Date du jour</Form.Label>
+                    <InputGroup className="mb-3">
+                      <InputGroup.Text>
+                        <LuCalendarClock
+                          className="text-primary"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </InputGroup.Text>
+                      <Form.Control
+                        type="date"
+                        value={jour.day}
+                        onChange={(e) =>
+                          handleJourChange(index, "day", e.target.value)
+                        }
+                        min={new Date().toISOString().split("T")[0]}
+                      />
+                    </InputGroup>
+                  </div>
+                  <div className="flex-grow-1 me-3">
+                    <Form.Label>Heure de début</Form.Label>
+                    <InputGroup className="mb-3">
+                      <InputGroup.Text>
+                        <LuCalendarClock
+                          className="text-primary"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </InputGroup.Text>
+                      <Form.Control
+                        type="time"
+                        value={jour.startTime}
+                        onChange={(e) =>
+                          handleJourChange(index, "startTime", e.target.value)
+                        }
+                      />
+                    </InputGroup>
+                  </div>
+                  <div className="flex-grow-1">
+                    <Form.Label>Heure de fin</Form.Label>
+                    <InputGroup className="mb-3">
+                      <InputGroup.Text>
+                        <LuCalendarClock
+                          className="text-primary"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </InputGroup.Text>
+                      <Form.Control
+                        type="time"
+                        value={jour.endTime}
+                        onChange={(e) =>
+                          handleJourChange(index, "endTime", e.target.value)
+                        }
+                      />
+                    </InputGroup>
+                  </div>
+                  {index !== 0 && (
+                    <Button
+                      onClick={() => removeJour(index)}
+                      className="btn btn-sm btn-rounded btn-inverse-danger m-3"
+                    >
+                      <MdDeleteForever size={30} />
+                    </Button>
+                  )}
+                </div>
+              ))}
+          </Form.Group>
+          <div className="d-flex justify-content-end">
+            <Button
+              className="mb-3 mt-0 btn btn-rounded btn-inverse-info"
+              onClick={handleAddJour}
+            >
+              Ajouter un jour <FaPlusCircle size={25} />
+            </Button>
+          </div>
           <div className="mt-5 d-flex justify-content-center">
             <Button
               type="submit"

@@ -144,6 +144,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-session/{id}', [SessionController::class, 'update']);
     Route::post('/add-session', [SessionController::class, 'store']);
     Route::delete('/delete-session/{id}', [SessionController::class, 'destroy']);
+    Route::get('/session-days/{sessionID}', [SessionController::class, 'getDaysOfSession']);
+    Route::get('/session/{startDate}/{endDate}/{reference}', [SessionController::class, 'getSessionByCriteria']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {

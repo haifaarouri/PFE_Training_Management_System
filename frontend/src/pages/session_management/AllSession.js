@@ -10,6 +10,7 @@ import {
   deleteSession,
   fetchAllSessions,
   fetchSessionById,
+  getSessionByCriteria,
 } from "../../services/SessionServices";
 import Swal from "sweetalert2";
 import { Modal, Button, Tooltip, OverlayTrigger } from "react-bootstrap";
@@ -17,6 +18,8 @@ import { BiSolidCalendarEdit } from "react-icons/bi";
 import SessionEditModal from "../../components/SessionEditModal";
 import { AiFillDelete } from "react-icons/ai";
 import { ToastContainer, toast } from "react-toastify";
+import ReservationSalleModal from "../../components/ReservationSalleModal";
+import { RiHomeOfficeLine } from "react-icons/ri";
 
 const CustomEvent = ({ event }) => {
   return (
@@ -65,13 +68,12 @@ const EventOverlay = ({ event }) => {
 
 const EventModal = ({ show, onHide, event }) => {
   const [showEditModal, setShowEditModal] = useState(false);
-  const [sessionToEdit, setSessionToEdit] = useState({});
-  const [session, setSession] = useState(event);
+  const [showRoomReservationModal, setShowRoomReservationModal] =
+    useState(false);
 
   const handleShowEditModal = (s) => {
     if (s && s.id) {
       setShowEditModal(true);
-      setSessionToEdit(s);
     } else {
       console.error("Invalid session data", s);
     }
@@ -79,25 +81,7 @@ const EventModal = ({ show, onHide, event }) => {
 
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-    setSessionToEdit({});
   };
-
-  const fetchData = async (eventId) => {
-    if (!eventId) return;
-    try {
-      const response = await fetchSessionById(eventId);
-      setSession(response);
-    } catch (error) {
-      console.error("Error fetching session details:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (show && event) {
-      setSession(event);
-      fetchData(event.id);
-    }
-  }, [show, event, showEditModal]);
 
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -153,65 +137,88 @@ const EventModal = ({ show, onHide, event }) => {
     });
   };
 
+  const handleShowRoomReservationModal = () =>
+    setShowRoomReservationModal(true);
+
+  const handleCloseRoomReservationModal = () =>
+    setShowRoomReservationModal(false);
+
   return (
-    <Modal
-      show={show}
-      onHide={onHide}
-      size="md"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
-    >
-      <ToastContainer />
-      <Modal.Header closeButton>
-        <Modal.Title
-          id="contained-modal-title-vcenter"
-          style={{ color: "#223e9c" }}
-        >
-          {session.title}
-        </Modal.Title>
-      </Modal.Header>
-      <SessionEditModal
-        onOpen={showEditModal}
-        onClose={handleCloseEditModal}
-        session={sessionToEdit}
-      />
-      <Modal.Body>
-        <div className="d-flex justify-content-between mb-3">
-          <h5 style={{ color: "#1097ff" }}>Formation de {session.reference}</h5>
+    event && (
+      <Modal
+        show={show}
+        onHide={onHide}
+        size="md"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <ToastContainer />
+        <Modal.Header closeButton>
+          <Modal.Title
+            id="contained-modal-title-vcenter"
+            style={{ color: "#223e9c" }}
+          >
+            {event.title}
+          </Modal.Title>
+        </Modal.Header>
+        <SessionEditModal
+          onOpen={showEditModal}
+          onClose={handleCloseEditModal}
+          session={event}
+        />
+        <Modal.Body>
+          <div className="d-flex justify-content-between mb-3">
+            <h5 style={{ color: "#1097ff" }}>Formation de {event.reference}</h5>
+            <div className="d-flex justify-content-between">
+              <Button
+                className="btn-sm btn-icon btn-inverse-info mx-3"
+                onClick={() => handleShowEditModal(event)}
+              >
+                <BiSolidCalendarEdit size={25} />
+              </Button>
+              <Button
+                className="btn-sm btn-icon btn-inverse-danger"
+                onClick={() => handleDeleteSession(event.id)}
+              >
+                <AiFillDelete size={26} />
+              </Button>
+            </div>
+          </div>
           <div className="d-flex justify-content-between">
+            <div>
+              {event.startDate && event.endDate && (
+                <>
+                  <p>
+                    Date et heure de début : {formatDateToFrench(event.startDate)}
+                  </p>
+                  <p>Date et heure de fin : {formatDateToFrench(event.endDate)}</p>
+                </>
+              )}
+              <p>Localisation : {event.location}</p>
+              <p>Durée en heures : {event.duration}</p>
+              <p>Mode de la session : {event.sessionMode}</p>
+              <p>Statut de la session : {event.status}</p>
+            </div>
             <Button
-              className="btn-sm btn-icon btn-inverse-info mx-3"
-              onClick={() => handleShowEditModal(session)}
+              className="btn-sm btn-icon btn-inverse-primary"
+              onClick={handleShowRoomReservationModal}
             >
-              <BiSolidCalendarEdit size={25} />
-            </Button>
-            <Button
-              className="btn-sm btn-icon btn-inverse-danger"
-              onClick={() => handleDeleteSession(session.id)}
-            >
-              <AiFillDelete size={26} />
+              <RiHomeOfficeLine size={26} />
             </Button>
           </div>
-        </div>
-        {session.startDate && session.endDate && (
-          <>
-            <p>
-              Date et heure de début : {formatDateToFrench(session.startDate)}
-            </p>
-            <p>Date et heure de fin : {formatDateToFrench(session.endDate)}</p>
-          </>
-        )}
-        <p>Localisation : {session.location}</p>
-        <p>Durée en heures : {session.duration}</p>
-        <p>Mode de la session : {session.sessionMode}</p>
-        <p>Statut de la session : {session.status}</p>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={onHide} variant="info">
-          Fermer
-        </Button>
-      </Modal.Footer>
-    </Modal>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={onHide} variant="info">
+            Fermer
+          </Button>
+        </Modal.Footer>
+        <ReservationSalleModal
+          show={showRoomReservationModal}
+          onHide={handleCloseRoomReservationModal}
+          session={event}
+        />
+      </Modal>
+    )
   );
 };
 
@@ -245,6 +252,7 @@ const AllSessions = () => {
         location: session.location,
         status: session.status,
         sessionMode: session.sessionMode,
+        style: session.salle_id ? {} : { backgroundColor: "red" },
       }));
       setSessions(fetchedEvents);
     } catch (error) {
@@ -379,6 +387,23 @@ const AllSessions = () => {
     };
   };
 
+  const fetchSessionByCriteria = async (startDate, endDate, reference) => {
+    try {
+      // Format dates to 'YYYY-MM-DDTHH:mm'
+      const formattedStartDate = moment(startDate).format("YYYY-MM-DDTHH:mm");
+      const formattedEndDate = moment(endDate).format("YYYY-MM-DDTHH:mm");
+
+      const session = await getSessionByCriteria(
+        formattedStartDate,
+        formattedEndDate,
+        reference
+      );
+      setEventSelected(session);
+    } catch (error) {
+      console.error("Error fetching session by criteria:", error);
+    }
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -423,7 +448,11 @@ const AllSessions = () => {
                 eventPropGetter={eventStyleGetter}
                 onSelectEvent={(event) => {
                   setModalShow(true);
-                  setEventSelected(event);
+                  fetchSessionByCriteria(
+                    event.start,
+                    event.end,
+                    event.reference
+                  );
                 }}
                 components={{ event: CustomEvent }}
               />

@@ -12,11 +12,17 @@ class JourSession extends Model
         "day",
         "startTime",
         "endTime",
-        "session_id"
+        "session_id",
+        "salle_id"
     ];
 
     public function session()
     {
         return $this->belongsTo(Session::class, 'session_id', 'id');
+    }
+
+    public function salle()
+    {
+        return $this->belongsTo(Salle::class, 'salle_id', 'id');
     }
 }

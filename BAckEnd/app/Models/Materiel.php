@@ -19,4 +19,9 @@ class Materiel extends Model
         'image',
         'technicalSpecifications'
     ];
+
+    public function sessions()
+    {
+        return $this->belongsToMany(Session::class, 'materiel_session');
+    }
 }

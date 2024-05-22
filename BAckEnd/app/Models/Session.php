@@ -19,6 +19,7 @@ class Session extends Model
         'location',
         'status',
         'formation_id',
+        'max_participants'
     ];
 
     public function formation()
@@ -39,5 +40,20 @@ class Session extends Model
     public function participants()
     {
         return $this->belongsToMany(Participant::class, 'participant_session');
+    }
+
+    public function commandes()
+    {
+        return $this->hasMany(Commande::class);
+    }
+
+    public function formateurs()
+    {
+        return $this->belongsToMany(Formateur::class, 'formateur_session');
+    }
+
+    public function materials()
+    {
+        return $this->belongsToMany(Materiel::class, 'materiel_session');
     }
 }

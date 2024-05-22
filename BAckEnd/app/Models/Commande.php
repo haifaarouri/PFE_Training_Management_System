@@ -21,4 +21,8 @@ class Commande extends Model
     {
         return $this->hasMany(Produit::class);
     }
+
+    public function session() {
+        return $this->belongsTo(Session::class);
+    }
 }

@@ -29,6 +29,39 @@ export const fetchSessionById = async (id) => {
   }
 };
 
+export const fetchSessionDays = async (id) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/session-days/${id}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`session-days/${id}`);
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching days of seesion with this id :", error);
+  }
+};
+
+export const getSessionByCriteria = async (startDate, endDate, reference) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(
+        `/api/session/${startDate}/${endDate}/${reference}`
+      );
+      return response.data;
+    } else {
+      const response = await apiFetch(
+        `session/${startDate}/${endDate}/${reference}`
+      );
+      return response;
+    }
+  } catch (error) {
+    console.error("Error fetching session by criteria:", error);
+    return null;
+  }
+};
+
 export const editSession = async (id, formData) => {
   try {
     if (!localStorage.getItem("token")) {
