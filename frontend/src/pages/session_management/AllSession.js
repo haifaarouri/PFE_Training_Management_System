@@ -9,11 +9,11 @@ import EventCreationModal from "../../components/EventCreationModal";
 import {
   deleteSession,
   fetchAllSessions,
-  fetchSessionById,
+  fetchSessionDays,
   getSessionByCriteria,
 } from "../../services/SessionServices";
 import Swal from "sweetalert2";
-import { Modal, Button, Tooltip, OverlayTrigger } from "react-bootstrap";
+import { Modal, Button, Tooltip, OverlayTrigger, Card } from "react-bootstrap";
 import { BiSolidCalendarEdit } from "react-icons/bi";
 import SessionEditModal from "../../components/SessionEditModal";
 import { AiFillDelete } from "react-icons/ai";
@@ -70,6 +70,11 @@ const EventModal = ({ show, onHide, event }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRoomReservationModal, setShowRoomReservationModal] =
     useState(false);
+  const [daySessions, setDaySessions] = useState([]);
+
+  useEffect(() => {
+    event && event.id && fetchSessionDays(event.id).then(setDaySessions);
+  }, [event]);
 
   const handleShowEditModal = (s) => {
     if (s && s.id) {
@@ -148,12 +153,14 @@ const EventModal = ({ show, onHide, event }) => {
       <Modal
         show={show}
         onHide={onHide}
-        size="md"
+        size="lg"
         aria-labelledby="contained-modal-title-vcenter"
         centered
+        className="event-modal"
+        fullscreen="lg-down"
       >
         <ToastContainer />
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="modal-header-custom">
           <Modal.Title
             id="contained-modal-title-vcenter"
             style={{ color: "#223e9c" }}
@@ -166,44 +173,90 @@ const EventModal = ({ show, onHide, event }) => {
           onClose={handleCloseEditModal}
           session={event}
         />
-        <Modal.Body>
-          <div className="d-flex justify-content-between mb-3">
-            <h5 style={{ color: "#1097ff" }}>Formation de {event.reference}</h5>
-            <div className="d-flex justify-content-between">
-              <Button
-                className="btn-sm btn-icon btn-inverse-info mx-3"
-                onClick={() => handleShowEditModal(event)}
-              >
-                <BiSolidCalendarEdit size={25} />
-              </Button>
-              <Button
-                className="btn-sm btn-icon btn-inverse-danger"
-                onClick={() => handleDeleteSession(event.id)}
-              >
-                <AiFillDelete size={26} />
-              </Button>
-            </div>
-          </div>
-          <div className="d-flex justify-content-between">
-            <div>
+        <Modal.Body className="modal-body-custom">
+          <Card className="mb-3">
+            <Card.Body>
+              <div className="d-flex justify-content-between">
+                <h5 className="text-primary align-self-center">
+                  Formation de {event.reference}
+                </h5>
+                <div className="d-flex">
+                  <Button
+                    className="btn-sm btn-inverse-info mx-1"
+                    onClick={() => handleShowEditModal(event)}
+                  >
+                    Modifier <BiSolidCalendarEdit size={25} />
+                  </Button>
+                  <Button
+                    className="btn-sm btn-inverse-danger mx-1"
+                    onClick={() => handleDeleteSession(event.id)}
+                  >
+                    Supprimer <AiFillDelete size={26} />
+                  </Button>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+          <Card className="mb-3">
+            <Card.Body>
               {event.startDate && event.endDate && (
                 <>
                   <p>
-                    Date et heure de début : {formatDateToFrench(event.startDate)}
+                    <i className="fas fa-calendar-alt"></i>{" "}
+                    <b>Date et heure de début : </b>
+                    {formatDateToFrench(event.startDate)}
                   </p>
-                  <p>Date et heure de fin : {formatDateToFrench(event.endDate)}</p>
+                  <p>
+                    <i className="fas fa-calendar-alt"></i>{" "}
+                    <b>Date et heure de fin : </b>
+                    {formatDateToFrench(event.endDate)}
+                  </p>
                 </>
               )}
-              <p>Localisation : {event.location}</p>
-              <p>Durée en heures : {event.duration}</p>
-              <p>Mode de la session : {event.sessionMode}</p>
-              <p>Statut de la session : {event.status}</p>
-            </div>
+              <p>
+                <i className="fas fa-map-marker-alt"></i> <b>Localisation : </b>{" "}
+                {event.location}
+              </p>
+              <p>
+                <i className="fas fa-clock"></i> <b>Durée en heures : </b>
+                {event.duration}
+              </p>
+              <p>
+                <i className="fas fa-chalkboard-teacher"></i>{" "}
+                <b>Mode de la session : </b>
+                {event.sessionMode}
+              </p>
+              <p>
+                <i className="fas fa-info-circle"></i>{" "}
+                <b>Statut de la session : </b>
+                {event.status}
+              </p>
+            </Card.Body>
+          </Card>
+          {daySessions.length > 0 && (
+            <Card className="mb-3">
+              <Card.Body>
+                <b>Jours :</b>
+                {daySessions.map((d) => (
+                  <p key={d.id}>
+                    <i className="fas fa-calendar-day"></i>{" "}
+                    <b>Date du jour : </b>
+                    {d.day} <br /> <i className="fas fa-clock"></i>{" "}
+                    <b>Heure de début : </b> {d.startTime} -
+                    <i className="fas fa-clock"></i> <b> Heure de fin : </b>{" "}
+                    {d.endTime}
+                  </p>
+                ))}
+              </Card.Body>
+            </Card>
+          )}
+          <div className="d-flex justify-content-center">
             <Button
-              className="btn-sm btn-icon btn-inverse-primary"
+              className="btn-sm btn-inverse-primary"
               onClick={handleShowRoomReservationModal}
             >
-              <RiHomeOfficeLine size={26} />
+              Réserver salle
+              <RiHomeOfficeLine size={25} />
             </Button>
           </div>
         </Modal.Body>

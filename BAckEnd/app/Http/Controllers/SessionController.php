@@ -261,6 +261,7 @@ class SessionController extends Controller
         $jourSessionId = $request->input('jourSessionId');
         $salleId = $request->input('salle_id');
 
+
         $jourSession = JourSession::find($jourSessionId);
         if (!$jourSession || $jourSession->session_id != $sessionId) {
             return response()->json(['error' => 'Jour de session non valide !'], 404);
@@ -269,7 +270,7 @@ class SessionController extends Controller
         //check for the capacity of the room
         $session = Session::findOrFail($sessionId);
         $salle = Salle::where('id', $salleId)
-            ->where('capacity', '>=', $session->participants_count)
+            ->where('capacity', '>=', $session->participants()->count())
             ->first();
 
         if (!$salle) {
@@ -287,49 +288,70 @@ class SessionController extends Controller
         return response()->json(['message' => 'Salle réservée avec succès pour le jour de la session !']);
     }
 
+    //Before a Salle can be reserved, check if there are any JourSession records for the same Salle on the same day that overlap with the desired start and end times.
     private function isSalleAvailable($salleId, $day, $startTime, $endTime)
     {
+
         $conflicts = JourSession::where('salle_id', $salleId)
             ->where('day', $day)
             ->where(function ($query) use ($startTime, $endTime) {
-                $query->whereBetween('startTime', [$startTime, $endTime])
-                    ->orWhereBetween('endTime', [$startTime, $endTime]);
+                $query->where(function ($q) use ($startTime, $endTime) {
+                    $q->where('startTime', '<', $endTime)
+                        ->where('endTime', '>', $startTime);
+                });
             })
             ->exists();
 
         return !$conflicts;
     }
 
-    // public function reserveRoom(Request $request, $sessionId)
-    // {
-    //     $session = Session::findOrFail($sessionId);
-    //     $salle = Salle::where('id', $request->salle_id)
-    //         ->where('capacity', '>=', $session->participants_count)
-    //         ->first();
+    public function isSalleReservedForDay($sessionID, $dayID)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
 
-    //     if (!$salle) {
-    //         return response()->json(['error' => 'Aucune salle disponible avec la capacité requise !'], 404);
-    //     }
+        $jourSession = JourSession::where('session_id', $sessionID)
+            ->where('id', $dayID)
+            ->first();
 
-    //     if (!$this->isSalleAvailable($salle, $session->startDate, $session->endDate)) {
-    //         return response()->json(['error' => 'La salle n\'est pas disponible aux dates sélectionnées !'], 422);
-    //     }
+        if ($jourSession && $jourSession->salle_id) {
+            $salle = Salle::find($jourSession->salle_id);
+            return response()->json(['message' => 'Une salle est réservée pour ce jour de la session', 'salleBooked' => $salle]);
+        } else {
+            return response()->json(['message' => 'Aucune salle n\'est réservée pour ce jour de la session.']);
+        }
+    }
 
-    //     $session->salle_id = $salle->id;
-    //     $session->save();
+    public function getAvailableRoomsForDay($sessionID, $dayID)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
 
-    //     return response()->json(['message' => 'Salle réservée avec succès pour la session !', 'session' => $session]);
-    // }
+        $jourSession = JourSession::where('session_id', $sessionID)
+            ->where('id', $dayID)
+            ->first();
 
-    // //This function is crucial for ensuring that a room is not double-booked for overlapping sessions
-    // private function isSalleAvailable($salle, $startDate, $endDate)
-    // {
-    //     //parcourir la liste de sessions ($salle->sessions) qui sont déjà réservées dans cette salle
-    //     foreach ($salle->sessions as $session) {
-    //         if ($startDate < $session->endDate && $endDate > $session->startDate) {
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
+        if (!$jourSession) {
+            return response()->json(['error' => 'Jour de session non trouvé !'], 404);
+        }
+
+        $startTime = $jourSession->startTime;
+        $endTime = $jourSession->endTime;
+
+        // Get available rooms for the specified day and time
+        $availableRooms = Salle::whereDoesntHave('jourSessions', function ($query) use ($jourSession, $startTime, $endTime) {
+            $query->where('day', $jourSession->day) // Ensure we're checking against the correct day
+                ->where(function ($q) use ($startTime, $endTime) {
+                    $q->where(function ($qq) use ($startTime, $endTime) {
+                        $qq->where('startTime', '<', $endTime)
+                            ->where('endTime', '>', $startTime);
+                    });
+                });
+        })->get();
+
+        return response()->json($availableRooms);
+    }
+
 }

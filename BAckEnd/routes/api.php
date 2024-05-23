@@ -146,6 +146,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::delete('/delete-session/{id}', [SessionController::class, 'destroy']);
     Route::get('/session-days/{sessionID}', [SessionController::class, 'getDaysOfSession']);
     Route::get('/session/{startDate}/{endDate}/{reference}', [SessionController::class, 'getSessionByCriteria']);
+    Route::post('/book-room/{sessionId}', [SessionController::class, 'reserveRoomForSessionDay']);
+    Route::get('/check-booked-room/{sessionId}/{dayID}', [SessionController::class, 'isSalleReservedForDay']);
+    Route::get('/available-rooms/{sessionId}/{dayID}', [SessionController::class, 'getAvailableRoomsForDay']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {

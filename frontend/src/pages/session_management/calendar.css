@@ -90,3 +90,18 @@
 .custom-event span {
   font-size: 12px; /* Smaller text for details */
 }
+
+.event-modal .modal-header-custom {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 20px;
+  text-align: center;
+}
+
+.event-modal .modal-body-custom {
+  padding: 20px;
+}
+
+.event-modal .text-primary {
+  color: #1097ff !important;
+}
