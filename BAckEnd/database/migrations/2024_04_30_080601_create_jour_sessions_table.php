@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->time('endTime');
             $table->foreignId('session_id')->constrained()->onDelete('cascade');
             $table->foreignId('salle_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('formateur_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
     }

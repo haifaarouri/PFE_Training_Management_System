@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Disponibility;
+use App\Models\Formateur;
 use App\Models\Formation;
 use App\Models\JourSession;
+use App\Models\Materiel;
 use App\Models\Salle;
 use App\Models\Session;
 use App\Rules\SessionModeRule;
@@ -354,4 +357,186 @@ class SessionController extends Controller
         return response()->json($availableRooms);
     }
 
+    public function reserveTrainerForSession(Request $request, $sessionId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $formateurId = $request->input('formateurId');
+        $dayId = $request->input('dayId');
+
+        $formateur = Formateur::find($formateurId);
+        if (!$formateur) {
+            return response()->json(['error' => 'Formateur non trouvé !'], 404);
+        }
+
+        $jourSession = JourSession::find($dayId);
+        if (!$jourSession || $jourSession->session_id != $sessionId) {
+            return response()->json(['error' => 'Jour de session non valide !'], 404);
+        }
+
+        // Check if the formateur is available on this day and time and his specialities
+        $result = $this->isFormateurAvailable($formateurId, $jourSession->day, $jourSession->startTime, $jourSession->endTime, $sessionId);
+        if (!$result['success']) {
+            return response()->json(['error' => $result['message']], 422);
+        }
+
+        // Assign the formateur to the day session
+        $jourSession->formateur_id = $formateurId;
+        $jourSession->save();
+
+        return response()->json(['message' => 'Formateur réservé avec succès pour le jour de la session !']);
+    }
+
+    private function isFormateurAvailable($formateurId, $day, $startTime, $endTime, $sessionId)
+    {
+        // Convert day to Carbon instance for comparison
+        $dayCarbon = Carbon::parse($day)->startOfDay();
+
+        // Check for any overlapping sessions
+        $conflicts = JourSession::where('formateur_id', $formateurId)
+            ->where('day', $day)
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->where('startTime', '<', $endTime)
+                    ->where('endTime', '>', $startTime);
+            })
+            ->exists();
+
+        if ($conflicts) {
+            return ['success' => false, 'message' => 'Le formateur a déjà une session à ces heures !'];
+        }
+
+        // Check formateur availability using startDate and endDate
+        $available = Disponibility::where('formateur_id', $formateurId)
+            ->where('startDate', '<=', $dayCarbon)
+            ->where('endDate', '>=', $dayCarbon)
+            ->exists();
+
+        if (!$available) {
+            return ['success' => false, 'message' => 'Le formateur n\'est pas disponible pendant ces dates !'];
+        }
+
+        // Check if formateur's specialty matches the session's formation requirement
+        $session = Session::with('formation')->find($sessionId);
+        if (!$session || !$session->formation) {
+            return ['success' => false, 'message' => 'Session non trouvée !'];
+        }
+
+        if (!$session->formation) {
+            return ['success' => false, 'message' => 'Formation non trouvée !'];
+        }
+
+        $formateur = Formateur::find($formateurId);
+        if (!$formateur) {
+            return ['success' => false, 'message' => 'Formateur non trouvé !'];
+        }
+
+        // Convert formateur specialties to an array
+        $formateurSpecialities = explode(',', $formateur->speciality);
+        $formationRequirements = explode(',', $session->formation->requirements);
+        $formationCategory = $session->formation->sousCategory->category->category_name ?? null;
+        $formationSubCategorie = $session->formation->sousCategory->sous_category_name ?? null;
+        $formationSpecialties = array_merge($formationRequirements, [$formationCategory], [$formationSubCategorie]);
+        $formationSpecialties = array_filter($formationSpecialties);
+        $matches = array_intersect($formateurSpecialities, $formationSpecialties);
+
+        if (empty($matches)) {
+            return ['success' => false, 'message' => 'La spécialité du formateur ne correspond pas aux exigences de la formation !'];
+        }
+
+        return ['success' => true];
+    }
+
+    public function getJourSessionsForTrainer($formateurId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $jourSessions = JourSession::whereHas('formateur', function ($query) use ($formateurId) {
+            $query->where('formateur_id', $formateurId);
+        })->get();
+
+        return response()->json($jourSessions);
+    }
+
+    public function getAvailableTrinersForDay($sessionID, $dayID)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $jourSession = JourSession::where('session_id', $sessionID)
+            ->where('id', $dayID)
+            ->first();
+
+        if (!$jourSession) {
+            return response()->json(['error' => 'Jour de session non trouvé !'], 404);
+        }
+
+        $day = $jourSession->day;
+        $startTime = $jourSession->startTime;
+        $endTime = $jourSession->endTime;
+
+        // Get available trainers for the specified day and time
+        $availableTrainers = Formateur::whereDoesntHave('jourSessions', function ($query) use ($day, $startTime, $endTime) {
+            $query->where('day', $day) // Ensure we're checking against the correct day
+                ->where(function ($q) use ($startTime, $endTime) {
+                    $q->where(function ($qq) use ($startTime, $endTime) {
+                        $qq->where('startTime', '<', $endTime)
+                            ->where('endTime', '>', $startTime);
+                    });
+                });
+        })->whereHas('disponibilities', function ($query) use ($day) {
+            $query->where('startDate', '<=', $day)
+                ->where('endDate', '>=', $day);
+        })->get();
+
+        return response()->json($availableTrainers);
+    }
+
+    public function reserveMaterialsForSession(Request $request, $sessionId)
+    {
+        $session = Session::find($sessionId);
+        if (!$session) {
+            return response()->json(['error' => 'Session non trouvée !'], 404);
+        }
+
+        $type = $request->input('materialType');
+        $requiredQuantity = $request->input('quantity');
+        $sessionStartDate = Carbon::parse($session->startDate);
+        $sessionEndDate = Carbon::parse($session->endDate);
+
+        $materials = Materiel::where('type', $type)
+            ->whereDoesntHave('sessions', function ($query) use ($sessionStartDate, $sessionEndDate) {
+                $query->where(function ($q) use ($sessionStartDate, $sessionEndDate) {
+                    $q->whereBetween('session_materiel.startDate', [$sessionStartDate, $sessionEndDate])
+                        ->orWhereBetween('session_materiel.endDate', [$sessionStartDate, $sessionEndDate])
+                        ->orWhere(function ($qq) use ($sessionStartDate, $sessionEndDate) {
+                            $qq->where('session_materiel.startDate', '<', $sessionStartDate)
+                                ->where('session_materiel.endDate', '>', $sessionEndDate);
+                        });
+                });
+            })
+            ->get();
+
+        $availableQuantity = count($materials);
+
+        if ($availableQuantity < $requiredQuantity) {
+            return response()->json(['error' => 'Pas assez de matériel disponible !'], 422);
+        }
+
+        foreach ($materials as $material) {
+            if ($requiredQuantity <= 0)
+                break;
+            // $useQuantity = min($material->quantityAvailable, $requiredQuantity);
+            $availableQuantity -= $requiredQuantity;
+            $material->save();
+            $session->materials()->attach($material->id, ['quantity' => $requiredQuantity, 'startDate' => $sessionStartDate, 'endDate' => $sessionEndDate]);
+            $requiredQuantity -= $requiredQuantity;
+        }
+
+        return response()->json(['message' => 'Materiaux réservés avec succès !']);
+    }
 }

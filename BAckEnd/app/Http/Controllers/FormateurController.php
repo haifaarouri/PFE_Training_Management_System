@@ -278,4 +278,18 @@ class FormateurController extends Controller
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
     }
+
+    public function filterBySpeciality($speciality)
+    {
+        if ($this->list_roles->contains(auth()->user()->role)) {
+            $formateurs = Formateur::where('speciality', 'LIKE', '%' . $speciality . '%')->get();
+            if ($formateurs->isEmpty()) {
+                return response()->json(['error' => 'Pas de formateurs avec cette spécialité !'], 404);
+            }
+            return response()->json($formateurs);
+        } else {
+            // User does not have access, return a 403 response
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+    }
 }

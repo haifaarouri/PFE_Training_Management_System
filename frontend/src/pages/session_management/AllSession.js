@@ -8,7 +8,9 @@ import { useCallback, useEffect, useState } from "react";
 import EventCreationModal from "../../components/EventCreationModal";
 import {
   deleteSession,
+  editSession,
   fetchAllSessions,
+  fetchSessionById,
   fetchSessionDays,
   getSessionByCriteria,
 } from "../../services/SessionServices";
@@ -20,6 +22,12 @@ import { AiFillDelete } from "react-icons/ai";
 import { ToastContainer, toast } from "react-toastify";
 import ReservationSalleModal from "../../components/ReservationSalleModal";
 import { RiHomeOfficeLine } from "react-icons/ri";
+import { Toaster } from "sonner";
+import { GiTeacher } from "react-icons/gi";
+import { FaCartArrowDown } from "react-icons/fa";
+import { MdLaptopChromebook } from "react-icons/md";
+import ReservationTrainersModal from "../../components/ReservationTrainersModal";
+import ReserveMaterialForSessionModal from "../../components/ReserveMaterialForSessionModal";
 
 const CustomEvent = ({ event }) => {
   return (
@@ -71,10 +79,17 @@ const EventModal = ({ show, onHide, event }) => {
   const [showRoomReservationModal, setShowRoomReservationModal] =
     useState(false);
   const [daySessions, setDaySessions] = useState([]);
+  const [sessionAfterEdit, setSessionAfterEdit] = useState(null);
+  const [showBookTrainersModal, setShowBookTrainersModal] = useState(false);
+  const [showBookMaterialsModal, setShowBookMaterialsModal] = useState(false);
 
   useEffect(() => {
     event && event.id && fetchSessionDays(event.id).then(setDaySessions);
-  }, [event]);
+  }, [event, showEditModal]);
+
+  useEffect(() => {
+    event && event.id && fetchSessionById(event.id).then(setSessionAfterEdit);
+  }, [showEditModal]);
 
   const handleShowEditModal = (s) => {
     if (s && s.id) {
@@ -148,6 +163,18 @@ const EventModal = ({ show, onHide, event }) => {
   const handleCloseRoomReservationModal = () =>
     setShowRoomReservationModal(false);
 
+  const handleShowTrainersReservationModal = () =>
+    setShowBookTrainersModal(true);
+
+  const handleCloseTrainersReservationModal = () =>
+    setShowBookTrainersModal(false);
+
+  const handleShowMaterialReservationModal = () =>
+    setShowBookMaterialsModal(true);
+
+  const handleCloseMaterialsReservationModal = () =>
+    setShowBookMaterialsModal(false);
+
   return (
     event && (
       <Modal
@@ -165,7 +192,7 @@ const EventModal = ({ show, onHide, event }) => {
             id="contained-modal-title-vcenter"
             style={{ color: "#223e9c" }}
           >
-            {event.title}
+            {event.title || (sessionAfterEdit && sessionAfterEdit.title)}
           </Modal.Title>
         </Modal.Header>
         <SessionEditModal
@@ -174,65 +201,133 @@ const EventModal = ({ show, onHide, event }) => {
           session={event}
         />
         <Modal.Body className="modal-body-custom">
-          <Card className="mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between">
-                <h5 className="text-primary align-self-center">
-                  Formation de {event.reference}
-                </h5>
-                <div className="d-flex">
-                  <Button
-                    className="btn-sm btn-inverse-info mx-1"
-                    onClick={() => handleShowEditModal(event)}
-                  >
-                    Modifier <BiSolidCalendarEdit size={25} />
-                  </Button>
-                  <Button
-                    className="btn-sm btn-inverse-danger mx-1"
-                    onClick={() => handleDeleteSession(event.id)}
-                  >
-                    Supprimer <AiFillDelete size={26} />
-                  </Button>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-          <Card className="mb-3">
-            <Card.Body>
-              {event.startDate && event.endDate && (
-                <>
+          {sessionAfterEdit ? (
+            <>
+              <Card className="mb-3">
+                <Card.Body>
+                  <div className="d-flex justify-content-between">
+                    <h5 className="text-primary align-self-center">
+                      Formation de {sessionAfterEdit.reference}
+                    </h5>
+                    <div className="d-flex">
+                      <Button
+                        className="btn-sm btn-inverse-info mx-1"
+                        onClick={() => handleShowEditModal(sessionAfterEdit)}
+                      >
+                        Modifier <BiSolidCalendarEdit size={25} />
+                      </Button>
+                      <Button
+                        className="btn-sm btn-inverse-danger mx-1"
+                        onClick={() => handleDeleteSession(sessionAfterEdit.id)}
+                      >
+                        Supprimer <AiFillDelete size={26} />
+                      </Button>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+              <Card className="mb-3">
+                <Card.Body>
+                  {sessionAfterEdit.startDate && sessionAfterEdit.endDate && (
+                    <>
+                      <p>
+                        <i className="fas fa-calendar-alt"></i>{" "}
+                        <b>Date et heure de début : </b>
+                        {formatDateToFrench(sessionAfterEdit.startDate)}
+                      </p>
+                      <p>
+                        <i className="fas fa-calendar-alt"></i>{" "}
+                        <b>Date et heure de fin : </b>
+                        {formatDateToFrench(sessionAfterEdit.endDate)}
+                      </p>
+                    </>
+                  )}
                   <p>
-                    <i className="fas fa-calendar-alt"></i>{" "}
-                    <b>Date et heure de début : </b>
-                    {formatDateToFrench(event.startDate)}
+                    <i className="fas fa-map-marker-alt"></i>{" "}
+                    <b>Localisation : </b> {sessionAfterEdit.location}
                   </p>
                   <p>
-                    <i className="fas fa-calendar-alt"></i>{" "}
-                    <b>Date et heure de fin : </b>
-                    {formatDateToFrench(event.endDate)}
+                    <i className="fas fa-clock"></i> <b>Durée en heures : </b>
+                    {sessionAfterEdit.duration}
                   </p>
-                </>
-              )}
-              <p>
-                <i className="fas fa-map-marker-alt"></i> <b>Localisation : </b>{" "}
-                {event.location}
-              </p>
-              <p>
-                <i className="fas fa-clock"></i> <b>Durée en heures : </b>
-                {event.duration}
-              </p>
-              <p>
-                <i className="fas fa-chalkboard-teacher"></i>{" "}
-                <b>Mode de la session : </b>
-                {event.sessionMode}
-              </p>
-              <p>
-                <i className="fas fa-info-circle"></i>{" "}
-                <b>Statut de la session : </b>
-                {event.status}
-              </p>
-            </Card.Body>
-          </Card>
+                  <p>
+                    <i className="fas fa-chalkboard-teacher"></i>{" "}
+                    <b>Mode de la session : </b>
+                    {sessionAfterEdit.sessionMode}
+                  </p>
+                  <p>
+                    <i className="fas fa-info-circle"></i>{" "}
+                    <b>Statut de la session : </b>
+                    {sessionAfterEdit.status}
+                  </p>
+                </Card.Body>
+              </Card>
+            </>
+          ) : (
+            event && (
+              <>
+                <Card className="mb-3">
+                  <Card.Body>
+                    <div className="d-flex justify-content-between">
+                      <h5 className="text-primary align-self-center">
+                        Formation de {event.reference}
+                      </h5>
+                      <div className="d-flex">
+                        <Button
+                          className="btn-sm btn-inverse-info mx-1"
+                          onClick={() => handleShowEditModal(event)}
+                        >
+                          Modifier <BiSolidCalendarEdit size={25} />
+                        </Button>
+                        <Button
+                          className="btn-sm btn-inverse-danger mx-1"
+                          onClick={() => handleDeleteSession(event.id)}
+                        >
+                          Supprimer <AiFillDelete size={26} />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+                <Card className="mb-3">
+                  <Card.Body>
+                    {event.startDate && event.endDate && (
+                      <>
+                        <p>
+                          <i className="fas fa-calendar-alt"></i>{" "}
+                          <b>Date et heure de début : </b>
+                          {formatDateToFrench(event.startDate)}
+                        </p>
+                        <p>
+                          <i className="fas fa-calendar-alt"></i>{" "}
+                          <b>Date et heure de fin : </b>
+                          {formatDateToFrench(event.endDate)}
+                        </p>
+                      </>
+                    )}
+                    <p>
+                      <i className="fas fa-map-marker-alt"></i>{" "}
+                      <b>Localisation : </b> {event.location}
+                    </p>
+                    <p>
+                      <i className="fas fa-clock"></i> <b>Durée en heures : </b>
+                      {event.duration}
+                    </p>
+                    <p>
+                      <i className="fas fa-chalkboard-teacher"></i>{" "}
+                      <b>Mode de la session : </b>
+                      {event.sessionMode}
+                    </p>
+                    <p>
+                      <i className="fas fa-info-circle"></i>{" "}
+                      <b>Statut de la session : </b>
+                      {event.status}
+                    </p>
+                  </Card.Body>
+                </Card>
+              </>
+            )
+          )}
           {daySessions.length > 0 && (
             <Card className="mb-3">
               <Card.Body>
@@ -250,15 +345,40 @@ const EventModal = ({ show, onHide, event }) => {
               </Card.Body>
             </Card>
           )}
-          <div className="d-flex justify-content-center">
-            <Button
-              className="btn-sm btn-inverse-primary"
-              onClick={handleShowRoomReservationModal}
-            >
-              Réserver salle
-              <RiHomeOfficeLine size={25} />
-            </Button>
-          </div>
+          <Card>
+            <Card.Body>
+              <div className="d-flex justify-content-between">
+                <Button
+                  className="btn-sm btn-inverse-primary"
+                  onClick={handleShowRoomReservationModal}
+                >
+                  Réserver salles
+                  <RiHomeOfficeLine size={25} />
+                </Button>
+                <Button
+                  className="btn-sm btn-inverse-primary"
+                  onClick={handleShowTrainersReservationModal}
+                >
+                  Réserver formateurs
+                  <GiTeacher size={25} />
+                </Button>
+                <Button
+                  className="btn-sm btn-inverse-primary"
+                  onClick={handleShowMaterialReservationModal}
+                >
+                  Réserver matériaux
+                  <MdLaptopChromebook size={25} />
+                </Button>
+                <Button
+                  className="btn-sm btn-inverse-primary"
+                  onClick={handleShowRoomReservationModal}
+                >
+                  Passer commandes
+                  <FaCartArrowDown size={25} />
+                </Button>
+              </div>
+            </Card.Body>
+          </Card>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={onHide} variant="info">
@@ -268,6 +388,16 @@ const EventModal = ({ show, onHide, event }) => {
         <ReservationSalleModal
           show={showRoomReservationModal}
           onHide={handleCloseRoomReservationModal}
+          session={event}
+        />
+        <ReservationTrainersModal
+          show={showBookTrainersModal}
+          onHide={handleCloseTrainersReservationModal}
+          session={event}
+        />
+        <ReserveMaterialForSessionModal
+          show={showBookMaterialsModal}
+          onHide={handleCloseMaterialsReservationModal}
           session={event}
         />
       </Modal>
@@ -344,18 +474,118 @@ const AllSessions = () => {
     });
   }, []);
 
+  const toUTCDate = (date) => {
+    const localDate = new Date(date);
+    return new Date(
+      Date.UTC(
+        localDate.getFullYear(),
+        localDate.getMonth(),
+        localDate.getDate(),
+        localDate.getHours(),
+        localDate.getMinutes()
+      )
+    );
+  };
+
+  const confirmAndSaveChanges = useCallback(async (start, end, eventId) => {
+    const fullEvent = sessions.find((e) => e.id === eventId);
+    if (!fullEvent) {
+      Swal.fire("Erreur !", "Session non trouvée !", "error");
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Êtes-vous sûre?",
+      text: "Voulez-vous enregistrer les modifications ?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, enregistrer !",
+    });
+    console.log(fullEvent);
+    if (result.isConfirmed) {
+      try {
+        const updatedEvent = {
+          ...fullEvent,
+          start: new Date(start),
+          end: new Date(end),
+        };
+        console.log(updatedEvent);
+        const formattedStartDate = toUTCDate(updatedEvent.start)
+          .toISOString()
+          .slice(0, 16);
+        const formattedEndDate = toUTCDate(updatedEvent.end)
+          .toISOString()
+          .slice(0, 16);
+
+        const formData = new FormData();
+        formData.append("_method", "PUT");
+        formData.append("title", updatedEvent.title);
+        formData.append("startDate", formattedStartDate);
+        formData.append("endDate", formattedEndDate);
+        formData.append("duration", updatedEvent.duration);
+        formData.append("reference", updatedEvent.reference);
+        formData.append("location", updatedEvent.location);
+        formData.append("status", updatedEvent.status);
+        formData.append("sessionMode", updatedEvent.sessionMode);
+        formData.append("max_participants", updatedEvent.max_participants);
+
+        const days = await fetchSessionDays(updatedEvent.id);
+        days.forEach((jour, index) => {
+          const formattedStartTime = new Date(
+            "1970-01-01T" + jour.startTime
+          ).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+          const formattedEndTime = new Date(
+            "1970-01-01T" + jour.endTime
+          ).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+          formData.append(`jours[${index}][day]`, jour.day);
+          formData.append(`jours[${index}][startTime]`, formattedStartTime);
+          formData.append(`jours[${index}][endTime]`, formattedEndTime);
+        });
+
+        const res = await editSession(eventId, formData);
+
+        if (res) {
+          setSessions((prevEvents) => {
+            return prevEvents.map((e) => {
+              if (e.id === eventId) {
+                return updatedEvent;
+              }
+              return e;
+            });
+          });
+
+          Swal.fire(
+            "Enregistré !",
+            "Votre session a été mise à jour !",
+            "success"
+          );
+        }
+      } catch (error) {
+        console.log(error);
+        Swal.fire(
+          "Echec !",
+          "Un problème est survenu lors de la mise à jour de votre session !",
+          "error"
+        );
+      }
+    }
+  }, []);
+
   const onEventDrop = useCallback(
     ({ event, start, end }) => {
-      onChangeEventTime(start, end, event.id);
+      confirmAndSaveChanges(start, end, event.id);
     },
-    [onChangeEventTime]
+    [confirmAndSaveChanges, sessions]
   );
 
   const onEventResize = useCallback(
     ({ event, start, end }) => {
-      onChangeEventTime(start, end, event.id);
+      confirmAndSaveChanges(start, end, event.id);
     },
-    [onChangeEventTime]
+    [confirmAndSaveChanges, sessions]
   );
 
   const handleSelectSlot = (slotInfo) => {
@@ -475,6 +705,7 @@ const AllSessions = () => {
                   Ajouter une session
                 </Button>
               </div>
+              <Toaster richColors expand={false} position="top-center" />
               <EventCreationModal
                 isOpen={showModal}
                 onClose={handleCloseAddModal}

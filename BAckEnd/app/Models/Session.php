@@ -47,13 +47,8 @@ class Session extends Model
         return $this->hasMany(Commande::class);
     }
 
-    public function formateurs()
-    {
-        return $this->belongsToMany(Formateur::class, 'formateur_session');
-    }
-
     public function materials()
     {
-        return $this->belongsToMany(Materiel::class, 'materiel_session');
+        return $this->belongsToMany(Materiel::class, 'session_materiel')->withPivot('quantity', 'startDate', 'endDate');
     }
 }

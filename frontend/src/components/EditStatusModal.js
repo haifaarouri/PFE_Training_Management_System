@@ -52,9 +52,10 @@ const EditStatusModal = ({
       if (!localStorage.getItem("token")) {
         const res = await axios.post(
           `${
-            !statusType === "ParticipationStatus"
+            statusType === "InscriptionStatus"
               ? `/api/update-register-status/${candidatId}/${formationId}`
-              : `/api/update-session-status/${participantId}/${sessionId}`
+              : statusType === "ParticipationStatus" &&
+                `/api/update-session-status/${participantId}/${sessionId}`
           }`,
           formData,
           {
@@ -88,9 +89,10 @@ const EditStatusModal = ({
 
         const response = await axios.post(
           `${
-            !statusType === "ParticipationStatus"
+            statusType === "InscriptionStatus"
               ? `/api/update-register-status/${candidatId}/${formationId}`
-              : `/api/update-session-status/${participantId}/${sessionId}`
+              : statusType === "ParticipationStatus" &&
+                `/api/update-session-status/${participantId}/${sessionId}`
           }`,
           formData,
           {
@@ -132,16 +134,18 @@ const EditStatusModal = ({
     >
       <Modal.Header closeButton>
         <Modal.Title>
-          {!statusType === "ParticipationStatus" ? (
+          {statusType === "InscriptionStatus" ? (
             <h5 className="modal-title">
               Formulaire pour modifier le status d'inscription du Candidat ID :{" "}
               {candidatId} à la Formation ID : {formationId}
             </h5>
           ) : (
-            <h5 className="modal-title">
-              Formulaire pour modifier le status de participation du Participant
-              ID : {participantId} à la Session ID : {sessionId}
-            </h5>
+            statusType === "ParticipationStatus" && (
+              <h5 className="modal-title">
+                Formulaire pour modifier le status de participation du
+                Participant ID : {participantId} à la Session ID : {sessionId}
+              </h5>
+            )
           )}
         </Modal.Title>
       </Modal.Header>
@@ -153,7 +157,7 @@ const EditStatusModal = ({
           className="p-4"
           onSubmit={handleRegisterCandidatToFormation}
         >
-          {!statusType === "ParticipationStatus" ? (
+          {statusType === "InscriptionStatus" ? (
             <Form.Group className="mb-3">
               <Form.Label>Statut d'inscription</Form.Label>
               <InputGroup className="mb-3">
@@ -185,38 +189,42 @@ const EditStatusModal = ({
               </InputGroup>
             </Form.Group>
           ) : (
-            <Form.Group className="mb-3">
-              <Form.Label>Statut de participation</Form.Label>
-              <InputGroup className="mb-3">
-                <InputGroup.Text id="inputGroup-sizing-default">
-                  <div className="input-group-prepend bg-transparent">
-                    <span className="input-group-text bg-transparent border-right-0">
-                      <FaBookReader
-                        className="text-primary"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </span>
-                  </div>
-                </InputGroup.Text>
-                <Form.Select
-                  name="registerStatus"
-                  value={registerStatus}
-                  onChange={(e) => setRegisterStatus(e.target.value)}
-                  required
-                >
-                  <option value="">
-                    Séléctionner le statut de participation
-                  </option>
-                  <option value="EnAttente">EnAttente</option>
-                  <option value="Absent">Absent</option>
-                  <option value="Présent">Présent</option>
-                </Form.Select>
-                <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-                <Form.Control.Feedback type="invalid">
-                  Veuillez saisir le statut de participation !
-                </Form.Control.Feedback>
-              </InputGroup>
-            </Form.Group>
+            statusType === "ParticipationStatus" && (
+              <Form.Group className="mb-3">
+                <Form.Label>Statut de participation</Form.Label>
+                <InputGroup className="mb-3">
+                  <InputGroup.Text id="inputGroup-sizing-default">
+                    <div className="input-group-prepend bg-transparent">
+                      <span className="input-group-text bg-transparent border-right-0">
+                        <FaBookReader
+                          className="text-primary"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </span>
+                    </div>
+                  </InputGroup.Text>
+                  <Form.Select
+                    name="registerStatus"
+                    value={registerStatus}
+                    onChange={(e) => setRegisterStatus(e.target.value)}
+                    required
+                  >
+                    <option value="">
+                      Séléctionner le statut de participation
+                    </option>
+                    <option value="EnAttente">EnAttente</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Présent">Présent</option>
+                  </Form.Select>
+                  <Form.Control.Feedback>
+                    Cela semble bon !
+                  </Form.Control.Feedback>
+                  <Form.Control.Feedback type="invalid">
+                    Veuillez saisir le statut de participation !
+                  </Form.Control.Feedback>
+                </InputGroup>
+              </Form.Group>
+            )
           )}
           <div className="mt-5 d-flex justify-content-center">
             <Button

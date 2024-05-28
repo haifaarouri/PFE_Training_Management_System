@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Modal, Button, Form, InputGroup } from "react-bootstrap";
+import { Modal, Button, Form, InputGroup, Alert } from "react-bootstrap";
 import { fetchAllSessions } from "../services/SessionServices";
 import Swal from "sweetalert2";
 import axios from "../services/axios";
@@ -162,36 +162,12 @@ const ParticipateSessionModal = ({ show, handleClose, participantId }) => {
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
-          {/* <Form.Group controlId="sessionSelect" className="mb-3">
-            <Form.Label>
-              Séléctionner une Sessions pour ce Participant
-            </Form.Label>
-            <InputGroup className="mb-3">
-              <InputGroup.Text id="inputGroup-sizing-default">
-                <div className="input-group-prepend bg-transparent">
-                  <span className="input-group-text bg-transparent border-right-0">
-                    <BsCalendarRange
-                      className="text-primary"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </span>
-                </div>
-              </InputGroup.Text>
-              <Form.Select
-                value={selectedSession}
-                onChange={(e) => setSelectedSession(e.target.value)}
-              >
-                <option value="">Sélectionner le statut de participation</option>
-                <option value="Présent">Présent</option>
-                <option value="Absent">Absent</option>
-                <option value="EnAttente">EnAttente</option>
-              </Form.Select>
-              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-              <Form.Control.Feedback type="invalid">
-                Veuillez Séléctionner une session !
-              </Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group> */}
+          {sessions.length === 0 && (
+            <Alert variant="danger">
+              Il n'y a pas encore de session ouverte pour la formation à
+              laquelle ce candidat est inscrit!
+            </Alert>
+          )}
           <div className="mt-5 d-flex justify-content-center">
             <Button
               variant="primary"

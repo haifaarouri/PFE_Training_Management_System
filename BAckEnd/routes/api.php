@@ -71,6 +71,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-materiel/{id}', [MaterielController::class, 'update']);
     Route::post('/add-materiel', [MaterielController::class, 'store']);
     Route::delete('/delete-materiel/{id}', [MaterielController::class, 'destroy']);
+    Route::get('/duplicate-material/{id}', [MaterielController::class, 'duplicate']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
@@ -79,6 +80,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-formateur/{id}', [FormateurController::class, 'update']);
     Route::post('/add-formateur', [FormateurController::class, 'store']);
     Route::delete('/delete-formateur/{id}', [FormateurController::class, 'destroy']);
+    Route::get('/formateurs-speciality/{speciality}', [FormateurController::class, 'filterBySpeciality']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
@@ -149,6 +151,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/book-room/{sessionId}', [SessionController::class, 'reserveRoomForSessionDay']);
     Route::get('/check-booked-room/{sessionId}/{dayID}', [SessionController::class, 'isSalleReservedForDay']);
     Route::get('/available-rooms/{sessionId}/{dayID}', [SessionController::class, 'getAvailableRoomsForDay']);
+    Route::post('/book-trainer/{sessionId}', [SessionController::class, 'reserveTrainerForSession']);
+    Route::get('/trainer-booked-days/{trainerId}', [SessionController::class, 'getJourSessionsForTrainer']);
+    Route::get('/available-trainers/{sessionId}/{dayID}', [SessionController::class, 'getAvailableTrinesForDay']);
+    Route::post('/book-material/{sessionId}', [SessionController::class, 'reserveMaterialsForSession']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
@@ -157,7 +163,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/participant-id/{id}', [ParticipantController::class, 'show']);
     Route::put('/update-participant/{id}', [ParticipantController::class, 'update']);
     Route::delete('/delete-participant/{id}', [ParticipantController::class, 'destroy']);
-    Route::post('/convert-participant/{candidatId}', [ParticipantController::class, 'convertToParticipant']);
+    Route::get('/convert-participant/{candidatId}', [ParticipantController::class, 'convertToParticipant']);
     Route::get('/participate-session/{participantId}/{sessionId}', [ParticipantController::class, 'participateToSession']);
     Route::put('/update-session-status/{participantId}/{sessionId}', [ParticipantController::class, 'updateSessionStatus']);
 });

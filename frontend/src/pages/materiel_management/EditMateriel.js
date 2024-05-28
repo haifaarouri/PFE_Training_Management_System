@@ -23,7 +23,7 @@ const EditMateriel = () => {
     name: "",
     type: "",
     id: "",
-    quantityAvailable: "",
+    // quantityAvailable: "",
     status: "",
     cost: "",
     supplier: "",
@@ -95,7 +95,7 @@ const EditMateriel = () => {
         formData.append("_method", "PUT");
         formData.append("name", materiel.name);
         formData.append("type", materiel.type);
-        formData.append("quantityAvailable", materiel.quantityAvailable);
+        // formData.append("quantityAvailable", materiel.quantityAvailable);
         formData.append("cost", materiel.cost);
         formData.append("purchaseDate", materiel.purchaseDate);
         formData.append("supplier", materiel.supplier);
@@ -120,7 +120,7 @@ const EditMateriel = () => {
             name: "",
             type: "",
             id: "",
-            quantityAvailable: "",
+            // quantityAvailable: "",
             status: "",
             cost: "",
             supplier: "",
@@ -255,7 +255,7 @@ const EditMateriel = () => {
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
-                <Form.Group className="mb-3">
+                {/* <Form.Group className="mb-3">
                   <Form.Label>Quantité Disponible</Form.Label>
                   <InputGroup className="mb-3">
                     <InputGroup.Text id="inputGroup-sizing-default">
@@ -288,7 +288,7 @@ const EditMateriel = () => {
                       Veuillez saisir la quantité disponible de ce matériel !
                     </Form.Control.Feedback>
                   </InputGroup>
-                </Form.Group>
+                </Form.Group> */}
                 <Form.Group className="mb-3">
                   <Form.Label>Etat du matériel</Form.Label>
                   <InputGroup className="mb-3">

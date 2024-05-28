@@ -75,7 +75,7 @@ class MaterielController extends Controller
             try {
                 $validator = Validator::make($request->all(), [
                     'name' => 'required|string|max:255',
-                    'quantityAvailable' => 'required|integer',
+                    // 'quantityAvailable' => 'required|integer',
                     'type' => ['required', new TypeMaterielRule()],
                     'status' => ['required', new StatusMaterielRule()],
                     'purchaseDate' => 'required|date',
@@ -114,7 +114,7 @@ class MaterielController extends Controller
                     $materiel = Materiel::create([
                         'name' => $request->input('name'),
                         'type' => $request->input('type'),
-                        'quantityAvailable' => $request->input('quantityAvailable'),
+                        // 'quantityAvailable' => $request->input('quantityAvailable'),
                         'status' => $request->input('status'),
                         'purchaseDate' => $request->input('purchaseDate'),
                         'cost' => $request->input('cost'),
@@ -166,7 +166,7 @@ class MaterielController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'quantityAvailable' => 'required|integer',
+                // 'quantityAvailable' => 'required|integer',
                 'type' => ['required', new TypeMaterielRule()],
                 'status' => ['required', new StatusMaterielRule()],
                 'purchaseDate' => 'required|date',
@@ -205,7 +205,7 @@ class MaterielController extends Controller
             // Update other fields
             $materiel->name = $request->input('name');
             $materiel->type = $request->input('type');
-            $materiel->quantityAvailable = $request->input('quantityAvailable');
+            // $materiel->quantityAvailable = $request->input('quantityAvailable');
             $materiel->status = $request->input('status');
             $materiel->purchaseDate = $request->input('purchaseDate');
             $materiel->cost = $request->input('cost');
@@ -356,5 +356,24 @@ class MaterielController extends Controller
             // User does not have access, return a 403 response
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
+    }
+
+    public function duplicate($id)
+    {
+        if ($this->list_roles->contains(auth()->user()->role)) {
+            $originalRow = Materiel::find($id);
+            if (!$originalRow) {
+                return response()->json(['error' => 'Materiel avec cette ID non trouvé !'], 404);
+            }
+
+            $duplicateRow = $originalRow->replicate();
+            $duplicateRow->save();
+
+            return response()->json(['message' => 'Materiel dupliqué avec succès !']);
+        } else {
+            // User does not have access, return a 403 response
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
     }
 }

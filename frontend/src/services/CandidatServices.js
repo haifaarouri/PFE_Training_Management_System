@@ -100,32 +100,12 @@ const handleError = (err) =>
 export const convertToParticipant = async (candidatId) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.post(
-        `/api/convert-participant/${candidatId}`,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+      const response = await axios.get(
+        `/api/convert-participant/${candidatId}`
       );
       return response.data;
     } else {
-      const headers = {
-        "Content-Type": "multipart/form-data",
-        Accept: "application/json",
-        withCredentials: true,
-      };
-
-      const token = localStorage.getItem("token");
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-      const response = await axios.post(
-        `/api/convert-participant/${candidatId}`,
-        {
-          headers: headers,
-        }
-      );
+      const response = await apiFetch(`convert-participant/${candidatId}`);
       return response;
     }
   } catch (error) {

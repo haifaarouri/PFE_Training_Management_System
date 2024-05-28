@@ -14,10 +14,13 @@ import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import MaterielModal from "../../components/MaterielModal";
 import {
+  duplicateMaterial,
   // deleteMateriel,
   fetchAllMateriaux,
 } from "../../services/MaterielServices";
 import FileModal from "../../components/FileModal";
+import { LuCopyPlus } from "react-icons/lu";
+import { toast } from "sonner";
 require("moment/locale/fr");
 
 function AllMateriels() {
@@ -177,6 +180,62 @@ function AllMateriels() {
   const handleShowFileModal = () => setShowFileModal(true);
   const handleCloseFileModal = () => setShowFileModal(false);
 
+  const handleSuccess = (msg) =>
+    toast.success(msg, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
+  const handleError = (err) =>
+    toast.error(err, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
+  const handleDuplicate = (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, dupliquer!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await duplicateMaterial(id);
+          if (res) {
+            Swal.fire({
+              title: "Dupliqué avec succès!",
+              text: "Nouvel matériel est créé ayant les même caractéristiques !",
+              icon: "success",
+            });
+            const d = await fetchData();
+            setMateriaux(d);
+            handleSuccess(res.message);
+          }
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -285,7 +344,7 @@ function AllMateriels() {
                           <th>Image</th>
                           <th>Nom</th>
                           <th>Type</th>
-                          <th>Quatité disponible</th>
+                          {/* <th>Quatité disponible</th> */}
                           <th>Etat</th>
                           <th>Cout</th>
                           <th>Date d'achat</th>
@@ -314,7 +373,7 @@ function AllMateriels() {
                                   <h6>{u.name}</h6>
                                 </td>
                                 <td>{u.type}</td>
-                                <td>{u.quantityAvailable}</td>
+                                {/* <td>{u.quantityAvailable}</td> */}
                                 <td>
                                   {u.status === "HorsService" ? (
                                     <Badge bg="danger">{u.status}</Badge>
@@ -357,6 +416,13 @@ function AllMateriels() {
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
                                     </Button> */}
+                                    <Button
+                                      onClick={() => handleDuplicate(u.id)}
+                                      variant="outline-warning"
+                                      className="btn btn-sm mb-2"
+                                    >
+                                      Dupliquer <LuCopyPlus />
+                                    </Button>
                                   </div>
                                 </td>
                                 <FileModal
@@ -390,14 +456,22 @@ function AllMateriels() {
                                   <h6>{u.name}</h6>
                                 </td>
                                 <td>{u.type}</td>
-                                <td>{u.quantityAvailable}</td>
+                                {/* <td>{u.quantityAvailable}</td> */}
                                 <td>
                                   {u.status === "HorsService" ? (
-                                    <Badge bg="danger" pill style={{fontSize: "1rem"}}>
+                                    <Badge
+                                      bg="danger"
+                                      pill
+                                      style={{ fontSize: "1rem" }}
+                                    >
                                       {u.status}
                                     </Badge>
                                   ) : (
-                                    <Badge bg="success" pill style={{fontSize: "1rem"}}>
+                                    <Badge
+                                      bg="success"
+                                      pill
+                                      style={{ fontSize: "1rem" }}
+                                    >
                                       {u.status}
                                     </Badge>
                                   )}
@@ -437,6 +511,13 @@ function AllMateriels() {
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
                                     </Button> */}
+                                    <Button
+                                      onClick={() => handleDuplicate(u.id)}
+                                      variant="outline-warning"
+                                      className="btn btn-sm mb-2"
+                                    >
+                                      Dupliquer <LuCopyPlus />
+                                    </Button>
                                   </div>
                                 </td>
                                 <FileModal
@@ -548,12 +629,12 @@ function AllMateriels() {
                                     </span>{" "}
                                     {m.supplier}
                                   </p>
-                                  <p>
+                                  {/* <p>
                                     <span className="text-primary fw-bold">
                                       Quantité disponible :
                                     </span>{" "}
                                     {m.quantityAvailable}
-                                  </p>
+                                  </p> */}
                                   <p>
                                     <span className="text-primary fw-bold">
                                       Etat :

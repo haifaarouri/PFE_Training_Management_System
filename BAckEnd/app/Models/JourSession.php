@@ -25,4 +25,9 @@ class JourSession extends Model
     {
         return $this->belongsTo(Salle::class, 'salle_id', 'id');
     }
+
+    public function formateur()
+    {
+        return $this->belongsTo(Formateur::class, 'formateur_id', 'id');
+    }
 }

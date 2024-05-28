@@ -82,3 +82,19 @@ export const deleteFormateur = async (id) => {
     console.log("Error deleting formateur with this id :", error);
   }
 };
+
+export const fetchFormateursBySpeciality = async (speciality) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(
+        `/api/formateurs-speciality/${speciality}`
+      );
+      return response.data;
+    } else {
+      const response = await apiFetch(`formateurs-speciality/${speciality}`);
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching formateurs with this speciality :", error);
+  }
+};

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('type');
-            $table->integer('quantityAvailable');
+            // $table->integer('quantityAvailable');
             $table->string('status');
             $table->date('purchaseDate');
             $table->double('cost');

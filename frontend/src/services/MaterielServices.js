@@ -82,3 +82,17 @@ export const deleteMateriel = async (id) => {
     console.log("Error deleting materiel with this id :", error);
   }
 };
+
+export const duplicateMaterial = async (id) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/duplicate-material/${id}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`duplicate-material/${id}`);
+      return response;
+    }
+  } catch (error) {
+    console.log("Error duplicationg material with this id :", error);
+  }
+};

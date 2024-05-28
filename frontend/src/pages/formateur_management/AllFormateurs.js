@@ -12,11 +12,14 @@ import FormateurModal from "../../components/FormateurModal";
 import CertifModal from "../../components/CertifModel";
 import { LiaCertificateSolid } from "react-icons/lia";
 import { MdOutlineOpenInNew } from "react-icons/md";
-import { FaAddressCard } from "react-icons/fa";
+import { FaAddressCard, FaCalendarAlt } from "react-icons/fa";
 import CVModal from "../../components/CVModal";
 import moment from "moment";
 import { DateRange } from "react-date-range";
 import DisponibilityModal from "../../components/DisponibilityModal";
+import "react-date-range/dist/styles.css"; // main style file
+import "react-date-range/dist/theme/default.css"; // theme css file
+import TrainerCalendarModal from "../../components/TrainerCalendarModal";
 require("moment/locale/fr");
 
 function AllFormateurs() {
@@ -45,6 +48,8 @@ function AllFormateurs() {
   const [showDispoModal, setShowDispoModal] = useState(false);
   const [modalDates, setModalDates] = useState(null);
   const [otherFilters, setOtherFilters] = useState(false);
+  const [showTrainerCalendrier, setShowTrainerCalendrier] = useState(false);
+  const [calendarIdTrainer, setCalendarIdTrainer] = useState(null);
 
   const handleCloseDispoModal = () => setShowDispoModal(false);
 
@@ -237,6 +242,16 @@ function AllFormateurs() {
     setShowCV(true);
   };
 
+  const handleShowTrainerCalendrier = (id) => {
+    setShowTrainerCalendrier(true);
+    setCalendarIdTrainer(id);
+  };
+
+  const handleCloseTrainerCalendrier = () => {
+    setShowTrainerCalendrier(false);
+    setCalendarIdTrainer(null);
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -275,6 +290,11 @@ function AllFormateurs() {
               <FormateurModal
                 show={showModal}
                 handleClose={handleCloseAddModal}
+              />
+              <TrainerCalendarModal
+                show={showTrainerCalendrier}
+                onHide={handleCloseTrainerCalendrier}
+                calendarIdTrainer={calendarIdTrainer}
               />
               {showList && (
                 <>
@@ -400,10 +420,10 @@ function AllFormateurs() {
                                 </td>
                                 <td>{f.email}</td>
                                 <td>{f.phoneNumber}</td>
-                                <td style={{ width: "5%" }}>{f.experience}</td>
+                                <td>{f.experience}</td>
                                 <td>{f.type}</td>
                                 <td>{f.speciality}</td>
-                                <td style={{ width: "15%" }}>
+                                <td>
                                   <div className="d-flex flex-column justify-content-center">
                                     {f.certificats.map((c, i) => (
                                       <Button
@@ -420,7 +440,7 @@ function AllFormateurs() {
                                     ))}
                                   </div>
                                 </td>
-                                <td style={{ width: "15%" }}>
+                                <td>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       onClick={() => handleCVClick(f.cv)}
@@ -453,7 +473,7 @@ function AllFormateurs() {
                                       );
                                     })}
                                 </td>
-                                <td style={{ width: "15%" }}>
+                                <td>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       variant="outline-primary"
@@ -462,6 +482,15 @@ function AllFormateurs() {
                                     >
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
+                                    </Button>
+                                    <Button
+                                      onClick={() =>
+                                        handleShowTrainerCalendrier(f.id)
+                                      }
+                                      variant="outline-info"
+                                      className="btn btn-sm mb-2"
+                                    >
+                                      Calendrier <FaCalendarAlt />
                                     </Button>
                                     <Button
                                       onClick={() =>
@@ -494,10 +523,10 @@ function AllFormateurs() {
                                 </td>
                                 <td>{f.email}</td>
                                 <td>{f.phoneNumber}</td>
-                                <td style={{ width: "5%" }}>{f.experience}</td>
+                                <td>{f.experience}</td>
                                 <td>{f.type}</td>
                                 <td>{f.speciality}</td>
-                                <td style={{ width: "15%" }}>
+                                <td>
                                   <div className="d-flex flex-column justify-content-center">
                                     {f.certificats.map((c, i) => {
                                       return (
@@ -516,7 +545,7 @@ function AllFormateurs() {
                                     })}
                                   </div>
                                 </td>
-                                <td style={{ width: "15%" }}>
+                                <td>
                                   <div className="d-flex flex-column justify-content-center">
                                     {f.cv !== null ? (
                                       <Button
@@ -556,7 +585,7 @@ function AllFormateurs() {
                                       );
                                     })}
                                 </td>
-                                <td style={{ width: "15%" }}>
+                                <td>
                                   <div className="d-flex flex-column justify-content-center">
                                     <Button
                                       variant="outline-primary"
@@ -565,6 +594,15 @@ function AllFormateurs() {
                                     >
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
+                                    </Button>
+                                    <Button
+                                      onClick={() =>
+                                        handleShowTrainerCalendrier(f.id)
+                                      }
+                                      variant="outline-info"
+                                      className="btn btn-sm mb-2"
+                                    >
+                                      Calendrier <FaCalendarAlt />
                                     </Button>
                                     <Button
                                       onClick={() =>

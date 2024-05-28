@@ -128,7 +128,7 @@ function AllCandidats() {
     };
 
     u();
-  }, [showModal, showEditStatus]);
+  }, [showModal, showEditStatus, showregisterToFormation]);
 
   const handleDeleteCandidat = async (id) => {
     Swal.fire({
@@ -559,6 +559,7 @@ function AllCandidats() {
                                   candidatId={candidatIdToEditStatus}
                                   formationId={formatioIdToEdit}
                                   handleClose={handleCloseEditRegisterStatus}
+                                  statusType="InscriptionStatus"
                                 />
                               </tr>
                             );

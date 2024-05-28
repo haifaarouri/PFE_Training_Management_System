@@ -12,7 +12,7 @@ import FileModal from "./FileModal";
 const MaterielModal = ({ show, handleClose }) => {
   const [name, setName] = useState("");
   const [type, setType] = useState("");
-  const [quantityAvailable, setQuantityAvailable] = useState("");
+  // const [quantityAvailable, setQuantityAvailable] = useState("");
   const [cost, setCost] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -173,7 +173,7 @@ const MaterielModal = ({ show, handleClose }) => {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("type", type);
-      formData.append("quantityAvailable", quantityAvailable);
+      // formData.append("quantityAvailable", quantityAvailable);
       formData.append("cost", cost);
       formData.append("purchaseDate", purchaseDate);
       formData.append("supplier", supplier);
@@ -200,7 +200,7 @@ const MaterielModal = ({ show, handleClose }) => {
 
             setName("");
             setType("");
-            setQuantityAvailable("");
+            // setQuantityAvailable("");
             setCost("");
             setPurchaseDate("");
             setSupplier("");
@@ -234,7 +234,7 @@ const MaterielModal = ({ show, handleClose }) => {
 
             setName("");
             setType("");
-            setQuantityAvailable("");
+            // setQuantityAvailable("");
             setCost("");
             setPurchaseDate("");
             setSupplier("");
@@ -355,7 +355,7 @@ const MaterielModal = ({ show, handleClose }) => {
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
-          <Form.Group className="mb-3">
+          {/* <Form.Group className="mb-3">
             <Form.Label>Quantité Disponible</Form.Label>
             <InputGroup className="mb-3">
               <InputGroup.Text id="inputGroup-sizing-default">
@@ -381,7 +381,7 @@ const MaterielModal = ({ show, handleClose }) => {
                 Veuillez saisir la quantité disponible de ce matériel !
               </Form.Control.Feedback>
             </InputGroup>
-          </Form.Group>
+          </Form.Group> */}
           <Form.Group className="mb-3">
             <Form.Label>Etat du matériel</Form.Label>
             <InputGroup className="mb-3">

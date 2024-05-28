@@ -11,7 +11,7 @@ class Materiel extends Model
     protected $fillable = [
         'name',
         'type',
-        'quantityAvailable',
+        // 'quantityAvailable',
         'status',
         'purchaseDate',
         'cost',
@@ -22,6 +22,6 @@ class Materiel extends Model
 
     public function sessions()
     {
-        return $this->belongsToMany(Session::class, 'materiel_session');
+        return $this->belongsToMany(Session::class, 'session_materiel')->withPivot('quantity', 'startDate', 'endDate');
     }
 }
