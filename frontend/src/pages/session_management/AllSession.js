@@ -28,6 +28,7 @@ import { FaCartArrowDown } from "react-icons/fa";
 import { MdLaptopChromebook } from "react-icons/md";
 import ReservationTrainersModal from "../../components/ReservationTrainersModal";
 import ReserveMaterialForSessionModal from "../../components/ReserveMaterialForSessionModal";
+import CommandeModal from "../../components/CommandeModal";
 
 const CustomEvent = ({ event }) => {
   return (
@@ -82,6 +83,8 @@ const EventModal = ({ show, onHide, event }) => {
   const [sessionAfterEdit, setSessionAfterEdit] = useState(null);
   const [showBookTrainersModal, setShowBookTrainersModal] = useState(false);
   const [showBookMaterialsModal, setShowBookMaterialsModal] = useState(false);
+  const [showCommandeModal, setShowCommandeModal] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
 
   useEffect(() => {
     event && event.id && fetchSessionDays(event.id).then(setDaySessions);
@@ -175,6 +178,16 @@ const EventModal = ({ show, onHide, event }) => {
   const handleCloseMaterialsReservationModal = () =>
     setShowBookMaterialsModal(false);
 
+  const handleShowCommandeModal = (id) => {
+    setShowCommandeModal(true);
+    setSessionId(id);
+  };
+
+  const handleCloseCommandeModal = () => {
+    setShowCommandeModal(false);
+    setSessionId(null);
+  };
+
   return (
     event && (
       <Modal
@@ -199,6 +212,11 @@ const EventModal = ({ show, onHide, event }) => {
           onOpen={showEditModal}
           onClose={handleCloseEditModal}
           session={event}
+        />
+        <CommandeModal
+          show={showCommandeModal}
+          handleClose={handleCloseCommandeModal}
+          sessionId={sessionId}
         />
         <Modal.Body className="modal-body-custom">
           {sessionAfterEdit ? (
@@ -371,7 +389,7 @@ const EventModal = ({ show, onHide, event }) => {
                 </Button>
                 <Button
                   className="btn-sm btn-inverse-primary"
-                  onClick={handleShowRoomReservationModal}
+                  onClick={() => handleShowCommandeModal(event.id)}
                 >
                   Passer commandes
                   <FaCartArrowDown size={25} />

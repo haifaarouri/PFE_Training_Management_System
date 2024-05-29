@@ -19,7 +19,8 @@ return new class extends Migration {
             $table->string('status')->default("Brouillon");
             $table->string('paymentMethod');
             $table->double('total');
-            $table->foreignId('session_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('session_id')->nullable();
+            $table->foreign('session_id')->references('id')->on('sessions')->onDelete('set null');
             $table->timestamps();
         });
     }

@@ -285,7 +285,7 @@ function AllCommandes() {
                 <h4 className="card-title mb-5 mt-2">
                   Liste de toutes les commandes
                 </h4>
-                {userAuth && userAuth.role !== "PiloteDuProcessus" && (
+                {/* {userAuth && userAuth.role !== "PiloteDuProcessus" && (
                   <Button
                     variant="outline-success"
                     className="btn btn-sm m-3 mt-1"
@@ -293,7 +293,7 @@ function AllCommandes() {
                   >
                     Ajouter une Commande
                   </Button>
-                )}
+                )} */}
               </div>
               <div className="d-flex justify-content-end px-3 py-3">
                 <div className="btn-group">

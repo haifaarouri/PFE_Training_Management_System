@@ -87,7 +87,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/commandes', [CommandeController::class, 'index']);
     Route::get('/commande-id/{id}', [CommandeController::class, 'show']);
     Route::put('/update-commande/{id}', [CommandeController::class, 'update']);
-    Route::post('/add-commande', [CommandeController::class, 'store']);
+    Route::post('/add-commande/{sessionId}', [CommandeController::class, 'store']);
     Route::post('/update-commande-status/{id}', [CommandeController::class, 'updateStatus']);
     Route::get('/notifications', function (Request $request) {
         return auth()->user()->notifications()->where('read', false)->get();
@@ -153,7 +153,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/available-rooms/{sessionId}/{dayID}', [SessionController::class, 'getAvailableRoomsForDay']);
     Route::post('/book-trainer/{sessionId}', [SessionController::class, 'reserveTrainerForSession']);
     Route::get('/trainer-booked-days/{trainerId}', [SessionController::class, 'getJourSessionsForTrainer']);
-    Route::get('/available-trainers/{sessionId}/{dayID}', [SessionController::class, 'getAvailableTrinesForDay']);
+    Route::get('/available-trainers/{sessionId}/{dayID}', [SessionController::class, 'getAvailableTrinersForDay']);
     Route::post('/book-material/{sessionId}', [SessionController::class, 'reserveMaterialsForSession']);
 });
 

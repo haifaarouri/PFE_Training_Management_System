@@ -8,6 +8,7 @@ use App\Models\Commande;
 use App\Models\Fournisseur;
 use App\Models\Notification;
 use App\Models\Produit;
+use App\Models\Session;
 use App\Models\User;
 use App\Rules\ProductCategoryRule;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class CommandeController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $sessionId)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
             try {
@@ -49,11 +50,17 @@ class CommandeController extends Controller
                     return response()->json(['error' => $validator->errors()], 400);
                 }
 
+                $session = Session::find($sessionId);
+                if (!$session) {
+                    return response()->json(['error' => 'Session non trouvée !'], 404);
+                }
+
                 $commandeData = [
                     'date' => $request->input('date'),
                     'deliveryDate' => $request->input('deliveryDate'),
                     'total' => $request->input('total'),
                     'paymentMethod' => $request->input('paymentMethod'),
+                    'session_id' => $sessionId
                 ];
 
                 $commande = Commande::create($commandeData);
@@ -139,6 +146,8 @@ class CommandeController extends Controller
                         $fournisseur->produits()->save($newProduit);
                     }
                 }
+
+                $session->commandes()->save($commande);
 
                 return response()->json($commande, 201);
             } catch (\Exception $e) {
@@ -311,6 +320,7 @@ class CommandeController extends Controller
             'deliveryDate' => $request->input('deliveryDate'),
             'total' => $request->input('total'),
             'paymentMethod' => $request->input('paymentMethod'),
+            'session_id' => $commande->session_id,
         ]);
 
         foreach ($request->input('produits') as $produitInput) {

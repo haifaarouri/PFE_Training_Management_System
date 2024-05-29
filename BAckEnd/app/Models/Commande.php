@@ -14,7 +14,8 @@ class Commande extends Model
         'deliveryDate',
         'status',
         'total',
-        'paymentMethod'
+        'paymentMethod',
+        'session_id'
     ];
 
     public function produits()
