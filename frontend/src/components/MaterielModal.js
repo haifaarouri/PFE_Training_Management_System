@@ -7,7 +7,6 @@ import { GiBuyCard, GiTakeMyMoney } from "react-icons/gi";
 import { MdCloudUpload, MdDelete } from "react-icons/md";
 import { AiFillFileImage } from "react-icons/ai";
 import FileModal from "./FileModal";
-// import Resumable from "resumablejs";
 
 const MaterielModal = ({ show, handleClose }) => {
   const [name, setName] = useState("");

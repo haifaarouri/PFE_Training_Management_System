@@ -7,7 +7,6 @@ import {
   editStatusCommande,
   fetchAllCommandes,
 } from "../../services/CommandeServices";
-import { BsFillSendCheckFill } from "react-icons/bs";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { TbTruckDelivery } from "react-icons/tb";

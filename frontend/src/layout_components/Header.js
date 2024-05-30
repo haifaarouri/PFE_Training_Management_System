@@ -29,7 +29,7 @@ function Header({ onToggleSidebar }) {
 
     setUserAuth(result.user);
     setListNotif(notifsRedux.notifications);
-  }, [result.user]);
+  }, [result.user, notifsRedux.notifications]);
 
   const handleSuccess = (msg) => toast.success(msg);
 
@@ -353,7 +353,7 @@ function Header({ onToggleSidebar }) {
                       ? `${userAuth.profileImage}`
                       : `http://localhost:8000/profilePictures/${userAuth.profileImage}`
                   }
-                  alt="Photo de profile"
+                  alt="User profile"
                 />
                 <span className="nav-profile-name">
                   {userAuth.firstName} {userAuth.lastName}

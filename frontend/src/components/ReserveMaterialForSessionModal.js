@@ -1,6 +1,6 @@
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Form } from "react-bootstrap";
 import { reserveMaterielForSession } from "../services/SessionServices";
 import { MdLaptopChromebook } from "react-icons/md";
@@ -8,7 +8,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
-import { fetchAllMateriaux } from "../services/MaterielServices";
 
 function ReserveMaterialForSessionModal({ show, onHide, session }) {
   const [validated, setValidated] = useState(false);

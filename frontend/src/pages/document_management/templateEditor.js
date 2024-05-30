@@ -8,8 +8,8 @@ import { Alert, Form, InputGroup } from "react-bootstrap";
 import { BsFiletypeDocx } from "react-icons/bs";
 import axios from "../../services/axios";
 import Swal from "sweetalert2";
-import StepProgressBar from "react-step-progress";
-import "react-step-progress/dist/index.css";
+// import StepProgressBar from "react-step-progress";
+// import "react-step-progress/dist/index.css";
 import { PiFileDocDuotone } from "react-icons/pi";
 
 function TemplateEditor() {
@@ -157,7 +157,7 @@ function TemplateEditor() {
               <h4 className="card-title mb-5 mt-2">
                 Etapes de création d'un nouvel document modèle
               </h4>
-              <StepProgressBar
+              {/* <StepProgressBar
                 key={forceUpdate}
                 startingStep={0}
                 onSubmit={onFormSubmit}
@@ -312,7 +312,7 @@ function TemplateEditor() {
                     validator: step3Validator,
                   },
                 ]}
-              />
+              /> */}
             </div>
           </div>
         </div>

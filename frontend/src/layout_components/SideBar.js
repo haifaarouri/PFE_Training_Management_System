@@ -7,6 +7,7 @@ import { PiStudent, PiStudentFill } from "react-icons/pi";
 import { BsCalendarRange } from "react-icons/bs";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { VscOrganization } from "react-icons/vsc";
+import { MdEmail } from "react-icons/md";
 
 function SideBar({ isSidebarVisible }) {
   const [userAuth, setUserAuth] = useState(null);
@@ -81,6 +82,11 @@ function SideBar({ isSidebarVisible }) {
       path: "/participants",
       icon: <PiStudent size={22} />,
       title: "Gestion des Participants",
+    },
+    {
+      path: "/email-templates",
+      icon: <MdEmail size={22} />,
+      title: "Gestion des Emails",
     },
   ];
 

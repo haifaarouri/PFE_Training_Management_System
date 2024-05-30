@@ -71,7 +71,7 @@ function ReservationTrainersModal({ show, onHide, session }) {
         setAvailable(trainers);
       });
     }
-  }, [selectedDayId]);
+  }, [selectedDayId, session.id, show]);
 
   const handleError = (err) =>
     toast.error(err, {

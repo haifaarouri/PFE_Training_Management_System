@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { fetchAllDocuments } from "../../services/DocumentServices";
 import FileModal from "../../components/FileModal";
 import { HiDocumentPlus } from "react-icons/hi2";
@@ -70,7 +70,7 @@ function Alldocuments() {
   //       }
   //     });
   //   };
-  console.log(documents);
+
   return (
     <div className="content-wrapper">
       <div className="row">

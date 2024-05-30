@@ -3,6 +3,7 @@
 use App\Http\Controllers\CandidatController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FormateurController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\materielController;
@@ -166,4 +167,12 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/convert-participant/{candidatId}', [ParticipantController::class, 'convertToParticipant']);
     Route::get('/participate-session/{participantId}/{sessionId}', [ParticipantController::class, 'participateToSession']);
     Route::put('/update-session-status/{participantId}/{sessionId}', [ParticipantController::class, 'updateSessionStatus']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/emailTemplates', [EmailTemplateController::class, 'index']);
+    Route::post('/add-emailTemplates', [EmailTemplateController::class, 'store']);
+    // Route::get('/emailTemplate-id/{id}', [EmailTemplateController::class, 'show']);
+    // Route::put('/update-emailTemplate/{id}', [EmailTemplateController::class, 'update']);
+    // Route::delete('/delete-emailTemplate/{id}', [EmailTemplateController::class, 'destroy']);
 });

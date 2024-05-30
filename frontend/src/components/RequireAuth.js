@@ -11,7 +11,7 @@ function RequireAuth({ children, allowedRoles }) {
     if (result) {
       setUserAuth(result.user);
     }
-  }, [result.user]);
+  }, [result.user, result]);
 
   if (!result.user) {
     // Redirect them to the /login page, but save the current location they were

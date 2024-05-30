@@ -86,8 +86,14 @@ function App() {
     import("./pages/participant_management/AllParticipants")
   );
   const EditParticipant = lazy(() =>
-  import("./pages/participant_management/EditParticipant")
-);
+    import("./pages/participant_management/EditParticipant")
+  );
+  const EmailEditor = lazy(() =>
+    import("./pages/email_management/EmailEditor")
+  );
+  const AllEmailTemplates = lazy(() =>
+    import("./pages/email_management/AllEmailTemplates")
+  );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -126,7 +132,7 @@ function App() {
         channel.stopListening("OrderStatusUpdated", handleOrderStatusUpdated);
       };
     }
-  }, [result]);
+  }, [result, dispatch, onNewNotification]);
 
   useEffect(() => {
     setToken(token);
@@ -596,7 +602,7 @@ function App() {
                 </RequireAuth>
               }
             />
-             <Route
+            <Route
               path="/edit-participant/:id"
               element={
                 <RequireAuth
@@ -612,6 +618,44 @@ function App() {
                   ]}
                 >
                   <EditParticipant />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/email-templates"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <AllEmailTemplates />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/add-email-templates"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <EmailEditor />
                 </RequireAuth>
               }
             />

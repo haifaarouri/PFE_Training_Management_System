@@ -92,7 +92,7 @@ const EventModal = ({ show, onHide, event }) => {
 
   useEffect(() => {
     event && event.id && fetchSessionById(event.id).then(setSessionAfterEdit);
-  }, [showEditModal]);
+  }, [showEditModal, event]);
 
   const handleShowEditModal = (s) => {
     if (s && s.id) {
@@ -477,20 +477,20 @@ const AllSessions = () => {
     u();
   }, [showModal, modalShow]);
 
-  const onChangeEventTime = useCallback((start, end, eventId) => {
-    setSessions((prevEvents) => {
-      return prevEvents.map((event) => {
-        if (event.id === eventId) {
-          return {
-            ...event,
-            start: new Date(start),
-            end: new Date(end),
-          };
-        }
-        return event;
-      });
-    });
-  }, []);
+  // const onChangeEventTime = useCallback((start, end, eventId) => {
+  //   setSessions((prevEvents) => {
+  //     return prevEvents.map((event) => {
+  //       if (event.id === eventId) {
+  //         return {
+  //           ...event,
+  //           start: new Date(start),
+  //           end: new Date(end),
+  //         };
+  //       }
+  //       return event;
+  //     });
+  //   });
+  // }, []);
 
   const toUTCDate = (date) => {
     const localDate = new Date(date);
@@ -505,92 +505,101 @@ const AllSessions = () => {
     );
   };
 
-  const confirmAndSaveChanges = useCallback(async (start, end, eventId) => {
-    const fullEvent = sessions.find((e) => e.id === eventId);
-    if (!fullEvent) {
-      Swal.fire("Erreur !", "Session non trouvée !", "error");
-      return;
-    }
+  const confirmAndSaveChanges = useCallback(
+    async (start, end, eventId) => {
+      const fullEvent = sessions.find((e) => e.id === eventId);
+      if (!fullEvent) {
+        Swal.fire("Erreur !", "Session non trouvée !", "error");
+        return;
+      }
 
-    const result = await Swal.fire({
-      title: "Êtes-vous sûre?",
-      text: "Voulez-vous enregistrer les modifications ?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Oui, enregistrer !",
-    });
-    console.log(fullEvent);
-    if (result.isConfirmed) {
-      try {
-        const updatedEvent = {
-          ...fullEvent,
-          start: new Date(start),
-          end: new Date(end),
-        };
-        console.log(updatedEvent);
-        const formattedStartDate = toUTCDate(updatedEvent.start)
-          .toISOString()
-          .slice(0, 16);
-        const formattedEndDate = toUTCDate(updatedEvent.end)
-          .toISOString()
-          .slice(0, 16);
+      const result = await Swal.fire({
+        title: "Êtes-vous sûre?",
+        text: "Voulez-vous enregistrer les modifications ?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Oui, enregistrer !",
+      });
+      console.log(fullEvent);
+      if (result.isConfirmed) {
+        try {
+          const updatedEvent = {
+            ...fullEvent,
+            start: new Date(start),
+            end: new Date(end),
+          };
+          console.log(updatedEvent);
+          const formattedStartDate = toUTCDate(updatedEvent.start)
+            .toISOString()
+            .slice(0, 16);
+          const formattedEndDate = toUTCDate(updatedEvent.end)
+            .toISOString()
+            .slice(0, 16);
 
-        const formData = new FormData();
-        formData.append("_method", "PUT");
-        formData.append("title", updatedEvent.title);
-        formData.append("startDate", formattedStartDate);
-        formData.append("endDate", formattedEndDate);
-        formData.append("duration", updatedEvent.duration);
-        formData.append("reference", updatedEvent.reference);
-        formData.append("location", updatedEvent.location);
-        formData.append("status", updatedEvent.status);
-        formData.append("sessionMode", updatedEvent.sessionMode);
-        formData.append("max_participants", updatedEvent.max_participants);
+          const formData = new FormData();
+          formData.append("_method", "PUT");
+          formData.append("title", updatedEvent.title);
+          formData.append("startDate", formattedStartDate);
+          formData.append("endDate", formattedEndDate);
+          formData.append("duration", updatedEvent.duration);
+          formData.append("reference", updatedEvent.reference);
+          formData.append("location", updatedEvent.location);
+          formData.append("status", updatedEvent.status);
+          formData.append("sessionMode", updatedEvent.sessionMode);
+          formData.append("max_participants", updatedEvent.max_participants);
 
-        const days = await fetchSessionDays(updatedEvent.id);
-        days.forEach((jour, index) => {
-          const formattedStartTime = new Date(
-            "1970-01-01T" + jour.startTime
-          ).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-          const formattedEndTime = new Date(
-            "1970-01-01T" + jour.endTime
-          ).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-
-          formData.append(`jours[${index}][day]`, jour.day);
-          formData.append(`jours[${index}][startTime]`, formattedStartTime);
-          formData.append(`jours[${index}][endTime]`, formattedEndTime);
-        });
-
-        const res = await editSession(eventId, formData);
-
-        if (res) {
-          setSessions((prevEvents) => {
-            return prevEvents.map((e) => {
-              if (e.id === eventId) {
-                return updatedEvent;
-              }
-              return e;
+          const days = await fetchSessionDays(updatedEvent.id);
+          days.forEach((jour, index) => {
+            const formattedStartTime = new Date(
+              "1970-01-01T" + jour.startTime
+            ).toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
             });
+            const formattedEndTime = new Date(
+              "1970-01-01T" + jour.endTime
+            ).toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            formData.append(`jours[${index}][day]`, jour.day);
+            formData.append(`jours[${index}][startTime]`, formattedStartTime);
+            formData.append(`jours[${index}][endTime]`, formattedEndTime);
           });
 
+          const res = await editSession(eventId, formData);
+
+          if (res) {
+            setSessions((prevEvents) => {
+              return prevEvents.map((e) => {
+                if (e.id === eventId) {
+                  return updatedEvent;
+                }
+                return e;
+              });
+            });
+
+            Swal.fire(
+              "Enregistré !",
+              "Votre session a été mise à jour !",
+              "success"
+            );
+          }
+        } catch (error) {
+          console.log(error);
           Swal.fire(
-            "Enregistré !",
-            "Votre session a été mise à jour !",
-            "success"
+            "Echec !",
+            "Un problème est survenu lors de la mise à jour de votre session !",
+            "error"
           );
         }
-      } catch (error) {
-        console.log(error);
-        Swal.fire(
-          "Echec !",
-          "Un problème est survenu lors de la mise à jour de votre session !",
-          "error"
-        );
       }
-    }
-  }, []);
+    },
+    [sessions]
+  );
 
   const onEventDrop = useCallback(
     ({ event, start, end }) => {

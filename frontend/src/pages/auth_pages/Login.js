@@ -21,7 +21,6 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [loginUrl, setLoginUrl] = useState(null);
-  const [listNotif, setListNotif] = useState([]);
 
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -99,7 +98,7 @@ function Login() {
 
             //stock user in redux
             dispatch(setUser(user));
-            dispatch(setNotifications(user.notifications))
+            dispatch(setNotifications(user.notifications));
 
             if (user && user.email_verified_at) {
               if (user.role === "SuperAdministrateur") {

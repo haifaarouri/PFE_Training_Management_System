@@ -98,7 +98,7 @@ const TrainerCalendarModal = ({ show, onHide, calendarIdTrainer }) => {
             });
         }
       });
-  }, [show, calendarIdTrainer]);
+  }, [show, calendarIdTrainer, trainerAvailabilities, bookedDays]);
 
   useEffect(() => {
     setFormateur({});
@@ -106,7 +106,6 @@ const TrainerCalendarModal = ({ show, onHide, calendarIdTrainer }) => {
     setBookedDays([]);
   }, [onHide]);
 
-  console.log(trainerAvailabilities);
   const eventStyleGetter = (event, start, end, isSelected) => {
     const backgroundColor = isSelected ? "#005a9e" : event.color || "#0078d4";
     const style = {

@@ -102,7 +102,7 @@ function AllCommandes() {
     }
   };
 
-  const handleShowAddModal = () => setShowModal(true);
+  // const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
 
   const handleSuccess = (msg) =>

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ConvocationEmail;
 use App\Models\Candidat;
+use App\Models\EmailTemplate;
 use App\Models\Session;
 use App\Rules\CandidatTypeRule;
 use Illuminate\Http\Request;
 use App\Models\participant;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 // séparation des préoccupations : but de création des classe Participant et Candidat
@@ -187,6 +190,38 @@ class ParticipantController extends Controller
         }
     }
 
+    public function sendConvocationEmail($firstName, $lastName, $sessionTitle, $sessionDate, $templateId, $participantEmail)
+    {
+        $template = EmailTemplate::find($templateId);
+        if (!$template) {
+            return response()->json(['error' => 'Modèle d\'e-mail non trouvé !'], 404);
+        }
+
+        $data = [
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'sessionTitle' => $sessionTitle,
+            'sessionDate' => $sessionDate,
+        ];
+
+        $subject = $this->replacePlaceholders($template->subject, $data);
+        $content = $this->replacePlaceholders($template->content, $data);
+
+        $imageAttachments = json_decode($template->imageAttachement, true) ?? [];
+
+        Mail::to($participantEmail)->send(new ConvocationEmail($subject, $content, $imageAttachments));
+
+        return response()->json(['message' => 'E-mail envoyé avec succès !']);
+    }
+
+    private function replacePlaceholders($text, $data)
+    {
+        foreach ($data as $key => $value) {
+            $text = str_replace("{" . $key . "}", $value, $text);
+        }
+        return $text;
+    }
+
     public function participateToSession($participantId, $sessionId)
     {
         if (!$this->list_roles->contains(auth()->user()->role)) {
@@ -226,6 +261,11 @@ class ParticipantController extends Controller
                 'participationStatus' => "EnAttente",
             ];
             $participant->sessions()->attach($sessionId, $attributes);
+
+            //send convocation automatically
+            // Mail::to($participant->email)->send(new ConvocationEmail($session, $participant));
+            $this->sendConvocationEmail($participant->firstName, $participant->lastName, $session->title, $session->startDate, 2, $participant->email);
+
             return response()->json(['message' => 'Participant inscrit à la session avec succès !']);
         } catch (\PDOException $e) {
             if ($e->getCode() == 23000) {
