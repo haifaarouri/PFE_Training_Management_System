@@ -605,14 +605,14 @@ const AllSessions = () => {
     ({ event, start, end }) => {
       confirmAndSaveChanges(start, end, event.id);
     },
-    [confirmAndSaveChanges, sessions]
+    [confirmAndSaveChanges]
   );
 
   const onEventResize = useCallback(
     ({ event, start, end }) => {
       confirmAndSaveChanges(start, end, event.id);
     },
-    [confirmAndSaveChanges, sessions]
+    [confirmAndSaveChanges]
   );
 
   const handleSelectSlot = (slotInfo) => {

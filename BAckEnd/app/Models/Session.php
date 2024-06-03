@@ -22,6 +22,10 @@ class Session extends Model
         'max_participants'
     ];
 
+    protected $casts = [
+        'endDate' => 'datetime',
+    ];
+
     public function formation()
     {
         return $this->belongsTo(Formation::class);

@@ -83,14 +83,14 @@ const FileModal = ({
           <iframe
             src={`http://localhost:8000/${
               fileContent === "Template"
-                ? "DocumentsTemplates"
+                ? "documentTemplates"
                 : fileContent === "CourseMaterial"
                 ? "CoursesMaterials"
                 : "MaterielDocs"
-            }/${selectedFile}`}
+            }/${selectedFile}&embedded=true`}
             width="100%"
             height="600px"
-            title="PDF Viewer"
+            title="Doc Viewer"
           ></iframe>
         ) : (
           <DocViewer

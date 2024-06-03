@@ -94,6 +94,12 @@ function App() {
   const AllEmailTemplates = lazy(() =>
     import("./pages/email_management/AllEmailTemplates")
   );
+  const EmailEditorEdit = lazy(() =>
+    import("./pages/email_management/EmailEditorEdit")
+  );
+  const DocumentTemplateEdit = lazy(() =>
+    import("./pages/document_management/DocumentTemplateEdit")
+  );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -656,6 +662,44 @@ function App() {
                   ]}
                 >
                   <EmailEditor />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/edit-email-template/:id"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <EmailEditorEdit />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/edit-document-template/:id"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <DocumentTemplateEdit />
                 </RequireAuth>
               }
             />

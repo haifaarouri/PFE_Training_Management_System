@@ -1,14 +1,131 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Pagination } from "react-bootstrap";
+import { Card, Modal, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
   deleteEmailTemplate,
   fetchAllEmailTemplates,
 } from "../../services/EmailTemplateServices";
+import { AiFillDelete } from "react-icons/ai";
+import { BiSolidCalendarEdit } from "react-icons/bi";
+import "react-toastify/dist/ReactToastify.css";
 require("moment/locale/fr");
+
+const handleSuccess = (msg) =>
+  toast.success(msg, {
+    position: "top-center",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+  });
+
+const handleError = (err) =>
+  toast.error(err, {
+    position: "top-center",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+  });
+
+const EmailTemplateModal = ({ show, onHide, emailTemplate }) => {
+  const handleDelete = async (id) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, supprimer!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await deleteEmailTemplate(id);
+          if (res) {
+            Swal.fire({
+              title: "Supprimé avec succès!",
+              text: "Modèle d'e-mail est supprimé !",
+              icon: "success",
+            });
+            handleSuccess(res.message);
+            onHide();
+          }
+        } catch (error) {
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
+        }
+      }
+    });
+  };
+
+  return (
+    emailTemplate && (
+      <Modal
+        show={show}
+        onHide={onHide}
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        className="event-modal"
+        fullscreen="lg-down"
+      >
+        <Modal.Header closeButton className="modal-header-custom">
+          <Modal.Title
+            id="contained-modal-title-vcenter"
+            style={{ color: "#223e9c" }}
+          >
+            Modèle d'e-mail de type : {emailTemplate.type}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="modal-body-custom">
+          <Card className="mb-3">
+            <Card.Body>
+              <div className="d-flex justify-content-between mb-5">
+                <h5 className="align-self-center">
+                  Objet : {emailTemplate.subject}
+                </h5>
+                <div className="d-flex ">
+                  <Link to={`/edit-email-template/${emailTemplate.id}`}>
+                    <Button className="btn-sm btn-icon btn-inverse-info mx-1">
+                      <BiSolidCalendarEdit size={22} />
+                    </Button>
+                  </Link>
+                  <Button
+                    className="btn-sm btn-icon btn-inverse-danger mx-1"
+                    onClick={() => handleDelete(emailTemplate.id)}
+                  >
+                    <AiFillDelete size={22} />
+                  </Button>
+                </div>
+              </div>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: emailTemplate.content,
+                }}
+              ></div>
+            </Card.Body>
+          </Card>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={onHide} variant="info">
+            Fermer
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    )
+  );
+};
 
 function AllEmailTemplates() {
   const [emailTemplates, setEmailTemplates] = useState([]);
@@ -23,6 +140,18 @@ function AllEmailTemplates() {
     emailTemplates.length > 0 && emailTemplates.length / emailTemplatesPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
+  const [showEmailTemplateModal, setShowEmailTemplateModal] = useState(false);
+  const [emailTemplate, setEmailTemplate] = useState(null);
+
+  const handleShowEmailTemplateModal = (t) => {
+    setShowEmailTemplateModal(true);
+    setEmailTemplate(t);
+  };
+
+  const handleCloseEmailTemplateModal = () => {
+    setShowEmailTemplateModal(false);
+    setEmailTemplate(null);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -33,32 +162,8 @@ function AllEmailTemplates() {
     u();
   }, []);
 
-  const handleSuccess = (msg) =>
-    toast.success(msg, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-
-  const handleError = (err) =>
-    toast.error(err, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-
   const handleButtonEdit = (id) => {
-    navigate(`/edit-EmailTemplates/${id}`);
+    navigate(`/edit-email-template/${id}`);
   };
 
   const fetchData = async () => {
@@ -84,14 +189,16 @@ function AllEmailTemplates() {
       if (result.isConfirmed) {
         try {
           const res = await deleteEmailTemplate(id);
-          Swal.fire({
-            title: "Supprimé avec succès!",
-            text: "EmailTemplates est supprimé !",
-            icon: "success",
-          });
-          const d = await fetchData();
-          setEmailTemplates(d);
-          handleSuccess(res.message);
+          if (res) {
+            Swal.fire({
+              title: "Supprimé avec succès!",
+              text: "EmailTemplates est supprimé !",
+              icon: "success",
+            });
+            const d = await fetchData();
+            setEmailTemplates(d);
+            handleSuccess(res.message);
+          }
         } catch (error) {
           if (error && error.response.status === 422) {
             handleError(error.response.data.message);
@@ -128,6 +235,11 @@ function AllEmailTemplates() {
                 <h4 className="card-title mb-5 mt-2">
                   Liste de tous les modèles d'e-mail
                 </h4>
+                <EmailTemplateModal
+                  show={showEmailTemplateModal}
+                  onHide={handleCloseEmailTemplateModal}
+                  emailTemplate={emailTemplate}
+                />
                 <Link to="/add-email-templates">
                   <Button
                     variant="outline-success"
@@ -139,13 +251,13 @@ function AllEmailTemplates() {
               </div>
               <div className="table-responsive">
                 <table className="table table-striped table-hover">
-                  <colgroup>
+                  {/* <colgroup>
                     <col span="1" style={{ width: "10%" }} />
                     <col span="1" style={{ width: "10%" }} />
                     <col span="1" style={{ width: "50%" }} />
                     <col span="1" style={{ width: "18%" }} />
                     <col span="1" style={{ width: "12%" }} />
-                  </colgroup>
+                  </colgroup> */}
                   <thead>
                     <tr>
                       <th>Type</th>
@@ -164,33 +276,43 @@ function AllEmailTemplates() {
                           imageAttachementString
                         );
                         return (
-                          <tr key={index} className="text-center">
+                          <tr key={index}>
                             <td>
                               <h6>{emailTemplate.type}</h6>
                             </td>
                             <td>{emailTemplate.subject}</td>
-                            <td style={{ width: "600px" }}>
-                              <div
-                                dangerouslySetInnerHTML={{
-                                  __html: emailTemplate.content,
-                                }}
-                              ></div>
+                            <td>
+                              <Button
+                                className="btn-sm btn-inverse-primary"
+                                onClick={() =>
+                                  handleShowEmailTemplateModal(emailTemplate)
+                                }
+                              >
+                                Voir le modèle{" "}
+                                <i
+                                  className="mdi mdi-eye"
+                                  style={{ fontSize: "1.5em" }}
+                                />
+                              </Button>
                             </td>
                             <td>
                               {imageAttachement &&
                                 imageAttachement.length > 0 &&
                                 imageAttachement.map((image, index) => (
-                                  <img
-                                    key={index}
-                                    src={`http://localhost:8000/emailAttachements/${image}`}
-                                    alt={`emailAttachements ${index}`}
-                                    style={{
-                                      borderRadius: "8px",
-                                      width: "100%",
-                                      height: "100%",
-                                      marginBottom: "5px",
-                                    }}
-                                  />
+                                  <>
+                                    <img
+                                      key={index}
+                                      src={`http://localhost:8000/emailAttachements/${image}`}
+                                      alt={`emailAttachements ${index}`}
+                                      style={{
+                                        borderRadius: "8px",
+                                        width: "100px",
+                                        height: "100px",
+                                        marginBottom: "5px",
+                                      }}
+                                    />
+                                    <br />
+                                  </>
                                 ))}
                             </td>
                             <td>

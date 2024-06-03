@@ -3,6 +3,7 @@
 use App\Http\Controllers\CandidatController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FormateurController;
 use App\Http\Controllers\FormationController;
@@ -171,8 +172,17 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/emailTemplates', [EmailTemplateController::class, 'index']);
-    Route::post('/add-emailTemplates', [EmailTemplateController::class, 'store']);
-    // Route::get('/emailTemplate-id/{id}', [EmailTemplateController::class, 'show']);
-    // Route::put('/update-emailTemplate/{id}', [EmailTemplateController::class, 'update']);
-    // Route::delete('/delete-emailTemplate/{id}', [EmailTemplateController::class, 'destroy']);
+    Route::post('/add-email-template', [EmailTemplateController::class, 'store']);
+    Route::get('/emailTemplate-id/{id}', [EmailTemplateController::class, 'show']);
+    Route::put('/update-emailTemplate/{id}', [EmailTemplateController::class, 'update']);
+    Route::delete('/delete-emailTemplate/{id}', [EmailTemplateController::class, 'destroy']);
+    Route::post('/delete-images-attachements/{id}', [EmailTemplateController::class, 'deleteImagesAttachements']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/documentTemplates', [DocumentTemplateController::class, 'index']);
+    Route::post('/add-document-template', [DocumentTemplateController::class, 'store']);
+    Route::get('/documentTemplate-id/{id}', [DocumentTemplateController::class, 'show']);
+    Route::put('/update-documentTemplate/{id}', [DocumentTemplateController::class, 'update']);
+    Route::delete('/delete-documentTemplate/{id}', [DocumentTemplateController::class, 'destroy']);
 });

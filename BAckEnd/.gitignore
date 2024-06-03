@@ -10,6 +10,7 @@
 /public/DocumentsTemplates
 /public/CoursesMaterials 
 /public/emailAttachements
+/public/documentTemplates
 /storage/*.key
 /vendor
 .env

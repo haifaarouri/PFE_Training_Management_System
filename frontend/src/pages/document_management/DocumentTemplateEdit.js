@@ -3,22 +3,41 @@ import {
   Toolbar,
   Inject,
 } from "@syncfusion/ej2-react-documenteditor";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Form, InputGroup } from "react-bootstrap";
 import { BsFiletypeDocx } from "react-icons/bs";
 import axios from "../../services/axios";
 import Swal from "sweetalert2";
 import { PiFileDocDuotone } from "react-icons/pi";
 import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  editDocument,
+  fetchDocumentById,
+} from "../../services/DocumentServices";
+import { BiUpload } from "react-icons/bi";
 
-function TemplateEditor() {
+function DocumentTemplateEdit() {
   let editorObj = useRef(null);
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
-  const [type, setType] = useState("");
-  const [docName, setDocName] = useState("");
+  const [docTemplate, setDocTemplate] = useState({
+    id: "",
+    type: "",
+    docName: "",
+  });
   const navigate = useNavigate();
+  const params = useParams();
+  const { id } = params;
+  const [otherTemplate, setOtherTemplate] = useState(false);
+
+  const toggleOtherTemplate = () => {
+    setOtherTemplate(!otherTemplate);
+  };
+
+  useEffect(() => {
+    fetchDocumentById(id).then(setDocTemplate);
+  }, [id]);
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
@@ -68,72 +87,34 @@ function TemplateEditor() {
       setValidated(true);
 
       const formData = new FormData();
-      formData.append("type", type);
+      formData.append("_method", "PUT");
+      formData.append("type", docTemplate.type);
 
       const blob = await getDocumentAsBlob();
       blob
-        ? formData.append("docName", blob, `TemplateDocument.${type}.docx`)
-        : formData.append("docName", docName);
+        ? formData.append(
+            "docName",
+            blob,
+            `TemplateDocument.${docTemplate.type}.docx`
+          )
+        : formData.append("docName", docTemplate.docName);
 
-      try {
-        if (!localStorage.getItem("token")) {
-          const res = await axios.post("/api/add-document-template", formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          });
-
-          if (res.status === 201) {
-            handleSuccess(res.data.message);
-            Swal.fire(
-              "Success",
-              "Modèle du document enregistré avec succès !",
-              "success"
-            );
-
-            setType("");
-            setDocName("");
-
-            navigate("/documents");
-          }
-        } else {
-          const headers = {
-            "Content-Type": "multipart/form-data",
-          };
-
-          const token = localStorage.getItem("token");
-          if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-          }
-
-          const response = await axios.post(
-            "/api/add-document-template",
-            formData,
-            {
-              headers: headers,
-            }
-          );
-
-          if (response.status === 201) {
-            handleSuccess(response.data.message);
-            Swal.fire(
-              "Success",
-              "Modèle du document enregistré avec succès !",
-              "success"
-            );
-
-            setType("");
-            setDocName("");
-
-            navigate("/documents");
-          }
-        }
-      } catch (error) {
+      const res = await editDocument(id, formData);
+      if (res.status === 200) {
+        handleSuccess(res.data.message);
         Swal.fire(
-          "Error",
-          "Echec de l'enregistrement du modèle du document !",
-          "error"
+          "Success",
+          "Modèle du document modifié avec succès !",
+          "success"
         );
+
+        setDocTemplate({
+          id: "",
+          type: "",
+          docName: "",
+        });
+
+        navigate("/documents");
       }
     } catch (error) {
       if (error && error.response.status === 422) {
@@ -147,20 +128,6 @@ function TemplateEditor() {
     }
   };
 
-  // const downloadDocument = async () => {
-  //   const blob = await getDocumentAsBlob();
-  //   if (blob) {
-  //     const url = window.URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = "EditedDocument.docx"; // Specify the file name
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     a.remove();
-  //     window.URL.revokeObjectURL(url);
-  //   }
-  // };
-
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -168,7 +135,7 @@ function TemplateEditor() {
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
               <h4 className="card-title mb-5 mt-2">
-                Etapes de création d'un nouvel document modèle
+                Formulaire de modification du document modèle {docTemplate.type}
               </h4>
               <ToastContainer />
               <Form
@@ -192,8 +159,13 @@ function TemplateEditor() {
                     </InputGroup.Text>
                     <Form.Select
                       name="type"
-                      value={type}
-                      onChange={(e) => setType(e.target.value)}
+                      value={docTemplate.type}
+                      onChange={(e) =>
+                        setDocTemplate((prev) => ({
+                          ...prev,
+                          type: e.target.value,
+                        }))
+                      }
                       required
                     >
                       <option value="">
@@ -223,16 +195,29 @@ function TemplateEditor() {
                       type="file"
                       accept=".doc,.docx"
                       placeholder="Sélectionner le fichier"
-                      onChange={(e) => setDocName(e.target.files[0])}
+                      onChange={(e) =>
+                        setDocTemplate((prev) => ({
+                          ...prev,
+                          docName: e.target.files[0],
+                        }))
+                      }
                       required
                       style={{ display: "block" }}
                     />
                   </InputGroup>
                 </Form.Group>
-                <Alert variant="info" style={{ width: "32%" }}>
-                  Veuillez importer un fichier de type .docx ou .doc
-                </Alert>
-                {docName === "" ? (
+                <div className="d-flex justify-content-between mb-3">
+                  <Alert variant="info">
+                    Veuillez importer un fichier de type .docx ou .doc
+                  </Alert>
+                  <Button
+                    className="btn btn-inverse-info btn-sm mb-3"
+                    onClick={toggleOtherTemplate}
+                  >
+                    Importer un autre modèle <BiUpload size={22} />
+                  </Button>
+                </div>
+                {docTemplate.docName !== "" && otherTemplate ? (
                   <>
                     <div className="d-flex justify-content-end">
                       <button
@@ -247,9 +232,6 @@ function TemplateEditor() {
                       </button>
                     </div>
                     <DocumentEditorContainerComponent
-                      // ref={(scope) => {
-                      //   editorObj = scope;
-                      // }}
                       ref={editorObj}
                       height="600"
                       enableToolbar={true}
@@ -288,7 +270,7 @@ function TemplateEditor() {
                   <div className="d-flex justify-content-center">
                     <Alert variant="info" style={{ width: "70%" }}>
                       Vous avez importer le modèle pour le document de type :{" "}
-                      {type}
+                      {docTemplate.type}
                     </Alert>
                   </div>
                 )}
@@ -297,7 +279,7 @@ function TemplateEditor() {
                     type="submit"
                     className="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn"
                   >
-                    Enregister
+                    Mettre à jour
                   </Button>
                 </div>
               </Form>
@@ -309,4 +291,4 @@ function TemplateEditor() {
   );
 }
 
-export default TemplateEditor;
+export default DocumentTemplateEdit;

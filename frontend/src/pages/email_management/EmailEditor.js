@@ -1,49 +1,50 @@
 import React, { useRef, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-import { Button, Form, InputGroup } from "react-bootstrap";
+import { Alert, Button, Form, InputGroup } from "react-bootstrap";
 import Swal from "sweetalert2";
 import axios from "../../services/axios";
 import { BiSolidCategory } from "react-icons/bi";
 import { FaMailBulk } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import { MdAttachEmail } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
-let imageAttachement = [];
+// let imageAttachement = [];
 
-class Base64UploadAdapter {
-  constructor(loader) {
-    this.loader = loader;
-  }
+// class Base64UploadAdapter {
+//   constructor(loader) {
+//     this.loader = loader;
+//   }
 
-  // Starts the upload process.
-  upload() {
-    return this.loader.file.then((file) => {
-      imageAttachement.push(file);
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          resolve({ default: reader.result });
-        };
-        reader.onerror = (error) => {
-          reject(error);
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-  }
+//   // Starts the upload process.
+//   upload() {
+//     return this.loader.file.then((file) => {
+//       imageAttachement.push(file);
+//       return new Promise((resolve, reject) => {
+//         const reader = new FileReader();
+//         reader.onload = () => {
+//           resolve({ default: reader.result });
+//         };
+//         reader.onerror = (error) => {
+//           reject(error);
+//         };
+//         reader.readAsDataURL(file);
+//       });
+//     });
+//   }
 
-  // Aborts the upload process.
-  abort() {
-    console.log("Upload aborted.");
-  }
-}
+//   // Aborts the upload process.
+//   abort() {
+//     console.log("Upload aborted.");
+//   }
+// }
 
-function MyCustomUploadAdapterPlugin(editor) {
-  editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
-    return new Base64UploadAdapter(loader);
-  };
-}
+// function MyCustomUploadAdapterPlugin(editor) {
+//   editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
+//     return new Base64UploadAdapter(loader);
+//   };
+// }
 
 function EmailEditor() {
   const [editorData, setEditorData] = useState("");
@@ -54,6 +55,7 @@ function EmailEditor() {
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const [showAttachements, setShowAttachements] = useState(false);
+  const navigate = useNavigate();
 
   const handleEditorChange = (event, editor) => {
     const data = editor.getData();
@@ -172,6 +174,42 @@ function EmailEditor() {
     
         <!-- Progressive Enhancements : BEGIN -->
         <style>
+        .container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          margin: auto;
+        }
+        
+        .row {
+            width: 100%;
+            padding: 1em 2.5em;
+            display: flex;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .bg_white {
+            background-color: white;
+        }
+        
+        .hero {
+            padding: 2em 0 4em 0;
+        }
+        
+        .col {
+            padding: 0 2.5em;
+        }
+        
+        .logo h1 {
+            margin: 0;
+        }
+        
+        .text {
+            padding-bottom: 3em;
+              }
+      
             .primary {
                 background: #17bebb;
             }
@@ -360,33 +398,18 @@ function EmailEditor() {
                 style="display: none; font-size: 1px;max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; font-family: sans-serif;">
             </div>
             <div style="max-width: 600px; margin: 0 auto;" class="email-container">
-                <table align="center" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                    style="margin: auto;">
-                    <tr>
-                        <td valign="top" class="bg_white" style="padding: 1em 2.5em 0 2.5em;">
-                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-                                <tr>
-                                    <td class="logo" style="text-align: center;">
-                                        <h1><a href="#">Train Scheduler</a></h1>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td valign="middle" class="hero bg_white" style="padding: 2em 0 4em 0;">
-                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-                                <tr>
-                                    <td style="padding: 0 2.5em; text-align: center; padding-bottom: 3em;">
-                                        <div class="text">
-                                            ${data}
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
+            <div class="container">
+                <div class="row bg_white">
+                    <div class="col logo">
+                        <h1><a href="#">Train Scheduler</a></h1>
+                    </div>
+                </div>
+                <div class="row hero bg_white">
+                    <div class="col text">
+                        ${data}
+                    </div>
+                </div>
+            </div>
             </div>
         </center>
     </body>
@@ -443,7 +466,6 @@ function EmailEditor() {
           formData.append(`imageAttachement[${index}]`, file);
         });
       }
-      // formData.append("imageAttachement", JSON.stringify(imageAttachements));
 
       try {
         if (!localStorage.getItem("token")) {
@@ -465,6 +487,8 @@ function EmailEditor() {
             setEmailType("");
             setSubject("");
             setContent("");
+
+            navigate("/email-templates");
           }
         } else {
           const headers = {
@@ -496,6 +520,8 @@ function EmailEditor() {
             setEmailType("");
             setSubject("");
             setContent("");
+
+            navigate("/email-templates");
           }
         }
       } catch (error) {
@@ -605,6 +631,12 @@ function EmailEditor() {
                 </Form.Group>
                 <Form.Group>
                   <Form.Label>Contenu de l'e-mail</Form.Label>
+                  <Alert variant="info">
+                    Veuillez saisir dans le contenu de l'e-mail les variables
+                    qui seront remplacées par des valeurs dynamiques lors de
+                    l'envoi de l'e-mail selon cette format :{" "}
+                    <b>{"{nomDuVariable}"}</b>
+                  </Alert>
                   <InputGroup className="mb-3 d-flex justify-content-center">
                     <div style={{ width: "100%" }}>
                       <Form.Control
@@ -619,7 +651,7 @@ function EmailEditor() {
                         data={editorData}
                         onChange={handleEditorChange}
                         config={{
-                          extraPlugins: [MyCustomUploadAdapterPlugin],
+                          // extraPlugins: [MyCustomUploadAdapterPlugin],
                           toolbar: [
                             "undo",
                             "redo",
@@ -636,13 +668,13 @@ function EmailEditor() {
                             "outdent",
                             "indent",
                             "|",
-                            "imageUpload",
+                            // "imageUpload",
                             "blockQuote",
                             "insertTable",
-                            "mediaEmbed",
-                            "|",
-                            "emoji",
-                            "resizeImage",
+                            // "mediaEmbed",
+                            // "|",
+                            // "emoji",
+                            // "resizeImage",
                           ],
                         }}
                       />
