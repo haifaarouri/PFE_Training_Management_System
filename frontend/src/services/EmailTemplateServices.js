@@ -15,6 +15,20 @@ export const fetchAllEmailTemplates = async () => {
   }
 };
 
+export const fetchAllEmailLogs = async () => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get("/api/emailLogs");
+      return response.data;
+    } else {
+      const response = await apiFetch("emailLogs");
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching email logs :", error);
+  }
+};
+
 export const fetchEmailTemplateById = async (id) => {
   try {
     if (!localStorage.getItem("token")) {

@@ -74,6 +74,8 @@ const FileModal = ({
               ? "Support de cours de la formation"
               : fileContent === "Template"
               ? "Document"
+              : fileContent === "documentGenerated"
+              ? "Document généré"
               : "Fichier sélectionné pour les spécifications techniques du matériel"}
           </h5>
         </Modal.Title>
@@ -86,8 +88,10 @@ const FileModal = ({
                 ? "documentTemplates"
                 : fileContent === "CourseMaterial"
                 ? "CoursesMaterials"
+                : fileContent === "documentGenerated"
+                ? "DocumentsGenerated"
                 : "MaterielDocs"
-            }/${selectedFile}&embedded=true`}
+            }/${selectedFile}`}
             width="100%"
             height="600px"
             title="Doc Viewer"

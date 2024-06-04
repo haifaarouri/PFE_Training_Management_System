@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Card, Modal, Pagination } from "react-bootstrap";
+import { Card, Modal, Pagination, Tab, Tabs } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
   deleteEmailTemplate,
+  fetchAllEmailLogs,
   fetchAllEmailTemplates,
 } from "../../services/EmailTemplateServices";
 import { AiFillDelete } from "react-icons/ai";
@@ -142,6 +143,7 @@ function AllEmailTemplates() {
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [showEmailTemplateModal, setShowEmailTemplateModal] = useState(false);
   const [emailTemplate, setEmailTemplate] = useState(null);
+  const [emailLogs, setEmailLogs] = useState([]);
 
   const handleShowEmailTemplateModal = (t) => {
     setShowEmailTemplateModal(true);
@@ -157,6 +159,9 @@ function AllEmailTemplates() {
     const u = async () => {
       const d = await fetchData();
       setEmailTemplates(d);
+
+      const e = await fetchAllEmailLogs();
+      setEmailLogs(e);
     };
 
     u();
@@ -249,131 +254,177 @@ function AllEmailTemplates() {
                   </Button>
                 </Link>
               </div>
-              <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  {/* <colgroup>
+              <Tabs
+                defaultActiveKey="listTemplates"
+                id="justify-tab-example"
+                className="mb-3"
+                justify
+              >
+                <Tab
+                  eventKey="listTemplates"
+                  title="Liste de tous les modèles d'e-mails"
+                >
+                  <div className="table-responsive">
+                    <table className="table table-striped table-hover">
+                      {/* <colgroup>
                     <col span="1" style={{ width: "10%" }} />
                     <col span="1" style={{ width: "10%" }} />
                     <col span="1" style={{ width: "50%" }} />
                     <col span="1" style={{ width: "18%" }} />
                     <col span="1" style={{ width: "12%" }} />
                   </colgroup> */}
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Object</th>
-                      <th>Contenu</th>
-                      <th>Pièces jointes</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {emailTemplates.length > 0 &&
-                      emailTemplatesPage.map((emailTemplate, index) => {
-                        const imageAttachementString =
-                          emailTemplate.imageAttachement;
-                        const imageAttachement = JSON.parse(
-                          imageAttachementString
-                        );
-                        return (
-                          <tr key={index}>
-                            <td>
-                              <h6>{emailTemplate.type}</h6>
-                            </td>
-                            <td>{emailTemplate.subject}</td>
-                            <td>
-                              <Button
-                                className="btn-sm btn-inverse-primary"
-                                onClick={() =>
-                                  handleShowEmailTemplateModal(emailTemplate)
-                                }
-                              >
-                                Voir le modèle{" "}
-                                <i
-                                  className="mdi mdi-eye"
-                                  style={{ fontSize: "1.5em" }}
-                                />
-                              </Button>
-                            </td>
-                            <td>
-                              {imageAttachement &&
-                                imageAttachement.length > 0 &&
-                                imageAttachement.map((image, index) => (
-                                  <>
-                                    <img
-                                      key={index}
-                                      src={`http://localhost:8000/emailAttachements/${image}`}
-                                      alt={`emailAttachements ${index}`}
-                                      style={{
-                                        borderRadius: "8px",
-                                        width: "100px",
-                                        height: "100px",
-                                        marginBottom: "5px",
-                                      }}
+                      <thead>
+                        <tr>
+                          <th>Type</th>
+                          <th>Object</th>
+                          <th>Contenu</th>
+                          <th>Pièces jointes</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {emailTemplates.length > 0 &&
+                          emailTemplatesPage.map((emailTemplate, index) => {
+                            const imageAttachementString =
+                              emailTemplate.imageAttachement;
+                            const imageAttachement = JSON.parse(
+                              imageAttachementString
+                            );
+                            return (
+                              <tr key={index}>
+                                <td>
+                                  <h6>{emailTemplate.type}</h6>
+                                </td>
+                                <td>{emailTemplate.subject}</td>
+                                <td>
+                                  <Button
+                                    className="btn-sm btn-inverse-primary"
+                                    onClick={() =>
+                                      handleShowEmailTemplateModal(
+                                        emailTemplate
+                                      )
+                                    }
+                                  >
+                                    Voir le modèle{" "}
+                                    <i
+                                      className="mdi mdi-eye"
+                                      style={{ fontSize: "1.5em" }}
                                     />
-                                    <br />
-                                  </>
-                                ))}
-                            </td>
-                            <td>
-                              <div className="d-flex flex-column justify-content-center">
-                                <Button
-                                  variant="outline-primary"
-                                  onClick={() =>
-                                    handleButtonEdit(emailTemplate.id)
-                                  }
-                                  className="btn btn-sm mb-2"
-                                >
-                                  Modifier{" "}
-                                  <i className="mdi mdi-tooltip-edit"></i>
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    handleDeleteEmailTemplate(emailTemplate.id)
-                                  }
-                                  variant="outline-danger"
-                                  className="btn btn-sm"
-                                >
-                                  Supprimer <i className="mdi mdi-delete"></i>
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-              <Pagination className="d-flex justify-content-center mt-5">
-                <Pagination.Prev
-                  onClick={prevPage}
-                  disabled={currentPage === 1}
-                >
-                  <i
-                    className="mdi mdi-arrow-left-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Prev>
-                {numbers.map((n, i) => (
-                  <Pagination.Item
-                    className={`${currentPage === n ? "active" : ""}`}
-                    key={i}
-                    style={{ fontSize: "1.5em" }}
-                    onClick={() => changeCurrentPage(n)}
-                  >
-                    {n}
-                  </Pagination.Item>
-                ))}
-                <Pagination.Next
-                  onClick={nextPage}
-                  disabled={currentPage === numberPages}
-                >
-                  <i
-                    className="mdi mdi-arrow-right-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Next>
-              </Pagination>
+                                  </Button>
+                                </td>
+                                <td>
+                                  {imageAttachement &&
+                                    imageAttachement.length > 0 &&
+                                    imageAttachement.map((image, index) => (
+                                      <>
+                                        <img
+                                          key={index}
+                                          src={`http://localhost:8000/emailAttachements/${image}`}
+                                          alt={`emailAttachements ${index}`}
+                                          style={{
+                                            borderRadius: "8px",
+                                            width: "100px",
+                                            height: "100px",
+                                            marginBottom: "5px",
+                                          }}
+                                        />
+                                        <br />
+                                      </>
+                                    ))}
+                                </td>
+                                <td>
+                                  <div className="d-flex flex-column justify-content-center">
+                                    <Button
+                                      variant="outline-primary"
+                                      onClick={() =>
+                                        handleButtonEdit(emailTemplate.id)
+                                      }
+                                      className="btn btn-sm mb-2"
+                                    >
+                                      Modifier{" "}
+                                      <i className="mdi mdi-tooltip-edit"></i>
+                                    </Button>
+                                    <Button
+                                      onClick={() =>
+                                        handleDeleteEmailTemplate(
+                                          emailTemplate.id
+                                        )
+                                      }
+                                      variant="outline-danger"
+                                      className="btn btn-sm"
+                                    >
+                                      Supprimer{" "}
+                                      <i className="mdi mdi-delete"></i>
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                    <Pagination className="d-flex justify-content-center mt-5">
+                      <Pagination.Prev
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
+                      >
+                        <i
+                          className="mdi mdi-arrow-left-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Prev>
+                      {numbers.map((n, i) => (
+                        <Pagination.Item
+                          className={`${currentPage === n ? "active" : ""}`}
+                          key={i}
+                          style={{ fontSize: "1.5em" }}
+                          onClick={() => changeCurrentPage(n)}
+                        >
+                          {n}
+                        </Pagination.Item>
+                      ))}
+                      <Pagination.Next
+                        onClick={nextPage}
+                        disabled={currentPage === numberPages}
+                      >
+                        <i
+                          className="mdi mdi-arrow-right-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Next>
+                    </Pagination>
+                  </div>
+                </Tab>
+                <Tab eventKey="listLogs" title="Liste des e-mails envoyés">
+                  <div className="table-responsive">
+                    <table className="table table-striped table-hover">
+                      <thead>
+                        <tr>
+                          <th>Type d'e-mail</th>
+                          <th>Participant ID</th>
+                          <th>Session ID</th>
+                          <th>Date d'envoi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {emailLogs.length > 0 &&
+                          emailLogs.map((emailLog, index) => {
+                            return (
+                              <tr key={index}>
+                                <td>
+                                  <h6>{emailLog.email_type}</h6>
+                                </td>
+                                <td>{emailLog.participant_id}</td>
+                                <td>{emailLog.session_id}</td>
+                                <td>{emailLog.sent_at}</td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                </Tab>
+              </Tabs>
             </div>
           </div>
         </div>

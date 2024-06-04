@@ -15,6 +15,20 @@ export const fetchAllDocuments = async () => {
   }
 };
 
+export const fetchAllDocumentLogs = async () => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get("/api/documentLogs");
+      return response.data;
+    } else {
+      const response = await apiFetch("documentLogs");
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching documentLogs :", error);
+  }
+};
+
 export const fetchDocumentById = async (id) => {
   try {
     if (!localStorage.getItem("token")) {

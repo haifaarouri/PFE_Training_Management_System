@@ -3,7 +3,9 @@
 use App\Http\Controllers\CandidatController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentLogController;
 use App\Http\Controllers\DocumentTemplateController;
+use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FormateurController;
 use App\Http\Controllers\FormationController;
@@ -185,4 +187,20 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/documentTemplate-id/{id}', [DocumentTemplateController::class, 'show']);
     Route::put('/update-documentTemplate/{id}', [DocumentTemplateController::class, 'update']);
     Route::delete('/delete-documentTemplate/{id}', [DocumentTemplateController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/emailLogs', [EmailLogController::class, 'index']);
+    // Route::post('/add-document-template', [DocumentTemplateController::class, 'store']);
+    // Route::get('/documentTemplate-id/{id}', [DocumentTemplateController::class, 'show']);
+    // Route::put('/update-documentTemplate/{id}', [DocumentTemplateController::class, 'update']);
+    // Route::delete('/delete-documentTemplate/{id}', [DocumentTemplateController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/documentLogs', [DocumentLogController::class, 'index']);
+    // Route::post('/add-document-template', [DocumentTemplateController::class, 'store']);
+    // Route::get('/documentTemplate-id/{id}', [DocumentTemplateController::class, 'show']);
+    // Route::put('/update-documentTemplate/{id}', [DocumentTemplateController::class, 'update']);
+    // Route::delete('/delete-documentTemplate/{id}', [DocumentTemplateController::class, 'destroy']);
 });

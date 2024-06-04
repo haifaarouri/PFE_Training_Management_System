@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Jobs\GenerateDocuments;
+use App\Jobs\SendEmailsThankAndEvaluation;
 use App\Models\Session;
 use Illuminate\Console\Command;
 
@@ -29,12 +30,16 @@ class AfterSessionTasks extends Command
      */
     public function handle()
     {
-        // return Command::SUCCESS;
         $sessions = Session::where('endDate', '<', now())->get();
+
         foreach ($sessions as $session) {
-            $delay = $session->endDate->addDay(); // Delay the job by one day after session's endDate
-            GenerateDocuments::dispatch($session)->delay($delay);
-            // SendThankYouEmails::dispatch($session)->delay($delay);
+            $participants = $session->participants;
+
+            foreach ($participants as $participant) {
+                $delay = $session->endDate->addDay();
+                GenerateDocuments::dispatch($session, $participant)->delay($delay);
+                SendEmailsThankAndEvaluation::dispatch($session, $participant)->delay($delay);
+            }
         }
     }
 }

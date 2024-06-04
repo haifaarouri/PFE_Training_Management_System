@@ -3,18 +3,23 @@ import { Link, useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import {
   deleteDocument,
+  fetchAllDocumentLogs,
   fetchAllDocuments,
 } from "../../services/DocumentServices";
 import FileModal from "../../components/FileModal";
 import { HiDocumentPlus } from "react-icons/hi2";
 import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
+import { Tab, Tabs } from "react-bootstrap";
 
 function Alldocuments() {
   const [documents, setDocuments] = useState([]);
   const navigate = useNavigate();
   const [showFileModal, setShowFileModal] = useState(false);
   const [file, setFile] = useState(null);
+  const [docLogs, setDocLogs] = useState([]);
+  const [showDoc, setShowDoc] = useState(false);
+  const [doc, setDoc] = useState(null);
 
   // const handleShowFileModal = (doc) => {
   //   setShowFileModal(true);
@@ -26,6 +31,9 @@ function Alldocuments() {
     const u = async () => {
       const d = await fetchData();
       setDocuments(d);
+
+      const doc = await fetchAllDocumentLogs();
+      setDocLogs(doc);
     };
 
     u();
@@ -101,6 +109,16 @@ function Alldocuments() {
     });
   };
 
+  const handleShowDoc = (f) => {
+    setShowDoc(true);
+    setDoc(f);
+  };
+
+  const handleCloseDoc = () => {
+    setShowDoc(false);
+    setDoc(null);
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -121,35 +139,45 @@ function Alldocuments() {
                   <HiDocumentPlus size={22} />
                 </Link>
               </div>
-              <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  <thead>
-                    <tr>
-                      <th>Nom du document</th>
-                      <th>Type du document</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {documents.length > 0 &&
-                      documents.map((d, index) => {
-                        return (
-                          <tr key={index}>
-                            <td>
-                              <h6>{d.docName}</h6>
-                            </td>
-                            <td>{d.type}</td>
-                            <td style={{ width: "15%" }}>
-                              <div className="d-flex flex-column justify-content-center">
-                                <Button
-                                  variant="outline-primary"
-                                  onClick={() => handleButtonEdit(d.id)}
-                                  className="btn btn-sm mb-2"
-                                >
-                                  Modifier{" "}
-                                  <i className="mdi mdi-tooltip-edit"></i>
-                                </Button>
-                                {/* <Button
+              <Tabs
+                defaultActiveKey="listTemplates"
+                id="justify-tab-example"
+                className="mb-3"
+                justify
+              >
+                <Tab
+                  eventKey="listTemplates"
+                  title="Liste de tous les modèles de documents"
+                >
+                  <div className="table-responsive">
+                    <table className="table table-striped table-hover">
+                      <thead>
+                        <tr>
+                          <th>Nom du document</th>
+                          <th>Type du document</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {documents.length > 0 &&
+                          documents.map((d, index) => {
+                            return (
+                              <tr key={index}>
+                                <td>
+                                  <h6>{d.docName}</h6>
+                                </td>
+                                <td>{d.type}</td>
+                                <td style={{ width: "15%" }}>
+                                  <div className="d-flex flex-column justify-content-center">
+                                    <Button
+                                      variant="outline-primary"
+                                      onClick={() => handleButtonEdit(d.id)}
+                                      className="btn btn-sm mb-2"
+                                    >
+                                      Modifier{" "}
+                                      <i className="mdi mdi-tooltip-edit"></i>
+                                    </Button>
+                                    {/* <Button
                                   onClick={() => handleShowFileModal(d)}
                                   className="btn btn-inverse-primary"
                                 >
@@ -159,27 +187,82 @@ function Alldocuments() {
                                     style={{ fontSize: "1.5em" }}
                                   />
                                 </Button> */}
-                                <Button
-                                  onClick={() => handleDeleteDocument(d.id)}
-                                  variant="outline-danger"
-                                  className="btn btn-sm"
-                                >
-                                  Supprimer <i className="mdi mdi-delete"></i>
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                                    <Button
+                                      onClick={() => handleDeleteDocument(d.id)}
+                                      variant="outline-danger"
+                                      className="btn btn-sm"
+                                    >
+                                      Supprimer{" "}
+                                      <i className="mdi mdi-delete"></i>
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        <FileModal
+                          show={showFileModal}
+                          handleClose={handleCloseFileModal}
+                          selectedFile={file}
+                          fileContent="Template"
+                        />
+                      </tbody>
+                    </table>
+                  </div>
+                </Tab>
+                <Tab eventKey="listLogs" title="Liste des documents générés">
+                  <div className="table-responsive">
+                    <table className="table table-striped table-hover">
+                      <thead>
+                        <tr>
+                          <th>Type d'e-mail</th>
+                          <th>Participant ID</th>
+                          <th>Session ID</th>
+                          <th>Formation ID</th>
+                          <th>Date d'envoi</th>
+                          <th>Document généré</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {docLogs.length > 0 &&
+                          docLogs.map((docLog, index) => {
+                            return (
+                              <tr key={index}>
+                                <td>
+                                  <h6>{docLog.document_type}</h6>
+                                </td>
+                                <td>{docLog.participant_id}</td>
+                                <td>{docLog.session_id}</td>
+                                <td>{docLog.formation_id}</td>
+                                <td>{docLog.generated_at}</td>
+                                <td>
+                                  <Button
+                                    className="btn btn-inverse-primary"
+                                    onClick={() =>
+                                      handleShowDoc(docLog.document_generated)
+                                    }
+                                  >
+                                    Ouvrir le fichier{" "}
+                                    <i
+                                      className="mdi mdi-eye"
+                                      style={{ fontSize: "1.2em" }}
+                                    />
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
                     <FileModal
-                      show={showFileModal}
-                      handleClose={handleCloseFileModal}
-                      selectedFile={file}
-                      fileContent="Template"
+                      show={showDoc}
+                      handleClose={handleCloseDoc}
+                      selectedFile={doc}
+                      fileContent="documentGenerated"
                     />
-                  </tbody>
-                </table>
-              </div>
+                  </div>
+                </Tab>
+              </Tabs>
             </div>
           </div>
         </div>
