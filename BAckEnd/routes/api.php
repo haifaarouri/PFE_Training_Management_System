@@ -12,6 +12,7 @@ use App\Http\Controllers\FormationController;
 use App\Http\Controllers\materielController;
 use App\Http\Controllers\PartenaireController;
 use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\ProxyController;
 use App\Http\Controllers\SalleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UserController;
@@ -204,3 +205,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Route::put('/update-documentTemplate/{id}', [DocumentTemplateController::class, 'update']);
     // Route::delete('/delete-documentTemplate/{id}', [DocumentTemplateController::class, 'destroy']);
 });
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/proxy', [ProxyController::class, 'handle']);
+});
+

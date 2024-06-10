@@ -100,6 +100,12 @@ function App() {
   const DocumentTemplateEdit = lazy(() =>
     import("./pages/document_management/DocumentTemplateEdit")
   );
+  const ParticipantFeedback = lazy(() =>
+    import("./pages/feedBack_management/ParticipantFeedback")
+  );
+  const GoogleSurveyCreator = lazy(() =>
+    import("./pages/feedBack_management/GoogleSurveyCreator")
+  );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -703,6 +709,25 @@ function App() {
                 </RequireAuth>
               }
             />
+            <Route
+              path="/survey-creator"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <GoogleSurveyCreator />
+                </RequireAuth>
+              }
+            />
           </Route>
           {/* Public Routes */}
           <Route element={<AuthLayout />}>
@@ -727,6 +752,7 @@ function App() {
           />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route path="*" element={<Unauthorized status="404" />} />
+          <Route path="/add-feedback" element={<ParticipantFeedback />} />
         </Routes>
       </div>
     </Suspense>
