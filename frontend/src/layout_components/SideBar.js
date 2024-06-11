@@ -8,6 +8,7 @@ import { BsCalendarRange } from "react-icons/bs";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { VscOrganization } from "react-icons/vsc";
 import { MdEmail } from "react-icons/md";
+import { RiSurveyFill } from "react-icons/ri";
 
 function SideBar({ isSidebarVisible }) {
   const [userAuth, setUserAuth] = useState(null);
@@ -87,6 +88,11 @@ function SideBar({ isSidebarVisible }) {
       path: "/email-templates",
       icon: <MdEmail size={22} />,
       title: "Gestion des Emails",
+    },
+    {
+      path: "/survey-creator",
+      icon: <RiSurveyFill size={22} />,
+      title: "Gestion des Formulaires",
     },
   ];
 

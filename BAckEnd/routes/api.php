@@ -208,5 +208,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/proxy', [ProxyController::class, 'handle']);
+    Route::post('/get-form-responses', [ProxyController::class, 'getFormResponses']);
+    Route::get('/get-all-surveys', [ProxyController::class, 'getAllSurveys']);
 });
 

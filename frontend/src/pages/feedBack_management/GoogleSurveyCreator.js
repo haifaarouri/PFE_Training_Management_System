@@ -6,27 +6,19 @@ import Swal from "sweetalert2";
 import { FaPlusCircle, FaQuestionCircle } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import { RiSurveyLine } from "react-icons/ri";
+import Spinner from "../../components/Spinner";
 
 function GoogleSurveyCreator() {
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState([""]);
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
-  const [theme, setTheme] = useState({
-    backgroundColor: "#ffffff",
-    headerImage: "",
-    textStyle: "Normal",
-  });
-
-  const handleThemeChange = (key, value) => {
-    setTheme((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleQuestionChange = (index, event) => {
-    const newQuestions = questions.slice();
-    newQuestions[index] = event.target.value;
-    setQuestions(newQuestions);
-  };
+  // const [theme, setTheme] = useState({
+  //   backgroundColor: "#ffffff",
+  //   headerImage: "",
+  //   textStyle: "Normal",
+  // });
+  const [loading, setLoading] = useState(false);
 
   const updateQuestion = (index, key, value) => {
     const updatedQuestions = [...questions];
@@ -35,7 +27,6 @@ function GoogleSurveyCreator() {
   };
 
   const addQuestion = () => {
-    // setQuestions([...questions, ""]);
     setQuestions((prev) => [
       ...prev,
       { type: "text", title: "", options: [], rows: [], columns: [] },
@@ -43,11 +34,6 @@ function GoogleSurveyCreator() {
   };
 
   const removeQuestion = (index) => {
-    // if (index !== 0) {
-    //   const newQuestions = [...questions];
-    //   newQuestions.splice(index, 1);
-    //   setQuestions(newQuestions);
-    // }
     setQuestions((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -67,6 +53,7 @@ function GoogleSurveyCreator() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     await csrf();
     try {
       const form = formRef.current;
@@ -80,7 +67,7 @@ function GoogleSurveyCreator() {
       const formData = new FormData();
       formData.append("title", title);
       formData.append("questions", JSON.stringify(questions));
-      formData.append("theme", theme);
+      // formData.append("theme", theme);
 
       if (!localStorage.getItem("token")) {
         const res = await axios.post(
@@ -93,11 +80,12 @@ function GoogleSurveyCreator() {
           }
         );
 
-        if (res.status === 201) {
-          handleSuccess("Commande créée !");
+        if (res) {
+          setLoading(false)
+          handleSuccess("Modèle du formulaire crée !");
           Swal.fire({
             icon: "success",
-            title: "Commande ajoutée avec succès !",
+            title: "Modèle du formulaire crée avec succès !",
             showConfirmButton: false,
             timer: 1500,
           });
@@ -120,10 +108,12 @@ function GoogleSurveyCreator() {
           }
         );
 
-        if (response.status === 201) {
+        if (response) {
+          setLoading(false)
+          handleSuccess("Modèle du formulaire crée !");
           Swal.fire({
             icon: "success",
-            title: "Commande ajoutée avec succès !",
+            title: "Modèle du formulaire crée !",
             showConfirmButton: false,
             timer: 2000,
           });
@@ -140,6 +130,7 @@ function GoogleSurveyCreator() {
         <div className="col-lg-12 grid-margin stretch-card">
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
+              {loading ? <Spinner /> : null}
               <h4 className="card-title mb-5 mt-2">
                 Formulaire de création du modèle de questionnaire d'évaluation
                 du session de formation
@@ -211,18 +202,18 @@ function GoogleSurveyCreator() {
                         {/* <option value="date">Date</option>
                         <option value="time">Time</option> */}
                       </Form.Select>
-                      <input
+                      <Form.Control
                         type="text"
-                        placeholder="Question Title"
+                        placeholder="Question"
                         value={question.title}
                         onChange={(e) =>
                           updateQuestion(index, "title", e.target.value)
                         }
                       />
                       {question.type === "choice" && (
-                        <input
+                        <Form.Control
                           type="text"
-                          placeholder="Options (comma-separated)"
+                          placeholder="Options (séparés par des virgules)"
                           value={question.options.join(",")}
                           onChange={(e) =>
                             updateQuestion(
@@ -235,9 +226,9 @@ function GoogleSurveyCreator() {
                       )}
                       {question.type === "grid" && (
                         <>
-                          <input
+                          <Form.Control
                             type="text"
-                            placeholder="Rows (comma-separated)"
+                            placeholder="Lignes (séparés par des virgules)"
                             value={question.rows.join(",")}
                             onChange={(e) =>
                               updateQuestion(
@@ -247,9 +238,9 @@ function GoogleSurveyCreator() {
                               )
                             }
                           />
-                          <input
+                          <Form.Control
                             type="text"
-                            placeholder="Columns (comma-separated)"
+                            placeholder="Colonnes (séparés par des virgules)"
                             value={question.columns.join(",")}
                             onChange={(e) =>
                               updateQuestion(
@@ -293,7 +284,7 @@ function GoogleSurveyCreator() {
                     Ajouter un question <FaPlusCircle size={25} />
                   </Button>
                 </div>
-                <div>
+                {/* <div>
                   <label>Background Color:</label>
                   <input
                     type="color"
@@ -311,7 +302,7 @@ function GoogleSurveyCreator() {
                       handleThemeChange("headerImage", e.target.value)
                     }
                   />
-                </div>
+                </div> */}
                 <div className="mt-5 d-flex justify-content-center">
                   <Button
                     type="submit"

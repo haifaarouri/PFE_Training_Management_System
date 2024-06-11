@@ -5,6 +5,7 @@ import { Toaster, toast } from "sonner";
 import pusher from "./services/pusherConfig";
 import { setNotifications } from "./store/slices/notificationsSlice";
 import { fetchAllUnreadNotifs } from "./services/CommandeServices";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const persistRootData = localStorage.getItem("persist:root");
@@ -728,6 +729,25 @@ function App() {
                 </RequireAuth>
               }
             />
+            <Route
+              path="/participants-feedbacks"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <ParticipantFeedback />
+                </RequireAuth>
+              }
+            />
           </Route>
           {/* Public Routes */}
           <Route element={<AuthLayout />}>
@@ -752,7 +772,6 @@ function App() {
           />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route path="*" element={<Unauthorized status="404" />} />
-          <Route path="/add-feedback" element={<ParticipantFeedback />} />
         </Routes>
       </div>
     </Suspense>
