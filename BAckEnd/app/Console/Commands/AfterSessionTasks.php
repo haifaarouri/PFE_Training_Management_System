@@ -33,13 +33,23 @@ class AfterSessionTasks extends Command
         $sessions = Session::where('endDate', '<', now())->get();
 
         foreach ($sessions as $session) {
-            $participants = $session->participants;
+            $endDate = $session->endDate;
+            $tomorrow = now()->addDay();
+            $dayAfterTomorrow = now()->addDays(2);
 
-            foreach ($participants as $participant) {
-                $delay = $session->endDate->addDay();
-                GenerateDocuments::dispatch($session, $participant)->delay($delay);
-                SendEmailsThankAndEvaluation::dispatch($session, $participant)->delay($delay);
+            if ($endDate->isTomorrow()) {
+                $participants = $session->participants;
+
+                foreach ($participants as $participant) {
+                    GenerateDocuments::dispatch($session, $participant)->delay($tomorrow);
+                    SendEmailsThankAndEvaluation::dispatch($session, $participant)->delay($tomorrow);
+                }
+            } elseif (now()->greaterThanOrEqualTo($dayAfterTomorrow)) {
+                // Do not generate documents or send emails
+                continue;
             }
         }
+
+        return 0;
     }
 }

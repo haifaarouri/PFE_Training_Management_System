@@ -3,6 +3,8 @@ import { ToastContainer } from "react-toastify";
 import { useEffect, useState } from "react";
 import axios from "../../services/axios";
 import { apiFetch } from "../../services/api";
+import { Link } from "react-router-dom";
+import Spinner from "../../components/Spinner";
 
 function ParticipantFeedback() {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -19,6 +21,12 @@ function ParticipantFeedback() {
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [surveyTemplates, setSurveyTemplates] = useState([]);
+
+  const handleLister = () => {
+    feedbacks.length > 0 && setFilteredData(feedbacks);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -55,13 +63,15 @@ function ParticipantFeedback() {
   const fetchData = async () => {
     try {
       if (!localStorage.getItem("token")) {
-        const surveys = await axios.get(`/api/get-all-surveys`);
+        let responsesNotToken = [];
 
-        let responses = [];
-        surveys.length > 0 &&
-          surveys.forEach(async (element) => {
+        const surveys = await axios.get(`/api/get-all-surveys`);
+        setSurveyTemplates(surveys.data);
+
+        if (surveys.data.length > 0) {
+          surveys.data.forEach(async (element) => {
             const response = await axios.post(
-              `http://localhost:8000/get-form-responses`,
+              `http://localhost:8000/api/get-form-responses`,
               { surveyId: element.surveyId },
               {
                 headers: {
@@ -69,13 +79,16 @@ function ParticipantFeedback() {
                 },
               }
             );
-            responses.push(response);
+            responsesNotToken.push(response.data);
           });
-
-        return responses;
+          console.log(responsesNotToken);
+          return responsesNotToken;
+        }
       } else {
-        const surveys = await apiFetch(`get-all-surveys`);
+        let responsesToken = [];
 
+        const surveys = await apiFetch(`get-all-surveys`);
+        setSurveyTemplates(surveys);
         const headers = {
           "Content-Type": "multipart/form-data",
         };
@@ -85,7 +98,6 @@ function ParticipantFeedback() {
           headers["Authorization"] = `Bearer ${token}`;
         }
 
-        let responses = [];
         surveys.length > 0 &&
           surveys.forEach(async (element) => {
             const response = await axios.post(
@@ -95,13 +107,14 @@ function ParticipantFeedback() {
                 headers: headers,
               }
             );
-            responses.push(response);
+            responsesToken.push(response.data);
           });
-
-        return responses;
+        return responsesToken;
       }
     } catch (error) {
       console.log("Error fetching feedbacks :", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -128,10 +141,19 @@ function ParticipantFeedback() {
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
               <ToastContainer />
+              {loading ? <Spinner /> : null}
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
                   Liste de tous les feedbacks des participants
                 </h4>
+                <Link to="/survey-creator">
+                  <Button
+                    variant="outline-success"
+                    className="btn btn-sm m-3 mt-1"
+                  >
+                    Ajouter un Formulaire
+                  </Button>
+                </Link>
               </div>
               <div className="d-flex justify-content-center mt-3 mb-5">
                 <Form style={{ width: "50%" }}>
@@ -194,19 +216,12 @@ function ParticipantFeedback() {
                 </Form>
               </div>
               <div className="table-responsive">
+                <Button onClick={handleLister}>Lister</Button>
                 <table className="table table-striped table-hover">
                   <thead>
                     <tr>
-                      <th>Nom</th>
-                      <th>Prénom</th>
-                      <th>E-mail</th>
-                      <th>Numéro de téléphone</th>
-                      <th>Nombre d'année d'expérience</th>
-                      <th>Type</th>
-                      <th>Spécialité(s)</th>
-                      <th>Certificats</th>
-                      <th>CV</th>
-                      <th>Disponibilité(s)</th>
+                      <th>Lien du SpreadSheet</th>
+                      {/* <th>Réponses</th> */}
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -216,17 +231,14 @@ function ParticipantFeedback() {
                         return (
                           <tr key={index} className="text-center">
                             <td>
-                              <h6>{f.lastName}</h6>
+                              <h6>{f.spreadsheetUrl}</h6>
+                              <iframe src={f.spreadsheetUrl} style={{ width: '100%', height: '500px', border: 'none' }} sandbox="seamless"></iframe>
                             </td>
-                            <td>
-                              <h6>{f.firstName}</h6>
-                            </td>
-                            <td>{f.email}</td>
-                            <td>{f.phoneNumber}</td>
-                            <td>{f.experience}</td>
-                            <td>{f.type}</td>
-                            <td>{f.speciality}</td>
-                            <td>
+                            {/* <td>
+                              {f.data.length > 0 &&
+                                f.data.map((r, i) => <p key={i}>{r}</p>)}
+                            </td> */}
+                            <td style={{width: "10%"}}>
                               <div className="d-flex flex-column justify-content-center">
                                 <Button
                                   variant="outline-primary"
@@ -245,20 +257,17 @@ function ParticipantFeedback() {
                       <></>
                     ) : (
                       feedbacks.length > 0 &&
-                      feedbacksPage.map((f, index) => {
+                      filteredData.map((f, index) => {
                         return (
                           <tr key={index} className="text-center">
                             <td>
-                              <h6>{f.lastName}</h6>
+                              <h6>{f.spreadsheetUrl}</h6>
+                              
                             </td>
                             <td>
-                              <h6>{f.firstName}</h6>
+                              {f.data.length > 0 &&
+                                f.data.map((r, i) => <p key={i}>{r}</p>)}
                             </td>
-                            <td>{f.email}</td>
-                            <td>{f.phoneNumber}</td>
-                            <td>{f.experience}</td>
-                            <td>{f.type}</td>
-                            <td>{f.speciality}</td>
                             <td>
                               <div className="d-flex flex-column justify-content-center">
                                 <Button

@@ -90,7 +90,7 @@ function SideBar({ isSidebarVisible }) {
       title: "Gestion des Emails",
     },
     {
-      path: "/survey-creator",
+      path: "/participants-feedbacks",
       icon: <RiSurveyFill size={22} />,
       title: "Gestion des Formulaires",
     },

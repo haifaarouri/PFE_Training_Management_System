@@ -87,7 +87,7 @@ function GoogleSurveyCreator() {
             icon: "success",
             title: "Modèle du formulaire crée avec succès !",
             showConfirmButton: false,
-            timer: 1500,
+            timer: 2000,
           });
         }
       } else {

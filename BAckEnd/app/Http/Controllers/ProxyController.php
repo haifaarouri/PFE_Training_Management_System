@@ -43,7 +43,7 @@ class ProxyController extends Controller
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://script.google.com/macros/s/AKfycbyrRC6Cb_p0oTo_YJaKUUfuSjvgj0FKTj5QHg4gi91FIuuEtef_U0SK_4CTnowlh5u2/exec', $data);
+        ])->post('https://script.google.com/macros/s/AKfycbyNGvUZfGQGbyu174Vfu6wqbslDnECKdKxMqQ5hThIB6WJdsETOuXTuRak2ClbKGjZq/exec', $data);
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();
@@ -75,16 +75,20 @@ class ProxyController extends Controller
 
     public function getFormResponses(Request $request)
     {
+        $data = [
+            'surveyId' => $request->input('surveyId'),
+        ];
+
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://script.google.com/macros/s/AKfycbzZEpoD9a3M97i2mvWz5gcYQ9spv7EbqcfrjkJjBKmxKLlkbyCp05rApXe-YKPhdEXb/exec', $request->surveyId);
+        ])->post('https://script.google.com/macros/s/AKfycbwu1hNYGBh6a4MuOc2vA0fKNE1xG2e0GE649WtORpzxhFddpBIamukKe8K9n4Hs1QMT/exec', $data);
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();
 
             return response()->json([
-                'data' => $responseData,
-                'editUrl' => $responseData['editUrl'] ?? 'No edit URL found'
+                'spreadsheetUrl' => $responseData['spreadsheetUrl'],
+                'data' => $responseData['data'],
             ])->header('Access-Control-Allow-Origin', '*');
         } else {
             \Log::error('Failed to create form or invalid response', [

@@ -174,42 +174,42 @@ function EmailEditor() {
     
         <!-- Progressive Enhancements : BEGIN -->
         <style>
-        .container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          width: 100%;
-          margin: auto;
-        }
-        
-        .row {
-            width: 100%;
-            padding: 1em 2.5em;
-            display: flex;
-            justify-content: center;
-            text-align: center;
-        }
-        
-        .bg_white {
-            background-color: white;
-        }
-        
-        .hero {
-            padding: 2em 0 4em 0;
-        }
-        
-        .col {
-            padding: 0 2.5em;
-        }
-        
-        .logo h1 {
-            margin: 0;
-        }
-        
-        .text {
-            padding-bottom: 3em;
-              }
-      
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                margin: auto;
+            }
+    
+            .row {
+                width: 100%;
+                padding: 1em 2.5em;
+                display: flex;
+                justify-content: center;
+                text-align: center;
+            }
+    
+            .bg_white {
+                background-color: white;
+            }
+    
+            .hero {
+                padding: 2em 0 4em 0;
+            }
+    
+            .col {
+                padding: 0 2.5em;
+            }
+    
+            .logo h1 {
+                margin: 0;
+            }
+    
+            .text {
+                padding-bottom: 3em;
+            }
+    
             .primary {
                 background: #17bebb;
             }
@@ -265,156 +265,156 @@ function EmailEditor() {
                 border: 2px solid #000;
                 color: #000;
                 font-weight: 700;
-            }
-    
-            .btn-custom {
+              }
+          
+              .btn-custom {
                 color: rgba(0, 0, 0, .3);
                 text-decoration: underline;
-            }
-    
-            h1,
-            h2,
-            h3,
-            h4,
-            h5,
-            h6 {
+              }
+          
+              h1,
+              h2,
+              h3,
+              h4,
+              h5,
+              h6 {
                 font-family: 'Poppins', sans-serif;
                 color: #000000;
                 margin-top: 0;
                 font-weight: 400;
-            }
-    
-            body {
+              }
+          
+              body {
                 font-family: 'Poppins', sans-serif;
                 font-weight: 400;
                 font-size: 15px;
                 line-height: 1.8;
                 color: rgba(0, 0, 0, .4);
-            }
-    
-            a {
+              }
+          
+              a {
                 color: #17bebb;
-            }
-    
-            /*LOGO*/
-    
-            .logo h1 {
+              }
+          
+              /*LOGO*/
+          
+              .logo h1 {
                 margin: 0;
-            }
-    
-            .logo h1 a {
+              }
+          
+              .logo h1 a {
                 color: #17bebb;
                 font-size: 24px;
                 font-weight: 700;
                 font-family: 'Poppins', sans-serif;
-            }
-    
-            /*HERO*/
-            .hero {
+              }
+          
+              /*HERO*/
+              .hero {
                 position: relative;
                 z-index: 0;
-            }
-    
-            .hero .text {
+              }
+          
+              .hero .text {
                 color: rgba(0, 0, 0, .3);
-            }
-    
-            .hero .text h2 {
+              }
+          
+              .hero .text h2 {
                 color: #000;
                 font-size: 34px;
                 margin-bottom: 0;
                 font-weight: 200;
                 line-height: 1.4;
-            }
-    
-            .hero .text h3 {
+              }
+          
+              .hero .text h3 {
                 font-size: 24px;
                 font-weight: 300;
-            }
-    
-            .hero .text h2 span {
+              }
+          
+              .hero .text h2 span {
                 font-weight: 600;
                 color: #000;
-            }
-    
-            .text-author {
-                bordeR: 1px solid rgba(0, 0, 0, .05);
+              }
+          
+              .text-author {
+                border: 1px solid rgba(0, 0, 0, .05);
                 max-width: 50%;
                 margin: 0 auto;
                 padding: 2em;
-            }
-    
-            .text-author img {
+              }
+          
+              .text-author img {
                 border-radius: 50%;
                 padding-bottom: 20px;
-            }
-    
-            .text-author h3 {
+              }
+          
+              .text-author h3 {
                 margin-bottom: 0;
-            }
-    
-            ul.social {
+              }
+          
+              ul.social {
                 padding: 0;
-            }
-    
-            ul.social li {
+              }
+          
+              ul.social li {
                 display: inline-block;
                 margin-right: 10px;
-            }
-    
-            /*FOOTER*/
-    
-            .footer {
+              }
+          
+              /*FOOTER*/
+          
+              .footer {
                 border-top: 1px solid rgba(0, 0, 0, .05);
                 color: rgba(0, 0, 0, .5);
-            }
-    
-            .footer .heading {
+              }
+          
+              .footer .heading {
                 color: #000;
                 font-size: 20px;
-            }
-    
-            .footer ul {
+              }
+          
+              .footer ul {
                 margin: 0;
                 padding: 0;
-            }
-    
-            .footer ul li {
+              }
+          
+              .footer ul li {
                 list-style: none;
                 margin-bottom: 10px;
-            }
-    
-            .footer ul li a {
+              }
+          
+              .footer ul li a {
                 color: rgba(0, 0, 0, 1);
-            }
-    
-            @media screen and (max-width: 500px) {}
-        </style>
-    </head>
-    
-    <body width="100%" style="margin: 0; padding: 0 !important; background-color: #f1f1f1;">
-        <center style="width: 100%; background-color: #f1f1f1;">
-            <div
-                style="display: none; font-size: 1px;max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; font-family: sans-serif;">
-            </div>
-            <div style="max-width: 600px; margin: 0 auto;" class="email-container">
-            <div class="container">
-                <div class="row bg_white">
+              }
+          
+              @media screen and (max-width: 500px) {}
+            </style>
+          </head>
+          
+          <body width="100%" style="margin: 0; padding: 0 !important; background-color: #f1f1f1;">
+            <center style="width: 100%; background-color: #f1f1f1;">
+              <div style="display: none; font-size: 1px;max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; font-family: sans-serif;">
+              </div>
+              <div style="max-width: 600px; margin: 0 auto;" class="email-container">
+                <div class="container">
+                  <div class="row bg_white">
                     <div class="col logo">
-                        <h1><a href="#">Train Scheduler</a></h1>
+                      <h1 style="text-align: center;"><a href="#">Train Scheduler</a></h1>
                     </div>
-                </div>
-                <div class="row hero bg_white">
-                    <div class="col text">
-                        ${data}
+                  </div>
+                  <div class="row hero bg_white">
+                    <div class="col text" style="text-align: left;">
+                      ${data}
                     </div>
+                  </div>
                 </div>
-            </div>
-            </div>
-        </center>
-    </body>
-    
-    </html>`);
+              </div>
+            </center>
+          </body>
+          
+          </html>
+    `);
   };
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");

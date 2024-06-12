@@ -2,9 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Mail\EvaluationLinkEmail;
 use App\Mail\RemerciementEmail;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
+use App\Models\Formulaire;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -51,11 +53,20 @@ class SendEmailsThankAndEvaluation implements ShouldQueue
             return response()->json(['error' => 'Modèle d\'e-mail de remerciement non trouvé !'], 404);
         }
 
+        $templateEmailLink = EmailTemplate::where('type', 'EvaluationLink')->first();
+        if (!$templateEmailLink) {
+            return response()->json(['error' => 'Modèle d\'e-mail de lien d\'évaluaton non trouvé !'], 404);
+        }
+
+        $survey = Formulaire::firstOrFail();
+
+        //Remerciement Email
         $data = [
             'sessionTitle' => $this->session->title,
             'firstName' => $this->participant->firstName,
             'lastName' => $this->participant->lastName,
             'formationRef' => $this->session->reference,
+            'link' => $survey->surveyLink
         ];
 
         $subject = $this->replacePlaceholders($template->subject, $data);
@@ -69,6 +80,20 @@ class SendEmailsThankAndEvaluation implements ShouldQueue
             'participant_id' => $this->participant->id,
             'session_id' => $this->session->id,
             'email_type' => 'Thanking',
+        ]);
+
+        //Evaluation Email
+        $subjectLink = $this->replacePlaceholders($templateEmailLink->subject, $data);
+        $contentLink = $this->replacePlaceholders($templateEmailLink->content, $data);
+
+        $imageAttachmentsLink = json_decode($templateEmailLink->imageAttachement, true) ?? [];
+
+        Mail::to($this->participant->email)->send(new EvaluationLinkEmail($subjectLink, $contentLink, $imageAttachmentsLink));
+
+        EmailLog::create([
+            'participant_id' => $this->participant->id,
+            'session_id' => $this->session->id,
+            'email_type' => 'EvaluationLink',
         ]);
     }
 }
