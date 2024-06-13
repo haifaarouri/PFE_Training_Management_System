@@ -14,6 +14,7 @@ use App\Http\Controllers\PartenaireController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ProxyController;
 use App\Http\Controllers\SalleController;
+use App\Http\Controllers\SentimentAnalysisController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -210,5 +211,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/proxy', [ProxyController::class, 'handle']);
     Route::post('/get-form-responses', [ProxyController::class, 'getFormResponses']);
     Route::get('/get-all-surveys', [ProxyController::class, 'getAllSurveys']);
-});
+}); 
 
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/sentiment', [SentimentAnalysisController::class, 'getSentiment']);
+});

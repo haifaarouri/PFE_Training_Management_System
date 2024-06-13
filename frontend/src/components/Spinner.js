@@ -1,7 +1,7 @@
 import React from "react";
 import { PulseLoader } from "react-spinners";
 
-const Spinner = () => {
+export default function Spinner() {
   return (
     <div className="spinner-overlay">
       <div className="spinner-container">
@@ -9,6 +9,4 @@ const Spinner = () => {
       </div>
     </div>
   );
-};
-
-export default Spinner;
+}

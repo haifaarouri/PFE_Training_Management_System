@@ -1,10 +1,37 @@
 import { Button, Form, InputGroup, Pagination } from "react-bootstrap";
-import { ToastContainer } from "react-toastify";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "../../services/axios";
 import { apiFetch } from "../../services/api";
 import { Link } from "react-router-dom";
 import Spinner from "../../components/Spinner";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  defaults,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+defaults.maintainAspectRatio = false;
+defaults.responsive = true;
+
+defaults.plugins.title.display = true;
+defaults.plugins.title.align = "center";
+defaults.plugins.title.font.size = 16;
+defaults.plugins.title.color = "black";
 
 function ParticipantFeedback() {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -22,10 +49,24 @@ function ParticipantFeedback() {
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [surveyTemplates, setSurveyTemplates] = useState([]);
+  // const [surveyTemplates, setSurveyTemplates] = useState([]);
+  const [chartData, setChartData] = useState(null);
 
-  const handleLister = () => {
-    feedbacks.length > 0 && setFilteredData(feedbacks);
+  const options = {
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+    plugins: {
+      legend: {
+        display: true,
+      },
+      title: {
+        display: true,
+        text: "Score de l'analyse des sentiments par question",
+      },
+    },
   };
 
   useEffect(() => {
@@ -66,7 +107,7 @@ function ParticipantFeedback() {
         let responsesNotToken = [];
 
         const surveys = await axios.get(`/api/get-all-surveys`);
-        setSurveyTemplates(surveys.data);
+        // setSurveyTemplates(surveys.data);
 
         if (surveys.data.length > 0) {
           surveys.data.forEach(async (element) => {
@@ -88,7 +129,7 @@ function ParticipantFeedback() {
         let responsesToken = [];
 
         const surveys = await apiFetch(`get-all-surveys`);
-        setSurveyTemplates(surveys);
+        // setSurveyTemplates(surveys);
         const headers = {
           "Content-Type": "multipart/form-data",
         };
@@ -134,14 +175,130 @@ function ParticipantFeedback() {
     }
   };
 
+  const handleAnalyse = async (feedbacks) => {
+    const formData = new FormData();
+    formData.append("feedbacks", JSON.stringify(feedbacks));
+
+    if (!localStorage.getItem("token")) {
+      const res = await axios.post("/api/sentiment", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const labels = new Set();
+      const datasets = {};
+
+      res.data[0].data.forEach((item, i) => {
+        Object.keys(item).forEach((key) => {
+          if (key.endsWith("_sentiment")) {
+            const question = key.replace("_sentiment", "");
+            labels.add(`Participant ${i + 1}`);
+            if (!datasets[question]) {
+              datasets[question] = [];
+            }
+            datasets[question].push(item[key]);
+          }
+        });
+      });
+
+      datasets &&
+        labels &&
+        setChartData({
+          labels: Array.from(labels),
+          datasets: Object.keys(datasets).map((key, index) => ({
+            label: key,
+            data: datasets[key],
+            // backgroundColor: function (context) {
+            //   const index = context.dataIndex;
+            //   const value = context.dataset.data[index];
+            //   console.log(value);
+            //   return value > 3 ? "#00d082" : "#30dbe7";
+            // },
+            backgroundColor: () => {
+              let bgColors = [];
+              if (datasets) {
+                for (let index = 0; index < datasets[key].length; index++) {
+                  if (datasets[key][index] > 3) {
+                    bgColors.push("rgba(0, 208, 130, 0.6)");
+                  } else {
+                    bgColors.push("rgba(48, 219, 231, 0.6)");
+                  }
+                }
+                return bgColors;
+              }
+            },
+            borderColor: () => {
+              let borderColors = [];
+              if (datasets) {
+                for (let index = 0; index < datasets[key].length; index++) {
+                  if (datasets[key][index] > 3) {
+                    borderColors.push("rgba(0, 208, 130, 1)");
+                  } else {
+                    borderColors.push("rgba(48, 219, 231, 1)");
+                  }
+                }
+                return borderColors;
+              }
+            },
+            borderWidth: 2,
+          })),
+        });
+    } else {
+      const headers = {
+        "Content-Type": "multipart/form-data",
+      };
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await axios.post("/api/sentiment", formData, {
+        headers: headers,
+      });
+
+      const labels = new Set();
+      const datasets = {};
+
+      response.data[0].data.forEach((item, i) => {
+        Object.keys(item).forEach((key) => {
+          if (key.endsWith("_sentiment")) {
+            const question = key.replace("_sentiment", "");
+            labels.add(`Participant ${i + 1}`);
+            if (!datasets[question]) {
+              datasets[question] = [];
+            }
+            datasets[question].push(item[key]);
+          }
+        });
+      });
+
+      datasets &&
+        labels &&
+        setChartData({
+          labels: Array.from(labels),
+          datasets: Object.keys(datasets).map((key, index) => ({
+            label: key,
+            data: datasets[key],
+            backgroundColor: `rgba(${255 - index * 50}, ${
+              99 + index * 50
+            }, 132, 0.2)`,
+            borderColor: `rgba(${255 - index * 50}, ${
+              99 + index * 50
+            }, 132, 1)`,
+            borderWidth: 1,
+          })),
+        });
+    }
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
         <div className="col-lg-12 grid-margin stretch-card">
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
-              <ToastContainer />
-              {loading ? <Spinner /> : null}
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
                   Liste de tous les feedbacks des participants
@@ -155,6 +312,7 @@ function ParticipantFeedback() {
                   </Button>
                 </Link>
               </div>
+              {loading && <Spinner />}
               <div className="d-flex justify-content-center mt-3 mb-5">
                 <Form style={{ width: "50%" }}>
                   <div className="inner-form">
@@ -215,14 +373,26 @@ function ParticipantFeedback() {
                   </div>
                 </Form>
               </div>
+              {feedbacks.length > 0 && (
+                <Button onClick={() => handleAnalyse(feedbacks)}>
+                  Analyser les sentiments des feedbacks
+                </Button>
+              )}
+              <div className="row">
+                {chartData && chartData.datasets.length > 0 && (
+                  <div
+                    className="col-4 chart-container"
+                    style={{ width: "100%", height: "400px" }}
+                  >
+                    <Bar data={chartData} options={options} />
+                  </div>
+                )}
+              </div>
               <div className="table-responsive">
-                <Button onClick={handleLister}>Lister</Button>
                 <table className="table table-striped table-hover">
                   <thead>
                     <tr>
-                      <th>Lien du SpreadSheet</th>
-                      {/* <th>Réponses</th> */}
-                      <th>Actions</th>
+                      <th>Réponses</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -231,24 +401,8 @@ function ParticipantFeedback() {
                         return (
                           <tr key={index} className="text-center">
                             <td>
-                              <h6>{f.spreadsheetUrl}</h6>
-                              <iframe src={f.spreadsheetUrl} style={{ width: '100%', height: '500px', border: 'none' }} sandbox="seamless"></iframe>
-                            </td>
-                            {/* <td>
                               {f.data.length > 0 &&
                                 f.data.map((r, i) => <p key={i}>{r}</p>)}
-                            </td> */}
-                            <td style={{width: "10%"}}>
-                              <div className="d-flex flex-column justify-content-center">
-                                <Button
-                                  variant="outline-primary"
-                                  // onClick={() => handleButtonEdit(f.id)}
-                                  className="btn btn-sm mb-2"
-                                >
-                                  Afficher
-                                  <i className="mdi mdi-tooltip-edit"></i>
-                                </Button>
-                              </div>
                             </td>
                           </tr>
                         );
@@ -257,28 +411,12 @@ function ParticipantFeedback() {
                       <></>
                     ) : (
                       feedbacks.length > 0 &&
-                      filteredData.map((f, index) => {
+                      feedbacksPage.map((f, index) => {
                         return (
                           <tr key={index} className="text-center">
                             <td>
-                              <h6>{f.spreadsheetUrl}</h6>
-                              
-                            </td>
-                            <td>
                               {f.data.length > 0 &&
                                 f.data.map((r, i) => <p key={i}>{r}</p>)}
-                            </td>
-                            <td>
-                              <div className="d-flex flex-column justify-content-center">
-                                <Button
-                                  variant="outline-primary"
-                                  // onClick={() => handleButtonEdit(f.id)}
-                                  className="btn btn-sm mb-2"
-                                >
-                                  Afficher
-                                  <i className="mdi mdi-tooltip-edit"></i>
-                                </Button>
-                              </div>
                             </td>
                           </tr>
                         );
