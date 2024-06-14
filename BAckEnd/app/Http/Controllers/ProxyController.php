@@ -32,6 +32,7 @@ class ProxyController extends Controller
             'title' => $request->input('title'),
             'questions' => $request->input('questions'),
             // 'theme' => $request->input('theme'),
+            'sessionIds' => $request->input('sessionIds')
         ];
 
         $questions = json_decode($request->input('questions'), true);
@@ -41,23 +42,32 @@ class ProxyController extends Controller
             return response()->json(['error' => 'Invalid questions format'], 400);
         }
 
+        $sessions = json_decode($request->input('sessionIds'), true);
+        if (is_array($sessions)) {
+            $data['sessionIds'] = $sessions;
+        } else {
+            return response()->json(['error' => 'Invalid sessionIds format'], 400);
+        }
+
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://script.google.com/macros/s/AKfycbyNGvUZfGQGbyu174Vfu6wqbslDnECKdKxMqQ5hThIB6WJdsETOuXTuRak2ClbKGjZq/exec', $data);
+        ])->post('https://script.google.com/macros/s/AKfycbzXtJdxK_R_csNk-l3SOyw6_bHccsq7b8ly2tI2hIEiTXafjMlBmg66XOw-JYnM9Lmo/exec', $data);
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();
 
             if (isset($responseData['formId'])) {
-                $form = Formulaire::create([
-                    'surveyId' => $responseData['formId'],
-                    'surveyLink' => $responseData['publishedUrl']
-                ]);
+                foreach ($data['sessionIds'] as $sessionId) {
+                    Formulaire::create([
+                        'surveyId' => $responseData['formId'],
+                        'surveyLink' => $responseData['publishedUrl'],
+                        'sessionId' => $sessionId
+                    ]);
+                }
 
                 return response()->json([
                     'data' => $responseData,
                     'editUrl' => $responseData['editUrl'] ?? 'No edit URL found',
-                    'form' => $form
                 ])->header('Access-Control-Allow-Origin', '*');
             } else {
                 return response()->json(['error' => 'formId not found in the response'], 400);
@@ -77,18 +87,19 @@ class ProxyController extends Controller
     {
         $data = [
             'surveyId' => $request->input('surveyId'),
+            'sessionId' => $request->input('sessionId')
         ];
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://script.google.com/macros/s/AKfycbwu1hNYGBh6a4MuOc2vA0fKNE1xG2e0GE649WtORpzxhFddpBIamukKe8K9n4Hs1QMT/exec', $data);
+        ])->post('https://script.google.com/macros/s/AKfycbwObuwleTrecUA_KEEyhJzULrxsPqlLxqAiCqfBmV8K8g2PG9QfJC3z2fU_rdFHb1bb/exec', $data);
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();
 
             return response()->json([
-                'spreadsheetUrl' => $responseData['spreadsheetUrl'],
-                'data' => $responseData['data'],
+                'spreadsheetUrl' => $responseData['spreadsheetUrl'] ?? 'No spreadsheet URL found',
+                'data' => $responseData['data'] ?? [],
             ])->header('Access-Control-Allow-Origin', '*');
         } else {
             \Log::error('Failed to create form or invalid response', [

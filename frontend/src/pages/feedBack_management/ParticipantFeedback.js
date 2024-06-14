@@ -4,7 +4,9 @@ import axios from "../../services/axios";
 import { apiFetch } from "../../services/api";
 import { Link } from "react-router-dom";
 import Spinner from "../../components/Spinner";
-import { Bar } from "react-chartjs-2";
+import { IoStatsChartSharp } from "react-icons/io5";
+import { RiSurveyFill } from "react-icons/ri";
+import { Bar, Doughnut, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,6 +16,7 @@ import {
   Tooltip,
   Legend,
   defaults,
+  ArcElement,
 } from "chart.js";
 
 ChartJS.register(
@@ -22,7 +25,8 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
 
 defaults.maintainAspectRatio = false;
@@ -49,8 +53,12 @@ function ParticipantFeedback() {
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
   const [loading, setLoading] = useState(true);
-  // const [surveyTemplates, setSurveyTemplates] = useState([]);
+  const [surveyTemplates, setSurveyTemplates] = useState([]);
   const [chartData, setChartData] = useState(null);
+  const [sentiments, setSentiments] = useState(null);
+  const [averagePerQuestion, setAveragePerQuestion] = useState(null);
+  const [averagePerParticipant, setAveragePerParticipant] = useState(null);
+  const [totalAverage, setTotalAverage] = useState(null);
 
   const options = {
     scales: {
@@ -65,6 +73,30 @@ function ParticipantFeedback() {
       title: {
         display: true,
         text: "Score de l'analyse des sentiments par question",
+      },
+    },
+  };
+
+  const optionsAvgQ = {
+    plugins: {
+      legend: {
+        display: true,
+      },
+      title: {
+        display: true,
+        text: "Score moyen par question",
+      },
+    },
+  };
+
+  const optionsAvgP = {
+    plugins: {
+      legend: {
+        display: true,
+      },
+      title: {
+        display: true,
+        text: "Score moyen par participant",
       },
     },
   };
@@ -107,13 +139,16 @@ function ParticipantFeedback() {
         let responsesNotToken = [];
 
         const surveys = await axios.get(`/api/get-all-surveys`);
-        // setSurveyTemplates(surveys.data);
+        setSurveyTemplates(surveys.data);
 
         if (surveys.data.length > 0) {
           surveys.data.forEach(async (element) => {
             const response = await axios.post(
               `http://localhost:8000/api/get-form-responses`,
-              { surveyId: element.surveyId },
+              {
+                surveyId: element.surveyId,
+                sessionId: "session 1 - ref nouvelle",
+              },
               {
                 headers: {
                   "Content-Type": "multipart/form-data",
@@ -129,7 +164,7 @@ function ParticipantFeedback() {
         let responsesToken = [];
 
         const surveys = await apiFetch(`get-all-surveys`);
-        // setSurveyTemplates(surveys);
+        setSurveyTemplates(surveys);
         const headers = {
           "Content-Type": "multipart/form-data",
         };
@@ -143,7 +178,10 @@ function ParticipantFeedback() {
           surveys.forEach(async (element) => {
             const response = await axios.post(
               `http://localhost:8000/api/get-form-responses`,
-              { surveyId: element.surveyId },
+              {
+                surveyId: element.surveyId,
+                sessionId: "session 1 - ref nouvelle",
+              },
               {
                 headers: headers,
               }
@@ -186,6 +224,8 @@ function ParticipantFeedback() {
         },
       });
 
+      setSentiments(res.data[0]);
+
       const labels = new Set();
       const datasets = {};
 
@@ -209,12 +249,6 @@ function ParticipantFeedback() {
           datasets: Object.keys(datasets).map((key, index) => ({
             label: key,
             data: datasets[key],
-            // backgroundColor: function (context) {
-            //   const index = context.dataIndex;
-            //   const value = context.dataset.data[index];
-            //   console.log(value);
-            //   return value > 3 ? "#00d082" : "#30dbe7";
-            // },
             backgroundColor: () => {
               let bgColors = [];
               if (datasets) {
@@ -222,7 +256,7 @@ function ParticipantFeedback() {
                   if (datasets[key][index] > 3) {
                     bgColors.push("rgba(0, 208, 130, 0.6)");
                   } else {
-                    bgColors.push("rgba(48, 219, 231, 0.6)");
+                    bgColors.push("rgba(34, 62, 156, 0.6)");
                   }
                 }
                 return bgColors;
@@ -235,7 +269,7 @@ function ParticipantFeedback() {
                   if (datasets[key][index] > 3) {
                     borderColors.push("rgba(0, 208, 130, 1)");
                   } else {
-                    borderColors.push("rgba(48, 219, 231, 1)");
+                    borderColors.push("rgba(34, 62, 156, 1)");
                   }
                 }
                 return borderColors;
@@ -257,6 +291,8 @@ function ParticipantFeedback() {
       const response = await axios.post("/api/sentiment", formData, {
         headers: headers,
       });
+
+      setSentiments(response.data[0]);
 
       const labels = new Set();
       const datasets = {};
@@ -281,16 +317,140 @@ function ParticipantFeedback() {
           datasets: Object.keys(datasets).map((key, index) => ({
             label: key,
             data: datasets[key],
-            backgroundColor: `rgba(${255 - index * 50}, ${
-              99 + index * 50
-            }, 132, 0.2)`,
-            borderColor: `rgba(${255 - index * 50}, ${
-              99 + index * 50
-            }, 132, 1)`,
-            borderWidth: 1,
+            backgroundColor: () => {
+              let bgColors = [];
+              if (datasets) {
+                for (let index = 0; index < datasets[key].length; index++) {
+                  if (datasets[key][index] > 3) {
+                    bgColors.push("rgba(0, 208, 130, 0.6)");
+                  } else {
+                    bgColors.push("rgba(34, 62, 156, 0.6)");
+                  }
+                }
+                return bgColors;
+              }
+            },
+            borderColor: () => {
+              let borderColors = [];
+              if (datasets) {
+                for (let index = 0; index < datasets[key].length; index++) {
+                  if (datasets[key][index] > 3) {
+                    borderColors.push("rgba(0, 208, 130, 1)");
+                  } else {
+                    borderColors.push("rgba(34, 62, 156, 1)");
+                  }
+                }
+                return borderColors;
+              }
+            },
+            borderWidth: 2,
           })),
         });
     }
+  };
+
+  const calculateAverageSentimentPerQuestion = (data) => {
+    const sentimentScores = {};
+    let totalEntries = {};
+
+    data.data.forEach((entry) => {
+      Object.keys(entry).forEach((key) => {
+        if (key.includes("_sentiment")) {
+          const question = key.replace("_sentiment", "");
+          if (!sentimentScores[question]) {
+            sentimentScores[question] = 0;
+            totalEntries[question] = 0;
+          }
+          sentimentScores[question] += entry[key];
+          totalEntries[question]++;
+        }
+      });
+    });
+
+    const averageSentiments = {};
+    Object.keys(sentimentScores).forEach((question) => {
+      averageSentiments[question] =
+        sentimentScores[question] / totalEntries[question];
+    });
+
+    const labels = Object.keys(averageSentiments);
+    const datasets = Object.values(averageSentiments);
+
+    const backgroundColors = datasets.map((score) =>
+      score > 3 ? "rgba(0, 208, 130, 0.8)" : "rgba(34, 62, 156, 0.8)"
+    );
+    const borderColors = datasets.map((score) =>
+      score > 3 ? "rgba(0, 208, 130, 1)" : "rgba(34, 62, 156, 1)"
+    );
+
+    setAveragePerQuestion({
+      labels: labels,
+      datasets: [
+        {
+          label: "Moyenne du score de l'analyse de sentiment",
+          data: datasets,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 2,
+          hoverOffset: 4,
+        },
+      ],
+    });
+    return averageSentiments;
+  };
+
+  const calculateOverallAverageSentimentPerParticipant = (data) => {
+    let totalAverage = 0;
+    let participantCount = 0;
+    const participantAverages = {};
+
+    data.data.forEach((entry) => {
+      let sumSentiments = 0;
+      let countSentiments = 0;
+      Object.keys(entry).forEach((key) => {
+        if (key.includes("_sentiment")) {
+          sumSentiments += entry[key];
+          countSentiments++;
+        }
+      });
+      if (countSentiments > 0) {
+        const participantAverage = sumSentiments / countSentiments;
+        totalAverage += participantAverage;
+        participantCount++;
+        participantAverages[entry.Horodateur] = participantAverage;
+      }
+    });
+
+    const overallAverage =
+      participantCount > 0 ? totalAverage / participantCount : 0;
+
+    const labels = Object.keys(participantAverages);
+    const datasets = Object.values(participantAverages);
+
+    const backgroundColors = datasets.map((score) =>
+      score > 3 ? "rgba(0, 208, 130, 0.8)" : "rgba(34, 62, 156, 0.8)"
+    );
+    const borderColors = datasets.map((score) =>
+      score > 3 ? "rgba(0, 208, 130, 1)" : "rgba(34, 62, 156, 1)"
+    );
+
+    setAveragePerParticipant({
+      labels: labels,
+      datasets: [
+        {
+          label: "Moyenne du score de l'analyse de sentiment",
+          data: datasets,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 2,
+          hoverOffset: 4,
+        },
+      ],
+    });
+
+    setTotalAverage(overallAverage);
+
+    return { overallAverage, participantAverages };
   };
 
   return (
@@ -373,27 +533,25 @@ function ParticipantFeedback() {
                   </div>
                 </Form>
               </div>
-              {feedbacks.length > 0 && (
-                <Button onClick={() => handleAnalyse(feedbacks)}>
-                  Analyser les sentiments des feedbacks
+              <div className="d-flex justify-content-evenly">
+                <p>
+                  Cliquez sur ce bouton pour voir les réponses du formulaire
+                  d'évaluation de la session
+                </p>
+                <Button onClick={fetchData}>
+                  Réponses <RiSurveyFill size={20} />
                 </Button>
-              )}
-              <div className="row">
-                {chartData && chartData.datasets.length > 0 && (
-                  <div
-                    className="col-4 chart-container"
-                    style={{ width: "100%", height: "400px" }}
-                  >
-                    <Bar data={chartData} options={options} />
-                  </div>
-                )}
               </div>
               <div className="table-responsive">
                 <table className="table table-striped table-hover">
                   <thead>
-                    <tr>
-                      <th>Réponses</th>
-                    </tr>
+                    {feedbacks.length > 0 &&
+                      feedbacksPage.map((f, i) => (
+                        <tr key={i}>
+                          {f.data[0].length > 0 &&
+                            f.data[0].map((q, ind) => <th key={ind}>{q}</th>)}
+                        </tr>
+                      ))}
                   </thead>
                   <tbody>
                     {filteredData.length > 0 ? (
@@ -411,16 +569,18 @@ function ParticipantFeedback() {
                       <></>
                     ) : (
                       feedbacks.length > 0 &&
-                      feedbacksPage.map((f, index) => {
-                        return (
-                          <tr key={index} className="text-center">
-                            <td>
-                              {f.data.length > 0 &&
-                                f.data.map((r, i) => <p key={i}>{r}</p>)}
-                            </td>
-                          </tr>
-                        );
-                      })
+                      feedbacksPage.map((f) =>
+                        f.data.map(
+                          (response, i) =>
+                            i !== 0 && (
+                              <tr key={i}>
+                                {Object.keys(response).map((key, j) => (
+                                  <td key={j}>{response[key]}</td>
+                                ))}
+                              </tr>
+                            )
+                        )
+                      )
                     )}
                   </tbody>
                 </table>
@@ -455,6 +615,81 @@ function ParticipantFeedback() {
                   />
                 </Pagination.Next>
               </Pagination>
+              <div className="my-5 d-flex justify-content-center">
+                {feedbacks.length > 0 && (
+                  <Button
+                    className="btn-block btn-inverse-success"
+                    onClick={() => handleAnalyse(feedbacks)}
+                  >
+                    Analyser les sentiments des feedbacks{" "}
+                    <IoStatsChartSharp size={20} />
+                  </Button>
+                )}
+              </div>
+              {chartData && (
+                <div className="row card shadow-lg p-3 mb-2 bg-white rounded">
+                  {chartData.datasets.length > 0 && (
+                    <div
+                      className="col-4 chart-container"
+                      style={{ width: "100%", height: "400px" }}
+                    >
+                      <Bar data={chartData} options={options} />
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="my-5 d-flex justify-content-center">
+                {sentiments && chartData && (
+                  <Button
+                    className="btn-block btn-inverse-success"
+                    onClick={() => {
+                      calculateAverageSentimentPerQuestion(sentiments);
+                      calculateOverallAverageSentimentPerParticipant(
+                        sentiments
+                      );
+                    }}
+                  >
+                    Calculer la moyenne des scores
+                  </Button>
+                )}
+              </div>
+              {averagePerQuestion && (
+                <div className="row card shadow-lg p-3 mb-2 bg-white rounded">
+                  {averagePerQuestion.labels && averagePerQuestion.datasets && (
+                    <div
+                      className="col-4 chart-container"
+                      style={{ width: "100%", height: "400px" }}
+                    >
+                      <Doughnut
+                        data={averagePerQuestion}
+                        options={optionsAvgQ}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              {averagePerParticipant && (
+                <div className="row card shadow-lg p-3 mb-2 bg-white rounded">
+                  {averagePerParticipant.labels &&
+                    averagePerParticipant.datasets && (
+                      <div
+                        className="col-4 chart-container"
+                        style={{ width: "100%", height: "400px" }}
+                      >
+                        <Pie
+                          data={averagePerParticipant}
+                          options={optionsAvgP}
+                        />
+                      </div>
+                    )}
+                  {totalAverage && (
+                    <p>
+                      La moyenne totale des scores de tous les participants est{" "}
+                      {totalAverage}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

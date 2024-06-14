@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "../../services/axios";
@@ -7,6 +7,7 @@ import { FaPlusCircle, FaQuestionCircle } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import { RiSurveyLine } from "react-icons/ri";
 import Spinner from "../../components/Spinner";
+import { fetchAllSessions } from "../../services/SessionServices";
 
 function GoogleSurveyCreator() {
   const [title, setTitle] = useState("");
@@ -19,6 +20,20 @@ function GoogleSurveyCreator() {
   //   textStyle: "Normal",
   // });
   const [loading, setLoading] = useState(false);
+  const [sessionIds, setSessionIds] = useState([]);
+  const [sessions, setSessions] = useState([]);
+
+  useEffect(() => {
+    fetchAllSessions().then(setSessions);
+  }, []);
+
+  const handleSessionChange = (e) => {
+    const selectedOptions = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
+    setSessionIds(selectedOptions);
+  };
 
   const updateQuestion = (index, key, value) => {
     const updatedQuestions = [...questions];
@@ -68,6 +83,7 @@ function GoogleSurveyCreator() {
       formData.append("title", title);
       formData.append("questions", JSON.stringify(questions));
       // formData.append("theme", theme);
+      formData.append("sessionIds", JSON.stringify(sessionIds));
 
       if (!localStorage.getItem("token")) {
         const res = await axios.post(
@@ -81,7 +97,7 @@ function GoogleSurveyCreator() {
         );
 
         if (res) {
-          setLoading(false)
+          setLoading(false);
           handleSuccess("Modèle du formulaire crée !");
           Swal.fire({
             icon: "success",
@@ -109,7 +125,7 @@ function GoogleSurveyCreator() {
         );
 
         if (response) {
-          setLoading(false)
+          setLoading(false);
           handleSuccess("Modèle du formulaire crée !");
           Swal.fire({
             icon: "success",
@@ -163,6 +179,44 @@ function GoogleSurveyCreator() {
                       onChange={(e) => setTitle(e.target.value)}
                       required
                     />
+                    <Form.Control.Feedback>
+                      Cela semble bon !
+                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      Veuillez saisir le titre du formulaire !
+                    </Form.Control.Feedback>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Séléctionner la ou les session(s)</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <RiSurveyLine
+                            className="text-primary"
+                            style={{ fontSize: "1.5em" }}
+                          />
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Select
+                      // as="select"
+                      multiple
+                      value={sessionIds}
+                      onChange={handleSessionChange}
+                    >
+                      <option value="">
+                        Séléctionner l'ID(s) de(s) session(s) liéé(s) à ce
+                        formulaire
+                      </option>
+                      {sessions.length > 0 &&
+                        sessions.map((s, i) => (
+                          <option key={i} value={s.title + " - " + s.reference}>
+                            {s.title} - {s.reference}
+                          </option>
+                        ))}
+                    </Form.Select>
                     <Form.Control.Feedback>
                       Cela semble bon !
                     </Form.Control.Feedback>
@@ -281,7 +335,7 @@ function GoogleSurveyCreator() {
                     className="mb-3 mt-0 btn btn-info btn-rounded btn-inverse-info"
                     onClick={addQuestion}
                   >
-                    Ajouter un question <FaPlusCircle size={25} />
+                    Ajouter une question <FaPlusCircle size={25} />
                   </Button>
                 </div>
                 {/* <div>
