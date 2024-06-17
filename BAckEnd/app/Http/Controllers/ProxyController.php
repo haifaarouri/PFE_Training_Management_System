@@ -51,33 +51,33 @@ class ProxyController extends Controller
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://script.google.com/macros/s/AKfycbzXtJdxK_R_csNk-l3SOyw6_bHccsq7b8ly2tI2hIEiTXafjMlBmg66XOw-JYnM9Lmo/exec', $data);
+        ])->post('https://script.google.com/macros/s/AKfycbxVGukxNSEYIMnsBC2vLilRFI6oAV5vi-1RiL08-x2uxwbxtYaMqre71efUS1Are4Sp/exec', $data);
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();
 
             if (isset($responseData['formId'])) {
-                foreach ($data['sessionIds'] as $sessionId) {
-                    Formulaire::create([
-                        'surveyId' => $responseData['formId'],
-                        'surveyLink' => $responseData['publishedUrl'],
-                        'sessionId' => $sessionId
-                    ]);
-                }
+                \Log::info($data['sessionIds']);
+                $form = Formulaire::create([
+                    'surveyId' => $responseData['formId'],
+                    'surveyLink' => $responseData['publishedUrl'],
+                    'session_ids' => $data['sessionIds']
+                ]);
 
                 return response()->json([
                     'data' => $responseData,
-                    'editUrl' => $responseData['editUrl'] ?? 'No edit URL found',
+                    'publishedUrl' => $responseData['publishedUrl'] ?? 'No published URL found',
+                    'form' => $form
                 ])->header('Access-Control-Allow-Origin', '*');
             } else {
-                return response()->json(['error' => 'formId not found in the response'], 400);
+                return response()->json(['error' => 'L\'ID fu Formulaire non trouvé dans la réponse de google script !'], 400);
             }
         } else {
-            \Log::error('Failed to create form or invalid response', [
+            \Log::error('Échec de la création du formulaire ou réponse non valide', [
                 'response' => $response->body()
             ]);
             return response()->json([
-                'error' => 'Failed to create form or invalid response',
+                'error' => 'Échec de la création du formulaire ou réponse non valide !',
                 'details' => $response->body()
             ], 500);
         }
@@ -92,7 +92,7 @@ class ProxyController extends Controller
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://script.google.com/macros/s/AKfycbwObuwleTrecUA_KEEyhJzULrxsPqlLxqAiCqfBmV8K8g2PG9QfJC3z2fU_rdFHb1bb/exec', $data);
+        ])->post('https://script.google.com/macros/s/AKfycbyO3O7r6unETHAhrsQ1jAyinUgkrtPpURXWeOmKsLaZl9R69cwGbBsB8197XLSZXO8_/exec', $data);
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();
@@ -102,11 +102,11 @@ class ProxyController extends Controller
                 'data' => $responseData['data'] ?? [],
             ])->header('Access-Control-Allow-Origin', '*');
         } else {
-            \Log::error('Failed to create form or invalid response', [
+            \Log::error('Échec de la récupération des réponses du formulaire ou réponse non valide', [
                 'response' => $response->body()
             ]);
             return response()->json([
-                'error' => 'Failed to create form or invalid response',
+                'error' => 'Échec de la récupération des réponses du formulaire ou réponse non valide',
                 'details' => $response->body()
             ], 500);
         }

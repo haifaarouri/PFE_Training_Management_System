@@ -38,21 +38,21 @@ defaults.plugins.title.font.size = 16;
 defaults.plugins.title.color = "black";
 
 function ParticipantFeedback() {
-  const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbacks, setFeedbacks] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const feedbacksPerPage = 2;
   const lastIndex = currentPage * feedbacksPerPage;
   const firstIndex = lastIndex - feedbacksPerPage;
   const feedbacksPage =
-    feedbacks.length > 0 && feedbacks.slice(firstIndex, lastIndex);
+    feedbacks?.length > 0 && feedbacks?.slice(firstIndex, lastIndex);
   const numberPages = Math.ceil(
-    feedbacks.length > 0 && feedbacks.length / feedbacksPerPage
+    feedbacks?.length > 0 && feedbacks?.length / feedbacksPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [surveyTemplates, setSurveyTemplates] = useState([]);
   const [chartData, setChartData] = useState(null);
   const [sentiments, setSentiments] = useState(null);
@@ -115,15 +115,15 @@ function ParticipantFeedback() {
     setWordEntered(searchWord);
     if (columnName && columnName !== "Colonne") {
       const newFilter =
-        feedbacks.length > 0 &&
-        feedbacks.filter((feedback) =>
+        feedbacks?.length > 0 &&
+        feedbacks?.filter((feedback) =>
           feedback[columnName].toLowerCase().includes(searchWord.toLowerCase())
         );
       setFilteredData(newFilter);
     } else {
       const newFilter =
-        feedbacks.length > 0 &&
-        feedbacks.filter((feedback) => {
+        feedbacks?.length > 0 &&
+        feedbacks?.filter((feedback) => {
           const feedbackFields = Object.values(feedback)
             .join(" ")
             .toLowerCase();
@@ -134,6 +134,7 @@ function ParticipantFeedback() {
   };
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       if (!localStorage.getItem("token")) {
         let responsesNotToken = [];
@@ -147,7 +148,7 @@ function ParticipantFeedback() {
               `http://localhost:8000/api/get-form-responses`,
               {
                 surveyId: element.surveyId,
-                sessionId: "session 1 - ref nouvelle",
+                sessionId: element.session_id,
               },
               {
                 headers: {
@@ -157,7 +158,7 @@ function ParticipantFeedback() {
             );
             responsesNotToken.push(response.data);
           });
-          console.log(responsesNotToken);
+          setLoading(false);
           return responsesNotToken;
         }
       } else {
@@ -174,27 +175,38 @@ function ParticipantFeedback() {
           headers["Authorization"] = `Bearer ${token}`;
         }
 
-        surveys.length > 0 &&
-          surveys.forEach(async (element) => {
-            const response = await axios.post(
-              `http://localhost:8000/api/get-form-responses`,
-              {
-                surveyId: element.surveyId,
-                sessionId: "session 1 - ref nouvelle",
-              },
-              {
-                headers: headers,
-              }
-            );
-            responsesToken.push(response.data);
-          });
-        return responsesToken;
+        if (surveys.length > 0) {
+          for (let index = 0; index < surveys.length; index++) {
+            let ids = [];
+            if (surveys[index].session_ids.length > 0) {
+              ids = surveys[index].session_ids.map((id) => id);
+            }
+
+            for (let index = 0; index < ids.length; index++) {
+              const response = await axios.post(
+                `http://localhost:8000/api/get-form-responses`,
+                {
+                  surveyId: surveys[index].surveyId,
+                  sessionId: parseInt(ids[index]),
+                },
+                {
+                  headers: headers,
+                }
+              );
+              responsesToken.push(response.data);
+              setLoading(false);
+              return responsesToken;
+            }
+          }
+        }
       }
     } catch (error) {
-      console.log("Error fetching feedbacks :", error);
-    } finally {
       setLoading(false);
+      console.log("Error fetching feedbacks :", error);
     }
+    // finally {
+    //   setLoading(false);
+    // }
   };
 
   const prevPage = () => {
@@ -417,7 +429,7 @@ function ParticipantFeedback() {
         const participantAverage = sumSentiments / countSentiments;
         totalAverage += participantAverage;
         participantCount++;
-        participantAverages[entry.Horodateur] = participantAverage;
+        participantAverages[entry.Timestamp] = participantAverage;
       }
     });
 
@@ -452,7 +464,7 @@ function ParticipantFeedback() {
 
     return { overallAverage, participantAverages };
   };
-
+console.log(averagePerParticipant);
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -545,7 +557,7 @@ function ParticipantFeedback() {
               <div className="table-responsive">
                 <table className="table table-striped table-hover">
                   <thead>
-                    {feedbacks.length > 0 &&
+                    {feedbacks?.length > 0 &&
                       feedbacksPage.map((f, i) => (
                         <tr key={i}>
                           {f.data[0].length > 0 &&
@@ -565,10 +577,10 @@ function ParticipantFeedback() {
                           </tr>
                         );
                       })
-                    ) : filteredData.length === 0 && feedbacks.length === 0 ? (
+                    ) : filteredData.length === 0 && feedbacks?.length === 0 ? (
                       <></>
                     ) : (
-                      feedbacks.length > 0 &&
+                      feedbacks?.length > 0 &&
                       feedbacksPage.map((f) =>
                         f.data.map(
                           (response, i) =>
@@ -616,7 +628,7 @@ function ParticipantFeedback() {
                 </Pagination.Next>
               </Pagination>
               <div className="my-5 d-flex justify-content-center">
-                {feedbacks.length > 0 && (
+                {feedbacks?.length > 0 && (
                   <Button
                     className="btn-block btn-inverse-success"
                     onClick={() => handleAnalyse(feedbacks)}

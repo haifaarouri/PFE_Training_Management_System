@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->id();
             $table->string('surveyId');
             $table->string('surveyLink');
+            $table->json('session_ids');
             $table->timestamps();
         });
     }

@@ -212,7 +212,7 @@ function GoogleSurveyCreator() {
                       </option>
                       {sessions.length > 0 &&
                         sessions.map((s, i) => (
-                          <option key={i} value={s.title + " - " + s.reference}>
+                          <option key={i} value={s.id}>
                             {s.title} - {s.reference}
                           </option>
                         ))}
