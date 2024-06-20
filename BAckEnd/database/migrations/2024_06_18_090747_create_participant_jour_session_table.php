@@ -13,14 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('participant_session', function (Blueprint $table) {
+        Schema::create('participant_jour_session', function (Blueprint $table) {
             $table->id();
-            $table->string('participationStatus')->default('Pending');
             $table->foreignId('participant_id')->constrained('participants');
             $table->foreignId('session_id')->constrained('sessions');
-            $table->integer('waitlist_order')->nullable();
+            $table->foreignId('jour_session_id')->constrained('jour_sessions');
+            $table->string('presenceStatus')->default('Absent');
             $table->timestamps();
-            $table->unique(['participant_id', 'session_id']);
         });
     }
 
@@ -31,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('participant_session');
+        Schema::dropIfExists('participant_jour_session');
     }
 };

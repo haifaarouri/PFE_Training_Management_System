@@ -44,6 +44,25 @@ export const fetchSessionById = async (id) => {
   }
 };
 
+export const fetchWaitingListBySessionId = async (sessionId) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(
+        `/api/participants-in-waiting-list/${sessionId}`
+      );
+      return response.data;
+    } else {
+      const response = await apiFetch(
+        `participants-in-waiting-list/${sessionId}`
+      );
+      return response;
+    }
+  } catch (error) {
+    console.log("Error fetching waiting list with this sessionId :", error);
+    handleError(error.response.data.error);
+  }
+};
+
 export const fetchSessionDays = async (id) => {
   try {
     if (!localStorage.getItem("token")) {

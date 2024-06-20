@@ -86,7 +86,7 @@ const ParticipateSessionModal = ({ show, handleClose, participantId }) => {
             headers: headers,
           }
         );
-        console.log(response);
+
         if (response.status === 200) {
           Swal.fire({
             icon: "success",
@@ -108,6 +108,17 @@ const ParticipateSessionModal = ({ show, handleClose, participantId }) => {
           title: "Oops...",
           text: "Quelque chose s'est mal passé !",
         });
+
+        if (
+          error.response.status === 500 
+          // &&
+          // error.response.data.message ==
+          //   "SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicata du champ '10-7' pour la clef 'participant_session.participant_session_participant_id_session_id_unique' (SQL: insert into `participant_session` (`created_at`, `participant_id`, `participationStatus`, `session_id`, `updated_at`, `waitlist_order`) values (2024-06-19 14:36:54, 10, Waitlisted, 7, 2024-06-19 14:36:54, 2))"
+        ) {
+          handleError(
+            "Ce participant est déjà en liste d'attente pour cette session !"
+          );
+        }
       }
     }
   };

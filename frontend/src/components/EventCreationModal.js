@@ -33,6 +33,9 @@ const EventCreationModal = ({
   const [status, setStatus] = useState("");
   const [sessionMode, setSessionMode] = useState("");
   const [max_participants, setMaxParticipants] = useState("");
+  const [min_participants, setMinParticipants] = useState("");
+  const [registration_start, setRegistrationStart] = useState("");
+  const [registration_end, setRegistrationEnd] = useState("");
   const [validated, setValidated] = useState(false);
   const [formations, setFormations] = useState([]);
   const nowISO = new Date().toISOString().slice(0, 16);
@@ -162,6 +165,9 @@ const EventCreationModal = ({
       formData.append("status", status);
       formData.append("sessionMode", sessionMode);
       formData.append("max_participants", max_participants);
+      formData.append("min_participants", min_participants);
+      formData.append("registration_start", registration_start);
+      formData.append("registration_end", registration_end);
       // formData.append("jours", JSON.stringify(formattedJours));
       // Append each jour object in the jours array
       jours.forEach((jour, index) => {
@@ -195,6 +201,9 @@ const EventCreationModal = ({
           setStatus("");
           setSessionMode("");
           setMaxParticipants("");
+          setMinParticipants("");
+          setRegistrationStart("");
+          setRegistrationEnd("");
           setJours([]);
 
           onClose();
@@ -230,6 +239,9 @@ const EventCreationModal = ({
           setStatus("");
           setSessionMode("");
           setMaxParticipants("");
+          setMinParticipants("");
+          setRegistrationStart("");
+          setRegistrationEnd("");
           setJours([]);
 
           onClose();
@@ -545,6 +557,90 @@ const EventCreationModal = ({
               <Form.Control.Feedback type="invalid">
                 Veuillez saisir le nombre limite de participants pour cette
                 session !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Nombre minimum de participants</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <PiStudentFill
+                      className="text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="number"
+                placeholder="Saisir le nombre minimum de participants"
+                value={min_participants}
+                onChange={(e) => setMinParticipants(e.target.value)}
+                min={1}
+                max={max_participants}
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir le nombre minimum de participants pour cette
+                session !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Date et heure de début de participation</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <FaCalendarDay
+                      className="text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="datetime-local"
+                placeholder="Saisir la date et l'heure de début de participation"
+                value={registration_start}
+                onChange={(e) => setRegistrationStart(e.target.value)}
+                max={new Date(startDate).getDate() + 1}
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir la date et l'heure de début de participation qui
+                doit etre avant ou la meme date de début de la session !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Date et heure de fin de participation</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <FaCalendarDay
+                      className="text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="datetime-local"
+                placeholder="Saisir la date et l'heure de fin de participation"
+                value={registration_end}
+                onChange={(e) => setRegistrationEnd(e.target.value)}
+                min={registration_start}
+                max={endDate}
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir la date et l'heure de fin de participation qui
+                doit etre après ou la meme date de début de la participation et
+                aussi avant ou la meme date de fin de la session !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>

@@ -172,6 +172,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/convert-participant/{candidatId}', [ParticipantController::class, 'convertToParticipant']);
     Route::get('/participate-session/{participantId}/{sessionId}', [ParticipantController::class, 'participateToSession']);
     Route::put('/update-session-status/{participantId}/{sessionId}', [ParticipantController::class, 'updateSessionStatus']);
+    Route::get('/participants-in-waiting-list/{sessionId}', [ParticipantController::class, 'getParticipantsInWaitingList']);
+    Route::post('/participants/{participantId}/sessions/{sessionId}/cancel', [ParticipantController::class, 'cancelParticipation']);
+    Route::put('/update-presence/{participantId}/{jourSessionId}', [ParticipantController::class, 'updatePresenceStatus']);
+    Route::get('/participants/session/{sessionId}', [ParticipantController::class, 'getParticipantsBySessionId']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
@@ -211,7 +215,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/proxy', [ProxyController::class, 'handle']);
     Route::post('/get-form-responses', [ProxyController::class, 'getFormResponses']);
     Route::get('/get-all-surveys', [ProxyController::class, 'getAllSurveys']);
-}); 
+});
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/sentiment', [SentimentAnalysisController::class, 'getSentiment']);

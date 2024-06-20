@@ -20,6 +20,8 @@ import { FaCalendarCheck } from "react-icons/fa";
 import ParticipateSessionModal from "../../components/ParticipateSessionModal";
 import { MdEdit } from "react-icons/md";
 import EditStatusModal from "../../components/EditStatusModal";
+import WaitingListModal from "../../components/WaitingListModal";
+import MarkPresenceModal from "../../components/MakPresenceModal";
 
 function AllParticipants() {
   const [Participants, setParticipants] = useState([]);
@@ -46,6 +48,8 @@ function AllParticipants() {
     useState("");
   const [sessionIdToEdit, setSessionIdToEdit] = useState("");
   const [showEditStatus, setShowEditStatus] = useState(false);
+  const [showWaitingList, setShowWaitingList] = useState(false);
+  const [showMarkPresence, setShowMarkPresence] = useState(false);
 
   useEffect(() => {
     const u = async () => {
@@ -54,7 +58,7 @@ function AllParticipants() {
     };
 
     u();
-  }, []);
+  }, [showEditStatus]);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -208,6 +212,22 @@ function AllParticipants() {
     setSessionIdToEdit("");
   };
 
+  const handleShowWaitigList = () => {
+    setShowWaitingList(true);
+  };
+
+  const handleCloseWaitingList = () => {
+    setShowWaitingList(false);
+  };
+
+  const handleShowMarkPresence = () => {
+    setShowMarkPresence(true);
+  };
+
+  const handleCloseMarkPresence = () => {
+    setShowMarkPresence(false);
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -353,9 +373,11 @@ function AllParticipants() {
                                           pill
                                           bg={
                                             form.pivot.participationStatus ===
-                                              "EnAttente" ||
+                                              "Pending" ||
                                             form.pivot.participationStatus ===
-                                              "Absent"
+                                              "Cancelled" ||
+                                            form.pivot.participationStatus ===
+                                              "Waitlisted"
                                               ? "danger"
                                               : "success"
                                           }
@@ -443,9 +465,11 @@ function AllParticipants() {
                                           pill
                                           bg={
                                             form.pivot.participationStatus ===
-                                              "EnAttente" ||
+                                              "Pending" ||
                                             form.pivot.participationStatus ===
-                                              "Absent"
+                                              "Cancelled" ||
+                                            form.pivot.participationStatus ===
+                                              "Waitlisted"
                                               ? "danger"
                                               : "success"
                                           }
@@ -638,10 +662,13 @@ function AllParticipants() {
                                               bg={
                                                 session.pivot
                                                   .participationStatus ===
-                                                  "EnAttente" ||
+                                                  "Pending" ||
                                                 session.pivot
                                                   .participationStatus ===
-                                                  "Annulé"
+                                                  "Cancelled" ||
+                                                session.pivot
+                                                  .participationStatus ===
+                                                  "Waitlisted"
                                                   ? "danger"
                                                   : "success"
                                               }
@@ -665,6 +692,28 @@ function AllParticipants() {
                     })}
                 </Carousel>
               )}
+              <div className="d-flex justify-content-evenly mt-5">
+                <Button
+                  className="btn-inverse-primary"
+                  onClick={handleShowWaitigList}
+                >
+                  Afficher la liste d'attente
+                </Button>
+                <Button
+                  className="btn-inverse-success"
+                  onClick={handleShowMarkPresence}
+                >
+                  Marquer la présence
+                </Button>
+              </div>
+              <WaitingListModal
+                show={showWaitingList}
+                handleClose={handleCloseWaitingList}
+              />
+              <MarkPresenceModal
+                show={showMarkPresence}
+                handleClose={handleCloseMarkPresence}
+              />
             </div>
           </div>
         </div>

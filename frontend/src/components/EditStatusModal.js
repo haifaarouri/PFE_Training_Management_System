@@ -5,6 +5,7 @@ import axios from "../services/axios";
 import Swal from "sweetalert2";
 import { FaBookReader } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
+import { cancelParticipation } from "../services/ParticipantServices";
 
 const EditStatusModal = ({
   candidatId,
@@ -33,6 +34,18 @@ const EditStatusModal = ({
       theme: "light",
     });
 
+  const handleSuccess = (msg) =>
+    toast.success(msg, {
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
   const handleRegisterCandidatToFormation = async (event) => {
     event.preventDefault();
     await csrf();
@@ -48,68 +61,103 @@ const EditStatusModal = ({
       const formData = new FormData();
       formData.append("_method", "PUT");
       formData.append("registerStatus", registerStatus);
+      let status = formData.get("registerStatus");
 
-      if (!localStorage.getItem("token")) {
-        const res = await axios.post(
-          `${
-            statusType === "InscriptionStatus"
-              ? `/api/update-register-status/${candidatId}/${formationId}`
-              : statusType === "ParticipationStatus" &&
-                `/api/update-session-status/${participantId}/${sessionId}`
-          }`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
+      if (status === "Cancelled") {
+        Swal.fire({
+          title: "Êtes-vous sûr?",
+          text: "Vous ne pourrez pas revenir en arrière !",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Oui, annuler!",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            try {
+              const res = await cancelParticipation(participantId, sessionId);
+
+              if (res) {
+                Swal.fire({
+                  title: "Annulée avec succès!",
+                  text: "Participation est annulée pour ce participant !",
+                  icon: "success",
+                });
+                handleSuccess(res.message);
+                setRegisterStatus("");
+
+                handleClose();
+              }
+            } catch (error) {
+              if (error && error.response.status === 422) {
+                handleError(error.response.data.message);
+              }
+            }
           }
-        );
-
-        if (res.status === 200) {
-          Swal.fire({
-            icon: "success",
-            title: "Statut d'inscription est modifiée avec succès !",
-            showConfirmButton: false,
-            timer: 2000,
-          });
-
-          setRegisterStatus("");
-
-          handleClose();
-        }
+        });
       } else {
-        const headers = {
-          "Content-Type": "multipart/form-data",
-        };
+        if (!localStorage.getItem("token")) {
+          const res = await axios.post(
+            `${
+              statusType === "InscriptionStatus"
+                ? `/api/update-register-status/${candidatId}/${formationId}`
+                : statusType === "ParticipationStatus" &&
+                  `/api/update-session-status/${participantId}/${sessionId}`
+            }`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
 
-        const token = localStorage.getItem("token");
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
+          if (res.status === 200) {
+            Swal.fire({
+              icon: "success",
+              title: "Statut d'inscription est modifiée avec succès !",
+              showConfirmButton: false,
+              timer: 2000,
+            });
 
-        const response = await axios.post(
-          `${
-            statusType === "InscriptionStatus"
-              ? `/api/update-register-status/${candidatId}/${formationId}`
-              : statusType === "ParticipationStatus" &&
-                `/api/update-session-status/${participantId}/${sessionId}`
-          }`,
-          formData,
-          {
-            headers: headers,
+            setRegisterStatus("");
+
+            handleClose();
           }
-        );
+        } else {
+          const headers = {
+            "Content-Type": "multipart/form-data",
+          };
 
-        if (response.status === 200) {
-          Swal.fire({
-            icon: "success",
-            title: "Statut d'inscription est modifiée avec succès !",
-            showConfirmButton: false,
-            timer: 2000,
-          });
+          const token = localStorage.getItem("token");
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
 
-          setRegisterStatus("");
-          handleClose();
+          const response = await axios.post(
+            `${
+              statusType === "InscriptionStatus"
+                ? `/api/update-register-status/${candidatId}/${formationId}`
+                : statusType === "ParticipationStatus" &&
+                  `/api/update-session-status/${participantId}/${sessionId}`
+            }`,
+            formData,
+            {
+              headers: headers,
+            }
+          );
+
+          if (response.status === 200) {
+            Swal.fire({
+              icon: "success",
+              title: "Statut d'inscription est modifiée avec succès !",
+              showConfirmButton: false,
+              timer: 2000,
+            });
+
+            setRegisterStatus("");
+            handleClose();
+          }
         }
       }
     } catch (error) {
@@ -212,9 +260,10 @@ const EditStatusModal = ({
                     <option value="">
                       Séléctionner le statut de participation
                     </option>
-                    <option value="EnAttente">EnAttente</option>
-                    <option value="Absent">Absent</option>
-                    <option value="Présent">Présent</option>
+                    <option value="Pending">En Attente</option>
+                    <option value="Confirmed">Confirmé</option>
+                    <option value="Cancelled">Annulé</option>
+                    <option value="Waitlisted">Liste d'attente</option>
                   </Form.Select>
                   <Form.Control.Feedback>
                     Cela semble bon !

@@ -19,11 +19,10 @@ class Session extends Model
         'location',
         'status',
         'formation_id',
-        'max_participants'
-    ];
-
-    protected $casts = [
-        'endDate' => 'datetime',
+        'max_participants',
+        'min_participants',
+        'registration_start',
+        'registration_end'
     ];
 
     public function formation()
@@ -43,7 +42,9 @@ class Session extends Model
 
     public function participants()
     {
-        return $this->belongsToMany(Participant::class, 'participant_session');
+        return $this->belongsToMany(Session::class, 'participant_session')
+            ->withPivot('participationStatus', 'participant_id', 'session_id', 'waitlist_order', 'created_at', 'updated_at');
+        // ->withTimestamps();
     }
 
     public function commandes()
@@ -54,5 +55,11 @@ class Session extends Model
     public function materials()
     {
         return $this->belongsToMany(Materiel::class, 'session_materiel')->withPivot('quantity', 'startDate', 'endDate');
+    }
+
+    public function participantsInWaitingList()
+    {
+        return $this->belongsToMany(Participant::class, 'participant_session')
+            ->wherePivot('participationStatus', 'Waitlisted');
     }
 }

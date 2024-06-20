@@ -32,6 +32,9 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
     status: "",
     formation_id: "",
     max_participants: "",
+    min_participants: "",
+    registration_start: "",
+    registration_end: "",
   });
   const [validated, setValidated] = useState(false);
   const [formations, setFormations] = useState([]);
@@ -142,6 +145,13 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
         .toISOString()
         .slice(0, 16);
 
+      const formattedRegistrationStart = toUTCDate(sessionDB.registration_start)
+        .toISOString()
+        .slice(0, 16);
+      const formattedRegistrationEnd = toUTCDate(sessionDB.registration_end)
+        .toISOString()
+        .slice(0, 16);
+
       // Validate each jour day is within the session start and end dates
       const sessionStart = new Date(sessionDB.startDate).setHours(0, 0, 0, 0);
       const sessionEnd = new Date(sessionDB.endDate).setHours(23, 59, 59, 999);
@@ -167,6 +177,9 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
       formData.append("status", sessionDB.status);
       formData.append("sessionMode", sessionDB.sessionMode);
       formData.append("max_participants", sessionDB.max_participants);
+      formData.append("min_participants", sessionDB.min_participants);
+      formData.append("registration_start", formattedRegistrationStart);
+      formData.append("registration_end", formattedRegistrationEnd);
       // Append each jour object in the jours array
       jours.forEach((jour, index) => {
         // Ensure time is in HH:mm format
@@ -541,6 +554,105 @@ const SessionEditModal = ({ onOpen, onClose, session }) => {
               <Form.Control.Feedback type="invalid">
                 Veuillez saisir le nombre limite de participants pour cette
                 session !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Nombre minimum de participants</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <PiStudentFill
+                      className="text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="number"
+                placeholder="Saisir le nombre minimum de participants"
+                value={sessionDB.min_participants}
+                onChange={(e) =>
+                  setSessionDB((prev) => ({
+                    ...prev,
+                    min_participants: e.target.value,
+                  }))
+                }
+                min={1}
+                max={sessionDB.max_participants}
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir le nombre minimum de participants pour cette
+                session !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Date et heure de début de participation</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <FaCalendarDay
+                      className="text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="datetime-local"
+                placeholder="Saisir la date et l'heure de début de participation"
+                value={sessionDB.registration_start}
+                onChange={(e) =>
+                  setSessionDB((prev) => ({
+                    ...prev,
+                    registration_start: e.target.value,
+                  }))
+                }
+                max={new Date(sessionDB.startDate).getDate() + 1}
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir la date et l'heure de début de participation qui
+                doit etre avant ou la meme date de début de la session !
+              </Form.Control.Feedback>
+            </InputGroup>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Date et heure de fin de participation</Form.Label>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="inputGroup-sizing-default">
+                <div className="input-group-prepend bg-transparent">
+                  <span className="input-group-text bg-transparent border-right-0">
+                    <FaCalendarDay
+                      className="text-primary"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </span>
+                </div>
+              </InputGroup.Text>
+              <Form.Control
+                type="datetime-local"
+                placeholder="Saisir la date et l'heure de fin de participation"
+                value={sessionDB.registration_end}
+                onChange={(e) =>
+                  setSessionDB((prev) => ({
+                    ...prev,
+                    registration_end: e.target.value,
+                  }))
+                }
+                min={sessionDB.registration_start}
+                max={sessionDB.endDate}
+              />
+              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Veuillez saisir la date et l'heure de fin de participation qui
+                doit etre après ou la meme date de début de la participation et
+                aussi avant ou la meme date de fin de la session !
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>

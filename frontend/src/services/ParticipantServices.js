@@ -137,3 +137,83 @@ export const convertToParticipant = async (ParticipantId) => {
     });
   }
 };
+
+export const fetchWaitingList = async (sessionId) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(
+        "/api/participants-in-waiting-list/" + sessionId
+      );
+      return response.data;
+    } else {
+      const response = await apiFetch(
+        "participants-in-waiting-list/" + sessionId
+      );
+      return response;
+    }
+  } catch (error) {
+    handleError(error.response.data.error);
+    Swal.fire({
+      title: "Opss...",
+      text: "Quelque chose s'est mal passée !",
+      icon: "error",
+    });
+  }
+};
+
+export const cancelParticipation = async (participantId, sessionId) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.post(
+        `/api/participants/${participantId}/sessions/${sessionId}/cancel`
+        // formData,
+        // {
+        //   headers: {
+        //     "Content-Type": "multipart/form-data",
+        //   },
+        // }
+      );
+      return response.data;
+    } else {
+      const headers = {
+        "Content-Type": "multipart/form-data",
+        Accept: "application/json",
+        withCredentials: true,
+      };
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      const response = await axios.post(
+        `/api/participants/${participantId}/sessions/${sessionId}/cancel`,
+        // formData,
+        {
+          headers: headers,
+        }
+      );
+      return response;
+    }
+  } catch (error) {
+    console.log("Error cancelling Participation :", error);
+  }
+};
+
+export const fetchParticipantsSessionId = async (sessionId) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(
+        `/api/participants/session/${sessionId}`
+      );
+      return response.data;
+    } else {
+      const response = await apiFetch(`participants/session/${sessionId}`);
+      return response;
+    }
+  } catch (error) {
+    console.log(
+      "Error fetching Participants for session with this id :",
+      error
+    );
+  }
+};

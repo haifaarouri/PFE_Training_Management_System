@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\ConvocationEmail;
 use App\Models\Candidat;
 use App\Models\EmailTemplate;
+use App\Models\JourSession;
 use App\Models\Session;
 use App\Rules\CandidatTypeRule;
 use Illuminate\Http\Request;
@@ -245,12 +246,24 @@ class ParticipantController extends Controller
             return response()->json(['error' => 'Aucun candidat correspondant trouvé pour cet email !'], 404);
         }
 
-        // Vérifier si le nombre maximum de participants est atteint
-        if ($session->participants()->count() >= $session->max_participants) {
-            return response()->json(['error' => 'La session a atteint le nombre maximum de participants !'], 400);
+        $currentDate = now();
+
+        // Check if the current date is within the registration period
+        if (!$currentDate->between($session->registration_start, $session->registration_end)) {
+            return response()->json(['error' => 'La période d\'inscription pour cette session est fermée !'], 403);
         }
 
-        // Check if the session's formation is one of the formations the candidat has confirmed
+        // Vérifier si le nombre maximum de participants est atteint
+        if ($session->participants()->count() >= $session->max_participants) {
+            // Add to waiting list
+            $participant->sessions()->attach($sessionId, [
+                'participationStatus' => 'Waitlisted',
+                'waitlist_order' => $session->participants()->wherePivot('participationStatus', 'Waitlisted')->count() + 1
+            ]);
+            return response()->json(['error' => 'Participant ajouté à la liste d\'attente car la session a atteint le nombre maximum de participants !'], 400);
+        }
+
+        // Check if the session's formation is one of the formations the candidat has confirmed his inscription
         $confirmedFormationIds = $candidat->formations->where('pivot.registerStatus', 'Confirmé')->pluck('id');
         if (!in_array($session->formation_id, $confirmedFormationIds->toArray())) {
             return response()->json(['error' => 'Cette session n\'est pas liée à une formation confirmée par le candidat !'], 403);
@@ -258,7 +271,7 @@ class ParticipantController extends Controller
 
         try {
             $attributes = [
-                'participationStatus' => "EnAttente",
+                'participationStatus' => "Confirmed",
             ];
             $participant->sessions()->attach($sessionId, $attributes);
 
@@ -273,7 +286,10 @@ class ParticipantController extends Controller
             }
             return response()->json(['error' => 'Erreur lors de la participation du participant à la formation.'], 500);
         } catch (\Exception $e) {
-            \Log::error('Error attaching participant to session: ' . $e->getMessage());
+            \Log::error('Error attaching participant to session : ' . $e->getMessage());
+            if ($e->getCode() == 23000) {
+                return response()->json(['error' => 'Ce participant est déjà en liste d\'attente pour cette session !'], 400);
+            }
             return response()->json(['error' => 'Erreur lors de la participation du participant à la session.'], 500);
         }
     }
@@ -293,5 +309,98 @@ class ParticipantController extends Controller
         }
 
         return response()->json(['error' => 'Participant non trouvé !'], 404);
+    }
+
+    // public function updatePresenceStatus($participantId, $sessionId, $jourSessionId, Request $request)
+    // {
+    //     if (!$this->list_roles->contains(auth()->user()->role)) {
+    //         return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+    //     }
+
+    //     $presenceStatus = $request->input('presence_status');
+
+    //     $participant = Participant::find($participantId);
+    //     if (!$participant) {
+    //         return response()->json(['error' => 'Participant not found'], 404);
+    //     }
+
+    //     $participant->jourSessions()->updateExistingPivot($jourSessionId, [
+    //         'presence_status' => $presenceStatus,
+    //         'session_id' => $sessionId
+    //     ]);
+
+    //     return response()->json(['message' => 'Presence status updated successfully']);
+    // }
+
+    public function cancelParticipation($participantId, $sessionId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $participant = Participant::find($participantId);
+        if (!$participant) {
+            return response()->json(['error' => 'Participant non trouvé avec set Id !'], 404);
+        }
+
+        // Remove the participant from the session
+        $participant->sessions()->detach($sessionId);
+
+        // Attempt to update the waiting list
+        Participant::updateWaitingList($sessionId);
+
+        return response()->json(['message' => 'Participation annulée et liste d\'attente est mise à jour !'], 200);
+    }
+
+    public function getParticipantsInWaitingList($sessionId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $session = Session::find($sessionId);
+
+        if (!$session) {
+            return response()->json(['error' => 'Session avec cet Id non trouvée !'], 404);
+        }
+
+        $participants = $session->participantsInWaitingList()->get();
+
+        return response()->json($participants);
+    }
+
+    public function updatePresenceStatus(Request $request, $participantId, $jourSessionId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $presenceStatus = $request->input('presenceStatus');
+
+        $jourSession = JourSession::find($jourSessionId);
+        if (!$jourSession) {
+            return response()->json(['error' => 'JourSession not found'], 404);
+        }
+
+        $jourSession->updateParticipantPresenceStatus($participantId, $presenceStatus);
+
+        return response()->json(['message' => 'Presence status updated successfully']);
+    }
+
+    public function getParticipantsBySessionId($sessionId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $session = Session::find($sessionId);
+
+        if (!$session) {
+            return response()->json(['error' => 'Session not found'], 404);
+        }
+
+        $participants = $session->participants;
+
+        return response()->json($participants);
     }
 }
