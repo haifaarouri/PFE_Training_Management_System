@@ -2,10 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DocumentLog;
 use App\Models\DocumentTemplate;
+use App\Models\Formation;
+use App\Models\Session;
+use App\Models\SousCategorie;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class DocumentTemplateController extends Controller
 {
@@ -133,6 +140,85 @@ class DocumentTemplateController extends Controller
             // User does not have access, return a 403 response
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
+    }
+
+    public function generateTrainingCatalog(Request $request, $type)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $template = DocumentTemplate::where('type', 'LIKE', '%' . $type . '%')->first();
+
+        if (!$template) {
+            return response()->json(['error' => 'Modèle du document non trouvé !'], 404);
+        }
+
+        $pathToFile = public_path('documentTemplates/' . $template->docName);
+
+        $catalogContent = $this->fillTemplateWithData($pathToFile, $template, $type);
+
+        // return Response::download($catalogContent, 'TrainingCatalog.pdf', [
+        //     'Content-Type' => 'application/pdf'
+        // ]);
+        return response()->json($pathToFile);
+    }
+
+    private function fillTemplateWithData($pathToFile, $template, $type)
+    {
+        $tempTemplatePath = public_path('temp/' . $template->docName);
+
+        if (!copy($pathToFile, $tempTemplatePath)) {
+            return response()->json(['error' => 'Erreur lors de la copie du modèle du document !'], 500);
+        }
+
+        if ($type == 'ParMois') {
+            $date = Carbon::now();
+
+            // check if there are sessions in this month
+            $sessions = Session::whereMonth('startDate', $date->month)
+                ->whereYear('startDate', $date->year)
+                ->get();
+
+            if ($sessions->count() > 0) {
+                foreach ($sessions as $session) {
+
+                    $formation = Formation::findOrFail($session->formation_id);
+
+                    $templateProcessor = new TemplateProcessor($tempTemplatePath);
+                    $templateProcessor->setValue('month', $date->month);
+                    $templateProcessor->setValue('title', $session->title);
+                    $templateProcessor->setValue('reference', $session->reference);
+                    $templateProcessor->setValue('subCategory', SousCategorie::findOrFail($formation->sous_categorie_id)->sous_categorie_name);
+                    $templateProcessor->setValue('days', $formation->numberOfDays);
+                    $templateProcessor->setValue('startDate', $session->startDate);
+                    $templateProcessor->setValue('endDate', $session->endDate);
+                    $templateProcessor->saveAs($tempTemplatePath);  // Save the modified document
+
+                    // Convert DOCX to PDF
+                    \PhpOffice\PhpWord\Settings::setPdfRendererPath(base_path('vendor/dompdf/dompdf'));
+                    \PhpOffice\PhpWord\Settings::setPdfRendererName('DomPDF');
+                    $phpWord = \PhpOffice\PhpWord\IOFactory::load($tempTemplatePath);
+                    $pdfWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'PDF');
+                    $pdfPath = public_path('DocumentsGenerated/' . $session->title . str_replace(".docx", ".pdf", $template->docName));
+                    $pdfWriter->save($pdfPath);
+
+                    unlink($tempTemplatePath);
+
+                    DocumentLog::create([
+                        'participant_id' => null,
+                        'session_id' => $session->id,
+                        'document_type' => 'CatalogueDesFormationsParMois',
+                        'document_generated' => $session->title . str_replace(".docx", ".pdf", $template->docName),
+                    ]);
+
+                    return response()->json(['message' => 'Document généré avec succès !']);
+                }
+            } else {
+                return response()->json(['error' => 'Aucune session trouvée pour ce mois !'], 404);
+            }
+        }
+
     }
 
 }

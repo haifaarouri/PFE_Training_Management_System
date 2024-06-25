@@ -10,6 +10,7 @@ import "./presenceTable.css";
 import {
   fetchParticipantById,
   fetchParticipantsSessionId,
+  fetchPresenceSessionId,
 } from "../services/ParticipantServices";
 import Swal from "sweetalert2";
 
@@ -20,6 +21,7 @@ const MarkPresenceModal = ({ show, handleClose }) => {
   const formRef = useRef();
   const [days, setDays] = useState([]);
   const [participants, setParticipants] = useState([]);
+  const [presences, setPresences] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,18 +54,28 @@ const MarkPresenceModal = ({ show, handleClose }) => {
 
       const res = await fetchSessionDays(selectedSession);
       const par = await fetchParticipantsSessionId(selectedSession);
+      const presence = await fetchPresenceSessionId(selectedSession);
 
       if (res) {
         setDays(res);
         setParticipants([]);
+        setPresences([]);
       }
 
       if (par) {
         par.forEach((element) => {
-          fetchParticipantById(element.pivot.participant_id).then((p) =>
-            setParticipants((prev) => [...prev, p])
-          );
+          fetchParticipantById(element.pivot.participant_id).then((p) => {
+            const updatedParticipant = {
+              ...p,
+              presence_status: "Absent", // Initialize default status
+            };
+            setParticipants((prev) => [...prev, updatedParticipant]);
+          });
         });
+      }
+
+      if (presence) {
+        setPresences(presence);
       }
     } catch (error) {
       console.log(error);
@@ -73,6 +85,12 @@ const MarkPresenceModal = ({ show, handleClose }) => {
   const handlePresenceChange = async (participantId, dayId, isChecked) => {
     const newStatus = isChecked ? "Present" : "Absent";
 
+    setParticipants((prev) =>
+      prev.map((p) =>
+        p.id === participantId ? { ...p, presence_status: newStatus } : p
+      )
+    );
+
     const formData = new FormData();
     formData.append("_method", "PUT");
     formData.append("presenceStatus", newStatus);
@@ -80,7 +98,7 @@ const MarkPresenceModal = ({ show, handleClose }) => {
     try {
       if (!localStorage.getItem("token")) {
         const res = await axios.post(
-          `/api/update-presence/${participantId}/${dayId}`,
+          `/api/update-presence/${participantId}/${dayId}/${selectedSession}`,
           formData,
           {
             headers: {
@@ -108,7 +126,7 @@ const MarkPresenceModal = ({ show, handleClose }) => {
         }
 
         const response = await axios.post(
-          `/api/update-presence/${participantId}/${dayId}`,
+          `/api/update-presence/${participantId}/${dayId}/${selectedSession}`,
           formData,
           {
             headers: headers,
@@ -182,7 +200,7 @@ const MarkPresenceModal = ({ show, handleClose }) => {
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
-          <div className="mt-2 mb-5 d-flex justify-content-center">
+          <div className="mt-2 mb-2 d-flex justify-content-center">
             <Button
               type="submit"
               className="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn"
@@ -208,11 +226,17 @@ const MarkPresenceModal = ({ show, handleClose }) => {
                       {p.firstName} {p.lastName}
                     </td>
                     {days.length > 0 &&
+                      presences.length > 0 &&
                       days.map((d) => (
                         <td key={d.id} className="attend-col">
                           <input
                             type="checkbox"
-                            // checked={p.pivot.presenceStatus === "Present"}
+                            checked={presences.some(
+                              (presence) =>
+                                presence.participant_id === p.id &&
+                                presence.jourSession_id === d.id &&
+                                presence.presence_status === "Present"
+                            )}
                             onChange={(e) =>
                               handlePresenceChange(p.id, d.id, e.target.checked)
                             }
@@ -223,11 +247,6 @@ const MarkPresenceModal = ({ show, handleClose }) => {
                 ))}
             </tbody>
           </table>
-          <div className="my-3 d-flex justify-content-center">
-            <Button className="btn btn-success btn-md text-white">
-              Enregistrer
-            </Button>
-          </div>
         </div>
       </Modal.Body>
       <Modal.Footer className="d-flex justify-content-center">

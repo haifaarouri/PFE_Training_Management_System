@@ -12,6 +12,8 @@ import {
 import FileModal from "../../components/FileModal";
 import { GrPlan } from "react-icons/gr";
 import ProgrammeFormationModal from "../../components/ProgrammeFormationModal";
+import axios from "../../services/axios";
+import { apiFetch } from "../../services/api";
 require("moment/locale/fr");
 
 function AllFormations() {
@@ -203,6 +205,32 @@ function AllFormations() {
     setShowList(false);
   };
 
+  const handleCatalog = async (type) => {
+    try {
+      if (!localStorage.getItem("token")) {
+        const response = await axios.get(`/api/training-catalog/${type}`);
+        return response.data;
+      } else {
+        const response = await apiFetch(`training-catalog/${type}`);
+
+        if (response) {
+          handleSuccess(response.message);
+          Swal.fire({
+            icon: "success",
+            title: "Document généré avec succès !",
+          });
+        }
+      }
+    } catch (error) {
+      handleError(error.response.data.error);
+      Swal.fire({
+        icon: "error",
+        title: error.response.data.error,
+        text: "Veillez vérifier si ce modèle existe si non, créez un nouveau modèle de document !",
+      });
+    }
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -222,7 +250,36 @@ function AllFormations() {
                   Ajouter une Formation
                 </Button>
               </div>
-              <div className="d-flex justify-content-end px-3 py-3">
+              <div className="d-flex justify-content-between px-3 py-3">
+                <div>
+                  <p>Télécharger le catalogue des formations</p>
+                  <div className="btn-group">
+                    <Button
+                      className="btn btn-sm btn-inverse-success"
+                      onClick={() => handleCatalog("ParMois")}
+                    >
+                      Par mois
+                    </Button>
+                    <Button
+                      className="btn btn-sm btn-inverse-success"
+                      onClick={() => handleCatalog("ParTrimestre")}
+                    >
+                      Par trimestre
+                    </Button>
+                    <Button
+                      className="btn btn-sm btn-inverse-success"
+                      onClick={() => handleCatalog("ParSemestre")}
+                    >
+                      Par semestre
+                    </Button>
+                    <Button
+                      className="btn btn-sm btn-inverse-success"
+                      onClick={() => handleCatalog("ParAn")}
+                    >
+                      Par an
+                    </Button>
+                  </div>
+                </div>
                 <div className="btn-group">
                   <Button
                     className="btn btn-lg btn-inverse-success btn-icon"

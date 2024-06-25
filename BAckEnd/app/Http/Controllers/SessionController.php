@@ -28,7 +28,7 @@ class SessionController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $sessions = Session::all();
+            $sessions = Session::with('participants')->get();
             return response()->json($sessions);
         } else {
             // User does not have access, return a 403 response

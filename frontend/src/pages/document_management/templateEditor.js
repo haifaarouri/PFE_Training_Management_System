@@ -205,8 +205,17 @@ function TemplateEditor() {
                       <option value="FeuilleDePrésence">
                         Feuille de présence
                       </option>
-                      <option value="CatalogueDesFormation">
-                        Catalogue des formations
+                      <option value="CatalogueDesFormationParMois">
+                        Catalogue des formations par mois
+                      </option>
+                      <option value="CatalogueDesFormationParTrimestre">
+                        Catalogue des formations par trimestre
+                      </option>
+                      <option value="CatalogueDesFormationParSemestre">
+                        Catalogue des formations par semestre
+                      </option>
+                      <option value="CatalogueDesFormationParAn">
+                        Catalogue des formations par an
                       </option>
                       <option value="BonDeCommande">Bon de commande</option>
                       <option value="FicheProgramme">

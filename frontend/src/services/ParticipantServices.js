@@ -217,3 +217,20 @@ export const fetchParticipantsSessionId = async (sessionId) => {
     );
   }
 };
+
+export const fetchPresenceSessionId = async (sessionId) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/presence/${sessionId}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`presence/${sessionId}`);
+      return response;
+    }
+  } catch (error) {
+    console.log(
+      "Error fetching Participants for session with this id :",
+      error
+    );
+  }
+};

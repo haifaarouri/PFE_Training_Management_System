@@ -62,4 +62,9 @@ class Session extends Model
         return $this->belongsToMany(Participant::class, 'participant_session')
             ->wherePivot('participationStatus', 'Waitlisted');
     }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
 }

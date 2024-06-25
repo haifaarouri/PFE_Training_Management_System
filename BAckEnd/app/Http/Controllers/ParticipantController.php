@@ -369,7 +369,7 @@ class ParticipantController extends Controller
         return response()->json($participants);
     }
 
-    public function updatePresenceStatus(Request $request, $participantId, $jourSessionId)
+    public function updatePresenceStatus(Request $request, $participantId, $jourSessionId, $sessionId)
     {
         if (!$this->list_roles->contains(auth()->user()->role)) {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
@@ -379,12 +379,17 @@ class ParticipantController extends Controller
 
         $jourSession = JourSession::find($jourSessionId);
         if (!$jourSession) {
-            return response()->json(['error' => 'JourSession not found'], 404);
+            return response()->json(['error' => 'JourSession non trouvé !'], 404);
         }
 
-        $jourSession->updateParticipantPresenceStatus($participantId, $presenceStatus);
+        $participant = $jourSession->participants()->where('participant_id', $participantId)->first();
+        if ($participant) {
+            $jourSession->participants()->updateExistingPivot($participantId, ['presenceStatus' => $presenceStatus]);
+        } else {
+            $jourSession->participants()->attach($participantId, ['presenceStatus' => $presenceStatus, 'session_id' => $sessionId]);
+        }
 
-        return response()->json(['message' => 'Presence status updated successfully']);
+        return response()->json(['message' => 'Presence est modifiée avec succès !']);
     }
 
     public function getParticipantsBySessionId($sessionId)
@@ -396,11 +401,36 @@ class ParticipantController extends Controller
         $session = Session::find($sessionId);
 
         if (!$session) {
-            return response()->json(['error' => 'Session not found'], 404);
+            return response()->json(['error' => 'Session non trouvée !'], 404);
         }
 
         $participants = $session->participants;
 
         return response()->json($participants);
+    }
+
+    public function getPresenceStatusForParticipants($sessionId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $session = Session::with('jour_sessions.participants')->find($sessionId);
+
+        if (!$session) {
+            return response()->json(['error' => 'Session non trouvée !'], 404);
+        }
+
+        $participantsStatus = $session->jour_sessions->flatMap(function ($jourSession) {
+            return $jourSession->participants->map(function ($participant) use ($jourSession) {
+                return [
+                    'participant_id' => $participant->id,
+                    'presence_status' => $participant->pivot->presenceStatus,
+                    'jourSession_id' => $jourSession->id
+                ];
+            });
+        });
+
+        return response()->json($participantsStatus);
     }
 }

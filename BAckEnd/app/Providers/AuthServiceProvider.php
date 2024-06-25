@@ -16,7 +16,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+            // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        Task::class => TaskPolicy::class,
     ];
 
     /**
@@ -27,7 +28,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
-            return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
+            return config('app.frontend_url') . "/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
 
         VerifyEmail::createUrlUsing(function ($notifiable) {
@@ -37,15 +38,15 @@ class AuthServiceProvider extends ServiceProvider
                 now()->addMinutes(60),
                 ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())]
             );
-        
+
             $path = parse_url($verifyUrl, PHP_URL_PATH);
             $queryParams = parse_url($verifyUrl, PHP_URL_QUERY);
-        
+
             return "{$frontendUrl}{$path}?{$queryParams}";
         });
     }
 
-     /**
+    /**
      * Build the email verification notification.
      *
      * @param  string  $url
