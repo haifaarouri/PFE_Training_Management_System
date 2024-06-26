@@ -89,8 +89,8 @@ function App() {
   const EditParticipant = lazy(() =>
     import("./pages/participant_management/EditParticipant")
   );
-  const EmailEditor = lazy(() =>
-    import("./pages/email_management/EmailEditor")
+  const EmailEditorCreation = lazy(() =>
+    import("./pages/email_management/EmailEditorCreation")
   );
   const AllEmailTemplates = lazy(() =>
     import("./pages/email_management/AllEmailTemplates")
@@ -668,7 +668,7 @@ function App() {
                     "ServiceFinancier",
                   ]}
                 >
-                  <EmailEditor />
+                  <EmailEditorCreation />
                 </RequireAuth>
               }
             />

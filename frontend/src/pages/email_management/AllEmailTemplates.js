@@ -112,7 +112,8 @@ const EmailTemplateModal = ({ show, onHide, emailTemplate }) => {
               </div>
               <div
                 dangerouslySetInnerHTML={{
-                  __html: emailTemplate.content,
+                  __html: JSON.parse(emailTemplate?.content)?.body?.rows[0]
+                    .columns[0].contents[0].values.html,
                 }}
               ></div>
             </Card.Body>

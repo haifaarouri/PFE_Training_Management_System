@@ -18,42 +18,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { MdCloudUpload, MdDelete } from "react-icons/md";
 import { AiFillFileImage } from "react-icons/ai";
 import "react-toastify/dist/ReactToastify.css";
-
-// let imageAttachement = [];
-
-// class Base64UploadAdapter {
-//   constructor(loader) {
-//     this.loader = loader;
-//   }
-
-//   // Starts the upload process.
-//   upload() {
-//     return this.loader.file.then((file) => {
-//       imageAttachement.push(file);
-//       return new Promise((resolve, reject) => {
-//         const reader = new FileReader();
-//         reader.onload = () => {
-//           resolve({ default: reader.result });
-//         };
-//         reader.onerror = (error) => {
-//           reject(error);
-//         };
-//         reader.readAsDataURL(file);
-//       });
-//     });
-//   }
-
-//   // Aborts the upload process.
-//   abort() {
-//     console.log("Upload aborted.");
-//   }
-// }
-
-// function MyCustomUploadAdapterPlugin(editor) {
-//   editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
-//     return new Base64UploadAdapter(loader);
-//   };
-// }
+import EmailEditor from "react-email-editor";
 
 function EmailEditorEdit() {
   const [emailTemplate, setEmailTemplate] = useState({
@@ -73,6 +38,7 @@ function EmailEditorEdit() {
   const [imagesNames, setImagesNames] = useState([]);
   const [urlimgs, setURLimgs] = useState([]);
   const navigate = useNavigate();
+  const emailEditorRef = useRef(null);
 
   useEffect(() => {
     fetchEmailTemplateById(id).then((res) => {
@@ -85,15 +51,15 @@ function EmailEditorEdit() {
     });
   }, [id]);
 
-  const handleEditorChange = (event, editor) => {
-    const data = editor.getData();
-    if (data !== emailTemplate.content) {
-      setEmailTemplate((prev) => ({
-        ...prev,
-        content: data,
-      }));
-    }
-  };
+  // const handleEditorChange = (event, editor) => {
+  //   const data = editor.getData();
+  //   if (data !== emailTemplate.content) {
+  //     setEmailTemplate((prev) => ({
+  //       ...prev,
+  //       content: data,
+  //     }));
+  //   }
+  // };
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
@@ -121,6 +87,17 @@ function EmailEditorEdit() {
       theme: "light",
     });
 
+  const saveDesignHtml = () => {
+    emailEditorRef.current.editor.exportHtml((data) => {
+      console.log(data);
+      const { design, html } = data;
+      setEmailTemplate((prev) => ({
+        ...prev,
+        content: JSON.stringify(data),
+      }));
+    });
+  };
+
   const edit = async (event) => {
     event.preventDefault();
     await csrf();
@@ -133,6 +110,8 @@ function EmailEditorEdit() {
       }
 
       setValidated(true);
+
+      saveDesignHtml();
 
       const formData = new FormData();
       formData.append("_method", "PUT");
@@ -265,6 +244,63 @@ function EmailEditorEdit() {
     }));
   };
 
+  const onDesignLoad = (data) => {
+    console.log("onDesignLoad", data);
+  };
+
+  const onLoad = (unlayer, template) => {
+    console.log("onLoad", unlayer);
+    unlayer.addEventListener("design:loaded", onDesignLoad);
+    unlayer.loadDesign(template);
+  };
+
+  const [preview, setPreview] = useState(false);
+
+  const saveDesignJson = () => {
+    const unlayer = emailEditorRef.current?.editor;
+
+    unlayer?.saveDesign((design) => {
+      console.log("saveDesign", design);
+      alert("Design JSON has been logged in your developer console.");
+    });
+  };
+
+  const togglePreview = () => {
+    const unlayer = emailEditorRef.current?.editor;
+
+    if (preview) {
+      unlayer?.hidePreview();
+      setPreview(false);
+    } else {
+      unlayer?.showPreview("desktop");
+      setPreview(true);
+    }
+  };
+
+  function onReady(editor) {
+    if (emailTemplate.content !== "") {
+      let jsonString = emailTemplate.content;
+      // Log the jsonString to debug
+      console.log("JSON String:", jsonString);
+
+      let design;
+      if (typeof jsonString === "string") {
+        try {
+          design = JSON.parse(jsonString);
+        } catch (error) {
+          console.error("Parsing error:", error);
+          return; // Stop further execution if JSON is not valid
+        }
+      } else if (typeof jsonString === "object") {
+        design = jsonString; // If it's already an object, use it directly
+      } else {
+        console.error("Invalid JSON data type:", typeof jsonString);
+        return; // Stop further execution if data type is not valid
+      }
+      editor.loadDesign(design);
+    }
+  }
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -361,7 +397,19 @@ function EmailEditorEdit() {
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
-                <Form.Group>
+                <EmailEditor
+                  ref={emailEditorRef}
+                  onReady={onReady}
+                  // onLoad={onLoad}
+                  options={{
+                    projectId: 239297,
+                    version: "latest",
+                    appearance: {
+                      theme: "modern_light",
+                    },
+                  }}
+                />
+                {/* <Form.Group>
                   <Form.Label>Contenu de l'e-mail</Form.Label>
                   <Alert variant="info">
                     Veuillez saisir dans le contenu de l'e-mail les variables
@@ -423,7 +471,7 @@ function EmailEditorEdit() {
                       Veuillez saisir le contenu de l'e-mail !
                     </Form.Control.Feedback>
                   </InputGroup>
-                </Form.Group>
+                </Form.Group> */}
                 <div className="mt-5 d-flex justify-content-center">
                   <Button
                     className="btn btn-block btn-inverse-primary btn-lg font-weight-medium auth-form-btn"
