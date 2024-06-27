@@ -16,6 +16,7 @@ function EmailEditorCreation() {
   const [emailType, setEmailType] = useState("");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
+  const [htmlContent, setHtmlContent] = useState("");
   const [imageAttachements, setImageAttachements] = useState([]);
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
@@ -37,6 +38,11 @@ function EmailEditorCreation() {
     emailEditorRef.current.editor.saveDesign((data) => {
       const { body } = data;
       setContent(JSON.stringify(data));
+    });
+
+    emailEditorRef.current.editor.exportHtml((data) => {
+      const { design, html } = data;
+      setHtmlContent(html);
     });
   };
 
@@ -465,6 +471,7 @@ function EmailEditorCreation() {
       formData.append("emailType", emailType);
       formData.append("subject", subject);
       formData.append("content", content);
+      formData.append("htmlContent", htmlContent);
       if (imageAttachements.length > 0) {
         const filesArray = Array.from(imageAttachements);
         filesArray.forEach((file, index) => {
@@ -590,8 +597,8 @@ function EmailEditorCreation() {
                       <option value="SessionChanges">
                         Changements dans une session
                       </option>
-                      <option value="RegistrationConfirmation">
-                        Confirmation d'inscription pour les candidats
+                      <option value="TrainerConfirmation">
+                        Confirmation des formateurs
                       </option>
                       <option value="EvaluationLink">
                         Lien d'évaluation de la session
@@ -643,6 +650,17 @@ function EmailEditorCreation() {
                     version: "latest",
                     appearance: {
                       theme: "modern_light",
+                    },
+                    tools: {
+                      button: {
+                        enabled: true,
+                        properties: {
+                          link: {
+                            defaultValue:
+                              "http://localhost:8000/api/track-click",
+                          },
+                        },
+                      },
                     },
                   }}
                 />

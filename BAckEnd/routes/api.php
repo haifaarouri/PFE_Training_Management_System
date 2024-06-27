@@ -161,8 +161,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/book-trainer/{sessionId}', [SessionController::class, 'reserveTrainerForSession']);
     Route::get('/trainer-booked-days/{trainerId}', [SessionController::class, 'getJourSessionsForTrainer']);
     Route::get('/available-trainers/{sessionId}/{dayID}', [SessionController::class, 'getAvailableTrinersForDay']);
-    Route::post('/book-material/{sessionId}', [SessionController::class, 'reserveMaterialsForSession']);
+    Route::post('/book-material/{sessionId}', [SessionController::class, 'reserveMaterialsForSession']); 
 });
+
+Route::get('/confirm-session/{id}/{action}', [SessionController::class, 'confirmSession']);
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/participants', [ParticipantController::class, 'index']);

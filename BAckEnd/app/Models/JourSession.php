@@ -13,7 +13,9 @@ class JourSession extends Model
         "startTime",
         "endTime",
         "session_id",
-        "salle_id"
+        "salle_id",
+        "formateur_id",
+        "confirmation_status"
     ];
 
     public function session()

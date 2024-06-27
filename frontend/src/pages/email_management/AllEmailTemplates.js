@@ -69,7 +69,10 @@ const EmailTemplateModal = ({ show, onHide, emailTemplate }) => {
       }
     });
   };
-
+  emailTemplate && console.log(
+    JSON.parse(emailTemplate?.content)?.body?.rows[0].columns[0].contents[0]
+      .values.html
+  );
   return (
     emailTemplate && (
       <Modal
@@ -113,7 +116,7 @@ const EmailTemplateModal = ({ show, onHide, emailTemplate }) => {
               <div
                 dangerouslySetInnerHTML={{
                   __html: JSON.parse(emailTemplate?.content)?.body?.rows[0]
-                    .columns[0].contents[0].values.html,
+                    .columns[0].contents[0].values.html || emailTemplate.htmlContent,
                 }}
               ></div>
             </Card.Body>

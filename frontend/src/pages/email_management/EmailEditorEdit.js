@@ -348,8 +348,8 @@ function EmailEditorEdit() {
                       <option value="SessionChanges">
                         Changements dans une session
                       </option>
-                      <option value="RegistrationConfirmation">
-                        Confirmation d'inscription pour les candidats
+                      <option value="TrainerConfirmation">
+                        Confirmation des formateurs
                       </option>
                       <option value="EvaluationLink">
                         Lien d'évaluation de la session
@@ -570,7 +570,7 @@ function EmailEditorEdit() {
                     )}
                   </Form.Group>
                 )}
-                {emailTemplate.imageAttachement.length > 0 && (
+                {emailTemplate.imageAttachement?.length > 0 && (
                   <div className="d-flex flex-wrap m-5">
                     {emailTemplate.imageAttachement.map((attachment, index) => (
                       <div key={index} className="m-2">

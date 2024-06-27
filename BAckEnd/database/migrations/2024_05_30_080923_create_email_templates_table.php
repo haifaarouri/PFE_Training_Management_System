@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('type');
             $table->string('subject');
             $table->text('content');
+            $table->text('htmlContent');
             $table->text('imageAttachement')->nullable();
             $table->timestamps();
         });

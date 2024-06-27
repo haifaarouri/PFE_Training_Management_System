@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->foreignId('session_id')->constrained()->onDelete('cascade');
             $table->foreignId('salle_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('formateur_id')->nullable()->constrained()->onDelete('set null');
+            $table->enum('confirmation_status', ['pending', 'confirmed', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }

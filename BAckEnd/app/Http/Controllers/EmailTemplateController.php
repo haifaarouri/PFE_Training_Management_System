@@ -38,6 +38,7 @@ class EmailTemplateController extends Controller
             'emailType' => 'required|string|max:255',
             'subject' => 'required|string|max:255',
             'content' => 'required|string',
+            'htmlcontent' => 'string',
             'imageAttachement' => 'nullable|array',
             'imageAttachement.*' => 'nullable|image|max:2048'
         ]);
@@ -46,6 +47,7 @@ class EmailTemplateController extends Controller
         $template->type = $request->emailType;
         $template->subject = $request->subject;
         $template->content = $request->content;
+        $template->htmlContent = $request->htmlContent;
 
         if ($request->has('imageAttachement')) {
             $images = [];
@@ -128,6 +130,7 @@ class EmailTemplateController extends Controller
                     'emailType' => 'required|string|max:255',
                     'subject' => 'required|string|max:255',
                     'content' => 'required|string',
+                    'htmlcontent' => 'string',
                     'imageAttachement' => 'nullable|array',
                     'imageAttachement.*' => 'nullable|max:2048'
                 ]);
@@ -139,6 +142,7 @@ class EmailTemplateController extends Controller
                 $emailTemplate->type = $request->emailType;
                 $emailTemplate->subject = $request->subject;
                 $emailTemplate->content = $request->content;
+                $emailTemplate->htmlContent = $request->htmlContent;
 
                 if ($request->has('imageAttachement')) {
                     $images = json_decode($emailTemplate->imageAttachement, true);

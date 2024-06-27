@@ -9,7 +9,7 @@ class EmailTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['type', 'subject', 'content', 'imageAttachement'];
+    protected $fillable = ['type', 'subject', 'content', 'htmlContent', 'imageAttachement'];
     protected $casts = [
         'imageAttachement' => 'array'
     ];

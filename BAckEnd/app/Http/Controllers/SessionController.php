@@ -2,16 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SessionUpdatedMail;
+use App\Mail\TrainerConfirmationEmail;
 use App\Models\Disponibility;
+use App\Models\EmailLog;
+use App\Models\EmailTemplate;
 use App\Models\Formateur;
 use App\Models\Formation;
 use App\Models\JourSession;
 use App\Models\Materiel;
+use App\Models\Participant;
 use App\Models\Salle;
 use App\Models\Session;
 use App\Rules\SessionModeRule;
 use App\Rules\SessionStatusRule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
 
@@ -143,13 +149,24 @@ class SessionController extends Controller
         }
     }
 
+    private function replacePlaceholders($text, $data)
+    {
+        foreach ($data as $key => $value) {
+            // $text = str_replace("{" . $key . "}", "<span style='text-decoration: line-through;'>{$value}</span>", $text);
+            $text = str_replace("{" . $key . "}", "<span style='color: red;'>{$value}</span>", $text);
+            // $text = str_replace("{" . $key . "_old}", "<span style='text-decoration: line-through;'>{$value['old']}</span>", $text);
+            // $text = str_replace("{" . $key . "_new}", "<span style='color: red;'>{$value['new']}</span>", $text);
+        }
+        return $text;
+    }
+
     public function update(Request $request, $id)
     {
         if (!$this->list_roles->contains(auth()->user()->role)) {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
 
-        $session = Session::find($id);
+        $session = Session::with(['participants', 'formation'])->find($id);
         if (!$session) {
             return response()->json(['error' => 'Session non trouvée.'], 404);
         }
@@ -195,6 +212,18 @@ class SessionController extends Controller
                 return response()->json(['error' => $validator->errors()], 400);
             }
 
+            // updating or clearing jour_sessions
+            foreach ($session->jour_sessions as $jour) {
+                // Remove or update participant_jour_session entries
+                foreach ($jour->participants as $participant) {
+                    // Detach participant from this jour_session
+                    $participant->jourSessions()->detach($jour->id);
+                }
+
+                // Now safe to delete jour_session
+                $jour->delete();
+            }
+
             // Update session details
             $session->update($request->only(['title', 'startDate', 'endDate', 'duration', 'sessionMode', 'reference', 'location', 'status']));
 
@@ -217,6 +246,109 @@ class SessionController extends Controller
                     'startTime' => $jour['startTime'],
                     'endTime' => $jour['endTime']
                 ]);
+            }
+
+            if (!empty($session->participants)) {
+                $changes = [];
+                // Check for changes in each attribute
+                $attributes = [
+                    'title',
+                    'startDate',
+                    'endDate',
+                    'registration_start',
+                    'registration_end',
+                    'max_participants',
+                    'min_participants',
+                    'duration',
+                    'sessionMode',
+                    'reference',
+                    'location',
+                    'status'
+                ];
+
+                foreach ($attributes as $attribute) {
+                    if ($request->has($attribute) && $session->$attribute == $request->$attribute) {
+                        $changes[$attribute] = [
+                            'old' => $session->$attribute,
+                            'new' => $request->$attribute
+                        ];
+                    }
+                }
+
+                // Check for changes in 'jours' (days)
+                if ($request->has('jours')) {
+                    $joursChanges = [];
+                    foreach ($request->jours as $index => $jour) {
+                        $originalJour = $session->jours[$index] ?? null;
+                        if ($originalJour) {
+                            $jourAttributes = ['day', 'startTime', 'endTime'];
+                            foreach ($jourAttributes as $attr) {
+                                if (isset($jour[$attr]) && $originalJour->$attr == $jour[$attr]) {
+                                    $joursChanges[$index][$attr] = [
+                                        'old' => $originalJour->$attr,
+                                        'new' => $jour[$attr]
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                    if (!empty($joursChanges)) {
+                        $changes['jours'] = $joursChanges;
+                    }
+                }
+
+                $template = EmailTemplate::where('type', 'Convocation')->first();
+                if (!$template) {
+                    return response()->json(['error' => 'Modèle d\'e-mail non trouvé !'], 404);
+                }
+                $htmlContent = json_decode($template->content)->body->rows[0]->columns[0]->contents[0]->values->html;
+
+                if (!empty($changes)) {
+                    foreach ($session->participants as $participant) {
+                        $participantDB = Participant::find($participant->pivot->participant_id);
+                        if (!$participantDB) {
+                            return response()->json(['error' => 'Participant non trouvé !'], 404);
+                        }
+
+                        $data = [
+                            'firstName' => $participantDB->firstName,
+                            'lastName' => $participantDB->lastName,
+                            'sessionTitle' => $session->title,
+                            'formationRef' => $session->reference,
+                            'sessionStartDate' => $session->startDate,
+                            'sessionEndDate' => $session->endDate,
+                            'sessionLocation' => $session->location,
+                            'sessionMode' => $session->sessionMode,
+                            'sessionDuration' => $session->duration,
+                            'programme' => $session->formation->programme,
+                            'formationTitle' => $session->formation->entitled,
+                        ];
+
+                        // foreach ($changes as $field => $value) {
+                        //     if (is_array($value)) {
+                        //         $oldValue = $value['old'] ?? '';
+                        //         $newValue = $value['new'] ?? '';
+
+                        //         $htmlContent = str_replace("{" . $field . "_old}", "<span style='text-decoration: line-through;'>{$oldValue}</span>", $htmlContent);
+                        //         $htmlContent = str_replace("{" . $field . "_new}", "<span style='color: red;'>{$newValue}</span>", $htmlContent);
+                        //     }
+                        // }
+
+                        $subject = $template->subject;
+                        $content = $this->replacePlaceholders($htmlContent, $data);
+                        // $content = $htmlContent;
+
+                        $imageAttachments = json_decode($template->imageAttachement, true) ?? [];
+
+                        !empty($participantDB->email) && filter_var($participantDB->email, FILTER_VALIDATE_EMAIL) && Mail::to($participantDB->email)->send(new SessionUpdatedMail($subject, $content, $imageAttachments));
+
+                        EmailLog::create([
+                            'participant_id' => $participantDB->id,
+                            'session_id' => $session->id,
+                            'email_type' => 'Convocation-Session Modifiée',
+                        ]);
+                    }
+                }
             }
 
             return response()->json($session, 200);
@@ -443,15 +575,46 @@ class SessionController extends Controller
         // Convert formateur specialties to an array
         $formateurSpecialities = explode(',', $formateur->speciality);
         $formationRequirements = explode(',', $session->formation->requirements);
-        $formationCategory = $session->formation->sousCategory->category->category_name ?? null;
-        $formationSubCategorie = $session->formation->sousCategory->sous_category_name ?? null;
+        $formationCategory = $session->formation->sousCategorie->categorie->categorie_name ?? null;
+        $formationSubCategorie = $session->formation->sousCategorie->sous_categorie_name ?? null;
         $formationSpecialties = array_merge($formationRequirements, [$formationCategory], [$formationSubCategorie]);
         $formationSpecialties = array_filter($formationSpecialties);
         $matches = array_intersect($formateurSpecialities, $formationSpecialties);
 
+        foreach ($formateurSpecialities as $speciality) {
+            foreach ($formationSpecialties as $requirement) {
+                if (str_contains(strtolower($requirement), strtolower($speciality))) {
+                    array_push($matches, $speciality);
+                }
+            }
+        }
+
         if (empty($matches)) {
             return ['success' => false, 'message' => 'La spécialité du formateur ne correspond pas aux exigences de la formation !'];
         }
+
+        $template = EmailTemplate::where('type', 'TrainerConfirmation')->first();
+        if (!$template) {
+            return response()->json(['error' => 'Modèle d\'e-mail non trouvé !'], 404);
+        }
+
+        $data = [
+            'firstName' => $formateur->firstName,
+            'lastName' => $formateur->lastName,
+            'sessionTitle' => $session->title,
+            'day' => $day,
+            'startTime' => $startTime,
+            'endTime' => $endTime,
+        ];
+
+        // $htmlContent = json_decode($template->content)->body->rows[0]->columns[0]->contents[0]->values->html;
+
+        $subject = $template->subject;
+        $content = $this->replacePlaceholders($template->htmlContent, $data);
+
+        $imageAttachments = json_decode($template->imageAttachement, true) ?? [];
+
+        Mail::to($formateur->email)->send(new TrainerConfirmationEmail($subject, $content, $imageAttachments));
 
         return ['success' => true];
     }
@@ -546,5 +709,43 @@ class SessionController extends Controller
         }
 
         return response()->json(['message' => 'Materiaux réservés avec succès !']);
+    }
+
+    public function confirmSession($id, $action)
+    {
+        \Log::info($id);
+        \Log::info($action);
+        $session = JourSession::find($id);
+        if (!$session) {
+            return response()->json(['error' => 'Session not found'], 404);
+        }
+
+        $session->confirmation_status = $action; // 'accepted' or 'rejected'
+        $session->save();
+
+        return response()->json(['message' => "Session {$action} successfully"]);
+    }
+
+    public function acceptSession($id)
+    {
+        
+        $session = JourSession::find($id);
+        if ($session) {
+            $session->confirmation_status = 'accepted';
+            $session->save();
+            return view('response', ['message' => 'You have accepted the session.']);
+        }
+        return abort(404);
+    }
+
+    public function rejectSession($id)
+    {
+        $session = JourSession::find($id);
+        if ($session) {
+            $session->confirmation_status = 'rejected';
+            $session->save();
+            return view('response', ['message' => 'You have rejected the session.']);
+        }
+        return abort(404);
     }
 }
