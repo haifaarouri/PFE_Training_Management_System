@@ -13,4 +13,9 @@ class EmailTemplate extends Model
     protected $casts = [
         'imageAttachement' => 'array'
     ];
+
+    public function variableTemplates()
+    {
+        return $this->belongsToMany(VariableTemplate::class, 'email_template_variable');
+    }
 }

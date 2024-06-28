@@ -9,6 +9,7 @@ import { IoDocumentAttachOutline } from "react-icons/io5";
 import { VscOrganization } from "react-icons/vsc";
 import { MdEmail } from "react-icons/md";
 import { RiSurveyFill } from "react-icons/ri";
+import { CiViewTable } from "react-icons/ci";
 
 function SideBar({ isSidebarVisible }) {
   const [userAuth, setUserAuth] = useState(null);
@@ -93,6 +94,11 @@ function SideBar({ isSidebarVisible }) {
       path: "/participants-feedbacks",
       icon: <RiSurveyFill size={22} />,
       title: "Gestion des Formulaires",
+    },
+    {
+      path: "/templates-variables",
+      icon: <CiViewTable size={22} />,
+      title: "Gestion des Variables",
     },
   ];
 

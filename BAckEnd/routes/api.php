@@ -18,6 +18,7 @@ use App\Http\Controllers\SentimentAnalysisController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VariableTemplateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmailController;
@@ -161,7 +162,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/book-trainer/{sessionId}', [SessionController::class, 'reserveTrainerForSession']);
     Route::get('/trainer-booked-days/{trainerId}', [SessionController::class, 'getJourSessionsForTrainer']);
     Route::get('/available-trainers/{sessionId}/{dayID}', [SessionController::class, 'getAvailableTrinersForDay']);
-    Route::post('/book-material/{sessionId}', [SessionController::class, 'reserveMaterialsForSession']); 
+    Route::post('/book-material/{sessionId}', [SessionController::class, 'reserveMaterialsForSession']);
 });
 
 Route::get('/confirm-session/{id}/{action}', [SessionController::class, 'confirmSession']);
@@ -231,4 +232,14 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/variables-template', [VariableTemplateController::class, 'index']);
+    Route::post('/add-variable-template', [VariableTemplateController::class, 'store']);
+    Route::get('/variable-template-id/{id}', [VariableTemplateController::class, 'show']);
+    Route::put('/update-variable-template/{id}', [VariableTemplateController::class, 'update']);
+    Route::delete('/delete-variable-template/{id}', [VariableTemplateController::class, 'destroy']);
+    Route::get('/source-tables', [VariableTemplateController::class, 'getSourceTables']);
+    Route::get('/source-columns/{tableName}', [VariableTemplateController::class, 'getSourceColonnes']);
 });

@@ -42,6 +42,7 @@ function EmailEditorCreation() {
 
     emailEditorRef.current.editor.exportHtml((data) => {
       const { design, html } = data;
+      console.log(html);
       setHtmlContent(html);
     });
   };
@@ -565,8 +566,9 @@ function EmailEditorCreation() {
                 Etapes de création d'un nouvel modèle d'e-mail
               </h4>
               <ToastContainer />
+              <Button onClick={saveDesignHtml}>save</Button>
               <Form
-                onSubmit={saveEmailTemplate}
+                // onSubmit={saveEmailTemplate}
                 ref={formRef}
                 noValidate
                 validated={validated}

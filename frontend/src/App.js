@@ -107,6 +107,9 @@ function App() {
   const GoogleSurveyCreator = lazy(() =>
     import("./pages/feedBack_management/GoogleSurveyCreator")
   );
+  const AllVariables = lazy(() =>
+    import("./pages/variable_template_management/AllVariables")
+  );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -745,6 +748,25 @@ function App() {
                   ]}
                 >
                   <ParticipantFeedback />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/templates-variables"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <AllVariables />
                 </RequireAuth>
               }
             />

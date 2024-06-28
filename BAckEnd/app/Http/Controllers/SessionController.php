@@ -152,8 +152,9 @@ class SessionController extends Controller
     private function replacePlaceholders($text, $data)
     {
         foreach ($data as $key => $value) {
+            $text = str_replace("{" . $key . "}", "{$value}", $text);
             // $text = str_replace("{" . $key . "}", "<span style='text-decoration: line-through;'>{$value}</span>", $text);
-            $text = str_replace("{" . $key . "}", "<span style='color: red;'>{$value}</span>", $text);
+            // $text = str_replace("{" . $key . "}", "<span style='color: red;'>{$value}</span>", $text);
             // $text = str_replace("{" . $key . "_old}", "<span style='text-decoration: line-through;'>{$value['old']}</span>", $text);
             // $text = str_replace("{" . $key . "_new}", "<span style='color: red;'>{$value['new']}</span>", $text);
         }
@@ -517,7 +518,7 @@ class SessionController extends Controller
         }
 
         // Check if the formateur is available on this day and time and his specialities
-        $result = $this->isFormateurAvailable($formateurId, $jourSession->day, $jourSession->startTime, $jourSession->endTime, $sessionId);
+        $result = $this->isFormateurAvailable($formateurId, $jourSession->id, $jourSession->day, $jourSession->startTime, $jourSession->endTime, $sessionId);
         if (!$result['success']) {
             return response()->json(['error' => $result['message']], 422);
         }
@@ -529,7 +530,7 @@ class SessionController extends Controller
         return response()->json(['message' => 'Formateur réservé avec succès pour le jour de la session !']);
     }
 
-    private function isFormateurAvailable($formateurId, $day, $startTime, $endTime, $sessionId)
+    private function isFormateurAvailable($formateurId, $dayId, $day, $startTime, $endTime, $sessionId)
     {
         // Convert day to Carbon instance for comparison
         $dayCarbon = Carbon::parse($day)->startOfDay();
@@ -605,6 +606,8 @@ class SessionController extends Controller
             'day' => $day,
             'startTime' => $startTime,
             'endTime' => $endTime,
+            'jourSessionId' => $dayId,
+            'trainerEmail' => $formateur->email
         ];
 
         // $htmlContent = json_decode($template->content)->body->rows[0]->columns[0]->contents[0]->values->html;
@@ -713,22 +716,22 @@ class SessionController extends Controller
 
     public function confirmSession($id, $action)
     {
-        \Log::info($id);
-        \Log::info($action);
-        $session = JourSession::find($id);
-        if (!$session) {
-            return response()->json(['error' => 'Session not found'], 404);
+        $day = JourSession::find($id);
+        if (!$day) {
+            return response()->json(['error' => 'Jour de la Session non trouvée !'], 404);
         }
 
-        $session->confirmation_status = $action; // 'accepted' or 'rejected'
-        $session->save();
+        $day->confirmation_status = $action;
+        $day->save();
 
-        return response()->json(['message' => "Session {$action} successfully"]);
+        return view('confirm');
+
+        // return response()->json(['message' => "Session {$action} successfully"]);
     }
 
     public function acceptSession($id)
     {
-        
+
         $session = JourSession::find($id);
         if ($session) {
             $session->confirmation_status = 'accepted';

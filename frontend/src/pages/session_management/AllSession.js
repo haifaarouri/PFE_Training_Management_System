@@ -19,10 +19,8 @@ import { Modal, Button, Tooltip, OverlayTrigger, Card } from "react-bootstrap";
 import { BiSolidCalendarEdit } from "react-icons/bi";
 import SessionEditModal from "../../components/SessionEditModal";
 import { AiFillDelete } from "react-icons/ai";
-import { ToastContainer, toast } from "react-toastify";
 import ReservationSalleModal from "../../components/ReservationSalleModal";
 import { RiHomeOfficeLine } from "react-icons/ri";
-import { Toaster } from "sonner";
 import { GiTeacher } from "react-icons/gi";
 import { FaCartArrowDown } from "react-icons/fa";
 import { MdLaptopChromebook } from "react-icons/md";
@@ -106,30 +104,6 @@ const EventModal = ({ show, onHide, event }) => {
     setShowEditModal(false);
   };
 
-  const handleSuccess = (msg) =>
-    toast.success(msg, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-
-  const handleError = (err) =>
-    toast.error(err, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-
   const handleDeleteSession = async (id) => {
     Swal.fire({
       title: "Êtes-vous sûr?",
@@ -142,18 +116,19 @@ const EventModal = ({ show, onHide, event }) => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await deleteSession(id);
+          await deleteSession(id);
           Swal.fire({
             title: "Supprimé avec succès!",
             text: "Session est supprimée !",
             icon: "success",
           });
-          // const d = await fetchData();
-          // setSalles(d);
-          handleSuccess(res.message);
         } catch (error) {
           if (error && error.response.status === 422) {
-            handleError(error.response.data.message);
+            Swal.fire({
+              title: "Erreur !",
+              text: error.response.data.message,
+              icon: "error",
+            });
           }
         }
       }
@@ -199,7 +174,6 @@ const EventModal = ({ show, onHide, event }) => {
         className="event-modal"
         fullscreen="lg-down"
       >
-        <ToastContainer />
         <Modal.Header closeButton className="modal-header-custom">
           <Modal.Title
             id="contained-modal-title-vcenter"
@@ -732,7 +706,6 @@ const AllSessions = () => {
                   Ajouter une session
                 </Button>
               </div>
-              <Toaster richColors expand={false} position="top-center" />
               <EventCreationModal
                 isOpen={showModal}
                 onClose={handleCloseAddModal}

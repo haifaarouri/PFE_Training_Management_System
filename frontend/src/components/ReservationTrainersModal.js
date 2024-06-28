@@ -22,7 +22,7 @@ function ReservationTrainersModal({ show, onHide, session }) {
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
-  console.log(filteredData);
+
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
     setWordEntered(searchWord);
@@ -103,51 +103,63 @@ function ReservationTrainersModal({ show, onHide, session }) {
     event.preventDefault();
     await csrf();
 
-    try {
-      if (!selectedFormateurId || !selectedDayId) {
-        handleError("Veuillez sélectionner un formateur et un jour");
-        return;
-      }
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, assigner ce formateur!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          if (!selectedFormateurId || !selectedDayId) {
+            handleError("Veuillez sélectionner un formateur et un jour");
+            return;
+          }
 
-      const form = formRef.current;
-      if (form.checkValidity() === false) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+          const form = formRef.current;
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
 
-      setValidated(true);
+          setValidated(true);
 
-      const formData = new FormData();
-      formData.append("formateurId", selectedFormateurId);
-      formData.append("dayId", selectedDayId);
+          const formData = new FormData();
+          formData.append("formateurId", selectedFormateurId);
+          formData.append("dayId", selectedDayId);
 
-      const response = await reserveTrainerForDay(session.id, formData);
+          const response = await reserveTrainerForDay(session.id, formData);
 
-      if (response) {
-        handleSuccess("Le formateur a été réservé avec succès !");
-        Swal.fire({
-          icon: "success",
-          title: "Le formateur a été réservé avec succès !",
-          showConfirmButton: false,
-          timer: 2000,
-        });
-        onHide();
-      }
-    } catch (error) {
-      if (error) {
-        if (error.response.data.error) {
-          Object.values(error.response.data.error).forEach((element) => {
-            handleError(element[0]);
-          });
+          if (response) {
+            handleSuccess("Le formateur a été réservé avec succès !");
+            Swal.fire({
+              icon: "success",
+              title: "Le formateur a été réservé avec succès !",
+              showConfirmButton: false,
+              timer: 2000,
+            });
+            onHide();
+          }
+        } catch (error) {
+          if (error) {
+            if (error.response.data.error) {
+              Object.values(error.response.data.error).forEach((element) => {
+                handleError(element[0]);
+              });
+            }
+            handleError(error.response.data.message);
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: "Quelque chose s'est mal passé !",
+            });
+          }
         }
-        handleError(error.response.data.message);
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Quelque chose s'est mal passé !",
-        });
       }
-    }
+    });
   };
 
   return (

@@ -10,4 +10,9 @@ class DocumentTemplate extends Model
     use HasFactory;
 
     protected $fillable = ['type', 'docName'];
+
+    public function variableTemplates()
+    {
+        return $this->belongsToMany(VariableTemplate::class, 'document_template_variable');
+    }
 }
