@@ -3,14 +3,15 @@ import {
   Toolbar,
   Inject,
 } from "@syncfusion/ej2-react-documenteditor";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Form, InputGroup } from "react-bootstrap";
 import { BsFiletypeDocx } from "react-icons/bs";
 import axios from "../../services/axios";
 import Swal from "sweetalert2";
-import { PiFileDocDuotone } from "react-icons/pi";
+import { PiFileDocDuotone, PiTableLight } from "react-icons/pi";
 import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { fetchAllVariables } from "../../services/VariableServices";
 
 function TemplateEditor() {
   let editorObj = useRef(null);
@@ -19,6 +20,12 @@ function TemplateEditor() {
   const [type, setType] = useState("");
   const [docName, setDocName] = useState("");
   const navigate = useNavigate();
+  const [variables, setVariables] = useState([]);
+  const [variableTemplates, setVariableTemplates] = useState([]);
+
+  useEffect(() => {
+    fetchAllVariables().then(setVariableTemplates);
+  }, []);
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
@@ -69,6 +76,7 @@ function TemplateEditor() {
 
       const formData = new FormData();
       formData.append("type", type);
+      formData.append("variable_ids", JSON.stringify(variables));
 
       const blob = await getDocumentAsBlob();
       blob
@@ -238,9 +246,55 @@ function TemplateEditor() {
                     />
                   </InputGroup>
                 </Form.Group>
-                <Alert variant="info" style={{ width: "32%" }}>
+                <Alert variant="info" style={{ width: "38%" }}>
                   Veuillez importer un fichier de type .docx ou .doc
                 </Alert>
+                <Form.Group className="mb-3">
+                  <Form.Label>Variables</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i className="text-primary">
+                            <PiTableLight size={30} />
+                          </i>
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Select
+                      multiple
+                      name="variables"
+                      value={variables}
+                      // onChange={(e) =>
+                      //   setVariables((prev) => [
+                      //     ...prev,
+                      //     e.target.selectedOptions,
+                      //   ])
+                      // }
+                      onChange={(e) =>
+                        setVariables(
+                          [...e.target.selectedOptions].map((o) => o.value)
+                        )
+                      }
+                      required
+                    >
+                      <option value="">
+                        Selectionner les variables liée à ce document
+                      </option>
+                      {variableTemplates.length > 0 &&
+                        variableTemplates.map((variable) => (
+                          <option value={variable.id}>
+                            {variable.variable_name}
+                          </option>
+                        ))}
+                    </Form.Select>
+                  </InputGroup>
+                  <Link to="/templates-variables">
+                    <Button className="btn-inverse-primary">
+                      Ajouter nouvelle variable
+                    </Button>
+                  </Link>
+                </Form.Group>
                 {docName === "" ? (
                   <>
                     <div className="d-flex justify-content-end">

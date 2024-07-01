@@ -10,7 +10,6 @@ use App\Models\SousCategorie;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpWord\TemplateProcessor;
 
@@ -27,7 +26,7 @@ class DocumentTemplateController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $documentTemplates = DocumentTemplate::all();
+            $documentTemplates = DocumentTemplate::with('variableTemplates')->get();
 
             return response()->json($documentTemplates, );
         } else {
@@ -43,7 +42,9 @@ class DocumentTemplateController extends Controller
 
         $request->validate([
             'type' => 'required|string|max:255',
-            'docName' => 'required|file|max:2048'
+            'docName' => 'required|file|max:2048',
+            'variable_ids' => 'required',
+            'variable_ids.*' => 'required|exists:variable_templates,id'
         ]);
 
         $template = new DocumentTemplate();
@@ -56,6 +57,7 @@ class DocumentTemplateController extends Controller
         }
 
         $template->save();
+        $template->variableTemplates()->attach(json_decode($request->variable_ids, true));
 
         return response()->json(['message' => 'Modèle du document enregistré avec succès !'], 201);
     }
@@ -63,7 +65,7 @@ class DocumentTemplateController extends Controller
     public function show($id)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
-            $documentTemplate = DocumentTemplate::find($id);
+            $documentTemplate = DocumentTemplate::with('variableTemplates')->find($id);
             if (!$documentTemplate) {
                 return response()->json(['error' => 'Modèle du document avec cette ID non trouvé !'], 404);
             }
@@ -85,7 +87,9 @@ class DocumentTemplateController extends Controller
 
                 $validator = Validator::make($request->all(), [
                     'type' => 'required|string|max:255',
-                    'docName' => 'required|max:2048'
+                    'docName' => 'required|max:2048',
+                    'variable_ids' => 'required|array',
+                    'variable_ids.*' => 'required|exists:variable_templates,id'
                 ]);
 
                 if ($validator->fails()) {
@@ -108,6 +112,8 @@ class DocumentTemplateController extends Controller
                 }
                 \Log::info($documentTemplate);
                 $documentTemplate->save();
+
+                $documentTemplate->variableTemplates()->sync($request->input('variable_ids'));
 
                 return response()->json($documentTemplate, 200);
             } catch (\Exception $e) {

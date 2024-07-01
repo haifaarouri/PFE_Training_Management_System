@@ -8,10 +8,12 @@ use App\Models\EmailTemplate;
 use App\Models\JourSession;
 use App\Models\Session;
 use App\Rules\CandidatTypeRule;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\participant;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Spatie\CalendarLinks\Link;
 
 // séparation des préoccupations : but de création des classe Participant et Candidat
 class ParticipantController extends Controller
@@ -191,23 +193,37 @@ class ParticipantController extends Controller
         }
     }
 
-    public function sendConvocationEmail($firstName, $lastName, $sessionTitle, $sessionDate, $templateId, $participantEmail)
+    public function sendConvocationEmail($firstName, $lastName, $session, $templateId, $participantEmail)
     {
         $template = EmailTemplate::find($templateId);
         if (!$template) {
             return response()->json(['error' => 'Modèle d\'e-mail non trouvé !'], 404);
         }
 
+        $from = Carbon::parse($session->startDate, 'Africa/Tunis');
+        $to = Carbon::parse($session->endDate, 'Africa/Tunis');
+
+        $link = Link::create($session->title, $from, $to)
+            ->description($session->reference)
+            ->address($session->location);
+
+        // Generate links for different calendars
+        $googleLink = $link->google();
+        $outlookLink = $link->webOutlook();
+
         $data = [
             'firstName' => $firstName,
             'lastName' => $lastName,
-            'sessionTitle' => $sessionTitle,
-            'sessionDate' => $sessionDate,
+            'sessionTitle' => $session->title,
+            'sessionStartDate' => $session->startDate,
+            'sessionEndDate' => $session->endDate,
+            'googleLink' => $googleLink,
+            'outlookLink' => $outlookLink
         ];
 
         $subject = $this->replacePlaceholders($template->subject, $data);
-        $content = $this->replacePlaceholders($template->content, $data);
-
+        $content = $this->replacePlaceholders($template->htmlContent, $data);
+                
         $imageAttachments = json_decode($template->imageAttachement, true) ?? [];
 
         Mail::to($participantEmail)->send(new ConvocationEmail($subject, $content, $imageAttachments));
@@ -222,6 +238,23 @@ class ParticipantController extends Controller
         }
         return $text;
     }
+
+    // public function replaceVariables($templateContent, $context) {
+    //     $variables = TemplateVariable::where('document_type_id', $context['document_type_id'])->get();
+
+    //     foreach ($variables as $variable) {
+    //         $modelClass = 'App\\Models\\' . $variable->source_model;
+    //         $modelInstance = new $modelClass();
+
+    //         // Assuming you have a way to determine the specific record, e.g., through a context ID
+    //         $record = $modelInstance->find($context[$variable->source_model . '_id']);
+
+    //         $value = $record->{$variable->source_field};
+    //         $templateContent = str_replace("{" . $variable->variable_name . "}", $value, $templateContent);
+    //     }
+
+    //     return $templateContent;
+    // }
 
     public function participateToSession($participantId, $sessionId)
     {
@@ -269,6 +302,11 @@ class ParticipantController extends Controller
             return response()->json(['error' => 'Cette session n\'est pas liée à une formation confirmée par le candidat !'], 403);
         }
 
+        $template = EmailTemplate::where('type', 'Convocation')->first();
+        if (!$template) {
+            return response()->json(['error' => 'Aucun template de convocation trouvé !'], 404);
+        }
+
         try {
             $attributes = [
                 'participationStatus' => "Confirmed",
@@ -276,8 +314,7 @@ class ParticipantController extends Controller
             $participant->sessions()->attach($sessionId, $attributes);
 
             //send convocation automatically
-            // Mail::to($participant->email)->send(new ConvocationEmail($session, $participant));
-            $this->sendConvocationEmail($participant->firstName, $participant->lastName, $session->title, $session->startDate, 2, $participant->email);
+            $this->sendConvocationEmail($participant->firstName, $participant->lastName, $session, $template->id, $participant->email);
 
             return response()->json(['message' => 'Participant inscrit à la session avec succès !']);
         } catch (\PDOException $e) {

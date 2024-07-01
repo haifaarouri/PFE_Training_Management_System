@@ -20,7 +20,7 @@ class EmailTemplateController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $emailTemplates = EmailTemplate::all();
+            $emailTemplates = EmailTemplate::with('variableTemplates')->get();
 
             return response()->json($emailTemplates, );
         } else {
@@ -40,7 +40,9 @@ class EmailTemplateController extends Controller
             'content' => 'required|string',
             'htmlcontent' => 'string',
             'imageAttachement' => 'nullable|array',
-            'imageAttachement.*' => 'nullable|image|max:2048'
+            'imageAttachement.*' => 'nullable|image|max:2048',
+            'variable_ids' => 'required|array',
+            'variable_ids.*' => 'required|exists:variable_templates,id'
         ]);
 
         $template = new EmailTemplate();
@@ -61,6 +63,7 @@ class EmailTemplateController extends Controller
         }
 
         $template->save();
+        $template->variableTemplates()->attach($request->variable_ids);
 
         return response()->json(['message' => 'Modèle d\'e-mail enregistré avec succès !'], 201);
     }
@@ -68,7 +71,7 @@ class EmailTemplateController extends Controller
     public function show($id)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
-            $emailTemplate = EmailTemplate::find($id);
+            $emailTemplate = EmailTemplate::with('variableTemplates')->find($id);
             if (!$emailTemplate) {
                 return response()->json(['error' => 'Modèle d\'e-mail avec cette ID non trouvé !'], 404);
             }

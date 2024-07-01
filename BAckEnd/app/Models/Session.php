@@ -42,9 +42,9 @@ class Session extends Model
 
     public function participants()
     {
-        return $this->belongsToMany(Session::class, 'participant_session')
-            ->withPivot('participationStatus', 'participant_id', 'session_id', 'waitlist_order', 'created_at', 'updated_at');
-        // ->withTimestamps();
+        return $this->belongsToMany(Participant::class, 'participant_session')
+            ->withPivot('participationStatus', 'participant_id', 'session_id', 'waitlist_order', 'created_at', 'updated_at')
+            ->withTimestamps();
     }
 
     public function commandes()
@@ -66,5 +66,10 @@ class Session extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(SessionImage::class);
     }
 }

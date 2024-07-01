@@ -11,7 +11,8 @@
 /public/CoursesMaterials 
 /public/emailAttachements
 /public/documentTemplates
-/public/DocumentsGenerated
+/public/DocumentsGenerated  
+/public/SessionImages
 /storage/*.key
 /vendor
 .env

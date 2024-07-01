@@ -110,6 +110,15 @@ function App() {
   const AllVariables = lazy(() =>
     import("./pages/variable_template_management/AllVariables")
   );
+  const EditVariableTemplate = lazy(() =>
+    import("./pages/variable_template_management/EditVariableTemplate")
+  );
+  const AllImagesSessions = lazy(() =>
+    import("./pages/session_images_management/AllSessionImages")
+  );
+  const LinkedInCallback = lazy(() =>
+    import("./pages/session_images_management/LinkedInCallback")
+  );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -770,6 +779,44 @@ function App() {
                 </RequireAuth>
               }
             />
+            <Route
+              path="/edit-variable/:id"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <EditVariableTemplate />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/sessions-images"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <AllImagesSessions />
+                </RequireAuth>
+              }
+            />
           </Route>
           {/* Public Routes */}
           <Route element={<AuthLayout />}>
@@ -793,6 +840,10 @@ function App() {
             element={<EmailVerification />}
           />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
+          <Route
+            path="/auth/linkedin/callback"
+            element={<LinkedInCallback />}
+          />
           <Route path="*" element={<Unauthorized status="404" />} />
         </Routes>
       </div>

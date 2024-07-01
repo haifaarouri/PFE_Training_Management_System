@@ -149,6 +149,23 @@ class SessionController extends Controller
         }
     }
 
+    // public function replaceVariables($templateContent, $context) {
+    //     $variables = TemplateVariable::where('document_type_id', $context['document_type_id'])->get();
+    
+    //     foreach ($variables as $variable) {
+    //         $modelClass = 'App\\Models\\' . $variable->source_model;
+    //         $modelInstance = new $modelClass();
+    
+    //         // Assuming you have a way to determine the specific record, e.g., through a context ID
+    //         $record = $modelInstance->find($context[$variable->source_model . '_id']);
+    
+    //         $value = $record->{$variable->source_field};
+    //         $templateContent = str_replace("{" . $variable->variable_name . "}", $value, $templateContent);
+    //     }
+    
+    //     return $templateContent;
+    // }
+
     private function replacePlaceholders($text, $data)
     {
         foreach ($data as $key => $value) {

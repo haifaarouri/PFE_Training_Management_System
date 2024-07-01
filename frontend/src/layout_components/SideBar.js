@@ -10,6 +10,7 @@ import { VscOrganization } from "react-icons/vsc";
 import { MdEmail } from "react-icons/md";
 import { RiSurveyFill } from "react-icons/ri";
 import { CiViewTable } from "react-icons/ci";
+import { IoMdImages } from "react-icons/io";
 
 function SideBar({ isSidebarVisible }) {
   const [userAuth, setUserAuth] = useState(null);
@@ -99,6 +100,11 @@ function SideBar({ isSidebarVisible }) {
       path: "/templates-variables",
       icon: <CiViewTable size={22} />,
       title: "Gestion des Variables",
+    },
+    {
+      path: "/sessions-images",
+      icon: <IoMdImages size={22} />,
+      title: "Gestion des Images des sessions",
     },
   ];
 

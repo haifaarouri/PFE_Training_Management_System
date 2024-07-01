@@ -19,12 +19,16 @@ Route::get('/', function () {
     return ['Laravel' => app()->version()];
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 Route::get('/auth/google/redirect', [ProviderController::class, 'redirect']);
 Route::get('/auth/google/callback', [ProviderController::class, 'callback']);
 
 Route::post('/upload-chunk', [MaterielController::class, 'uploadChunk']);
-Route::get('/test', function() {
+Route::get('/test', function () {
     dd(phpinfo());
 });
+
+Route::get('auth/linkedin', [ProviderController::class, 'redirectToLinkedIn']);
+Route::post('auth/linkedin/callback', [ProviderController::class, 'handleLinkedInCallback']);
+Route::get('/linkedin/share', [ProviderController::class, 'redirectToLinkedInShare']);

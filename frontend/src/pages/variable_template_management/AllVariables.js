@@ -11,7 +11,7 @@ import VariableModal from "../../components/VariableModal";
 import Swal from "sweetalert2";
 
 function Allvariables() {
-  const [variables, setvariables] = useState([]);
+  const [variables, setVariables] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +53,7 @@ function Allvariables() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-Variable/${id}`);
+    navigate(`/edit-variable/${id}`);
   };
 
   const fetchData = async () => {
@@ -68,7 +68,7 @@ function Allvariables() {
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setvariables(d);
+      setVariables(d);
     };
 
     u();
@@ -88,12 +88,12 @@ function Allvariables() {
         try {
           const res = await deleteVariable(id);
           Swal.fire({
-            title: "Supprimé avec succès!",
+            title: "Supprimée avec succès!",
             text: "Variable est supprimée !",
             icon: "success",
           });
           const d = await fetchData();
-          setvariables(d);
+          setVariables(d);
           handleSuccess(res.message);
         } catch (error) {
           if (error && error.response.status === 422) {

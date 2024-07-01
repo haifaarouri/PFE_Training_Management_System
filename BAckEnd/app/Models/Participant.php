@@ -23,7 +23,7 @@ class Participant extends Model
     public function sessions()
     {
         return $this->belongsToMany(Session::class, 'participant_session')
-            ->withPivot('participationStatus')
+            ->withPivot('participationStatus', 'participant_id', 'session_id', 'waitlist_order', 'created_at', 'updated_at')
             ->withTimestamps();
     }
 
