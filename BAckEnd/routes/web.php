@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\MaterielController;
+use App\Http\Controllers\SessionImageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ProviderController;
 
@@ -31,4 +32,4 @@ Route::get('/test', function () {
 
 Route::get('auth/linkedin', [ProviderController::class, 'redirectToLinkedIn']);
 Route::post('auth/linkedin/callback', [ProviderController::class, 'handleLinkedInCallback']);
-Route::get('/linkedin/share', [ProviderController::class, 'redirectToLinkedInShare']);
+// Route::get('/linkedin/share/{image_id}', [SessionImageController::class, 'shareOnLinkedIn'])->name('linkedin.share');

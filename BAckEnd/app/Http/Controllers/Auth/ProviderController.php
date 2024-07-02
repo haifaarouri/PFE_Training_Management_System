@@ -65,26 +65,24 @@ class ProviderController extends Controller
     }
 
     // Redirect to LinkedIn for authentication
-    public function redirectToLinkedIn()
+    public function redirectToLinkedIn(Request $request)
     {
+        $imageId = $request->imageId;
+        $message = $request->message;
+
+        // Store these in the session or pass them to the callback handler
+        session(['image_id_to_share' => $imageId, 'message_to_share' => $message]);
+
         $clientId = '78qcie9wzyy5ml';
         $redirectUri = urlencode('http://localhost:3000/auth/linkedin/callback');
-        $scopes = 'openid profile email w_member_social';  // Include other scopes as needed
+        $scopes = 'openid profile email w_member_social';
         $state = bin2hex(random_bytes(16));  // Generate a random state for security
 
         session(['linkedin_oauth_state' => $state]);  // Store state in session for later validation
 
         $url = "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id={$clientId}&redirect_uri={$redirectUri}&scope={$scopes}&state={$state}";
-
+        \Log::info($url);
         return redirect()->to($url);
-        // return response()->json([
-        //     'url' => Socialite::driver('linkedin')
-        //         ->stateless()
-        //         ->scopes(['openid', 'profile', 'email', 'w_member_social'])
-        //         ->redirect()
-        //         ->getTargetUrl(),
-        // ]);
-        // return Socialite::driver('linkedin')->scopes(['profile', 'email', 'w_member_social'])->redirect();
     }
 
     // Handle the callback from LinkedIn
@@ -155,7 +153,7 @@ class ProviderController extends Controller
         $accessToken = $request->access_token;
 
         $client = new \GuzzleHttp\Client();
-        $response = $client->request('GET', 'https://api.linkedin.com/v2/me', [
+        $response = $client->request('GET', 'https://api.linkedin.com/v2/userinfo', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $accessToken,
             ],
@@ -184,16 +182,40 @@ class ProviderController extends Controller
                 'form_params' => [
                     'grant_type' => 'authorization_code',
                     'code' => $request->code,
-                    'redirect_uri' => 'http://localhost:3000/auth/linkedin/callback',
-                    'client_id' => 'your-client-id',
-                    'client_secret' => 'your-client-secret',
+                    'redirect_uri' => env('LINKEDIN_REDIRECT_URI'),
+                    'client_id' => env('LINKEDIN_CLIENT_ID'),
+                    'client_secret' => env('LINKEDIN_CLIENT_SECRET')
                 ],
             ]);
 
             $accessToken = json_decode($response->getBody()->getContents(), true)['access_token'];
+            session(['linkedin_access_token' => $accessToken]);
+
+            // Fetch user's LinkedIn profile to get personURN
+            $profileResponse = $client->request('GET', 'https://api.linkedin.com/v2/userinfo', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $accessToken
+                ]
+            ]);
+
+            $profileData = json_decode($profileResponse->getBody()->getContents(), true);
+            $personURN = $profileData['id'];  // Assuming 'id' holds the personURN
+
+            // Redirect to your internal route that handles the share
+            return redirect()->route('linkedin.share', [
+                'image_id' => $request->session()->get('image_id_to_share'),
+                'message' => $request->session()->get('message_to_share'),
+                'personURN' => $personURN,
+                'accessToken' => $accessToken
+            ]);
 
             // Redirect to /userinfo with the access token
-            return redirect()->to('/userinfo?access_token=' . $accessToken);
+            // return redirect()->to('/userinfo?access_token=' . $accessToken);
+            // $shareUrl = "https://www.linkedin.com/sharing/share-offsite/?url=" . urlencode('http://localhost:3000/path-to-your-image');
+            // return redirect()->to($shareUrl);
+
+            // \Log::info($request->session()->get('image_id_to_share'));
+            // return redirect()->route('linkedin.share', ['image_id' => $request->session()->get('image_id_to_share'), 'message' => $request->session()->get('message_to_share')]);
         } catch (\Exception $e) {
             \Log::error("Error during LinkedIn authentication: " . $e->getMessage());
             return redirect()->to('/login')->withErrors('Failed to login with LinkedIn.');

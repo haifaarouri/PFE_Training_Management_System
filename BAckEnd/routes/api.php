@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmailController;
 use Illuminate\Support\Facades\Broadcast;
+use App\Http\Controllers\SessionImageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -242,4 +243,17 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::delete('/delete-variable-template/{id}', [VariableTemplateController::class, 'destroy']);
     Route::get('/source-tables', [VariableTemplateController::class, 'getSourceTables']);
     Route::get('/source-columns/{tableName}', [VariableTemplateController::class, 'getSourceColonnes']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/images-sessions', [SessionImageController::class, 'index']);
+    Route::post('/add-image-sessions', [SessionImageController::class, 'store']);
+    Route::get('/image-sessions-id/{id}', [SessionImageController::class, 'show']);
+    Route::put('/update-image-sessions/{id}', [SessionImageController::class, 'update']);
+    Route::delete('/delete-image-sessions/{id}', [SessionImageController::class, 'destroy']);
+    Route::post('/linkedin/register-media', [SessionImageController::class, 'registerMedia']);
+    Route::post('/linkedin/upload-media', [SessionImageController::class, 'uploadMedia']);
+    Route::post('/linkedin/create-share', [SessionImageController::class, 'createShare']);
+    Route::post('/linkedin/exchange-code', [SessionImageController::class, 'exchangeCodeForAccessToken']);
+    Route::post('/share-image', [SessionImageController::class, 'shareImageOnLinkedIn']);
 });

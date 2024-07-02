@@ -1,47 +1,37 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import { Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
-import { deleteSalle, fetchAllSalles } from "../../services/SalleServices";
-import SalleModal from "../../components/SalleModal";
 import Swal from "sweetalert2";
 import ShareImageOnLinkedIn from "../../components/ShareImageOnLinkedIn";
+import SessionImageModal from "../../components/SessionImageModal";
+import {
+  deleteImageSession,
+  fetchAllImageSessions,
+} from "../../services/ImageSessionServices";
+import { PiShareFat } from "react-icons/pi";
+import ImageSessionShareModal from "../../components/ImageSessionShareModal";
 
-function AllSalles() {
-  const [salles, setSalles] = useState([]);
+function AllimagesSessions() {
+  const [imagesSessions, setImagesSessions] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const sallesPerPage = 2;
-  const lastIndex = currentPage * sallesPerPage;
-  const firstIndex = lastIndex - sallesPerPage;
-  const sallesPage = salles.length > 0 && salles.slice(firstIndex, lastIndex);
+  const imagesSessionsPerPage = 2;
+  const lastIndex = currentPage * imagesSessionsPerPage;
+  const firstIndex = lastIndex - imagesSessionsPerPage;
+  const imagesSessionsPage =
+    imagesSessions.length > 0 && imagesSessions.slice(firstIndex, lastIndex);
   const numberPages = Math.ceil(
-    salles.length > 0 && salles.length / sallesPerPage
+    imagesSessions.length > 0 && imagesSessions.length / imagesSessionsPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState("");
   const [columnName, setColumnName] = useState(null);
-  const [loginUrl, setLoginUrl] = useState(null);
-
-//   useEffect(() => {
-//     fetch("http://localhost:8000/auth/linkedin", {
-//       headers: {
-//         "Content-Type": "application/json",
-//         Accept: "application/json",
-//       },
-//     })
-//       .then((response) => {
-//         if (response.ok) {
-//           return response.json();
-//         }
-//         throw new Error("Something went wrong!");
-//       })
-//       .then((data) => setLoginUrl(data.url))
-//       .catch((error) => console.error(error));
-//   }, []);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [imageToShare, setImageToShare] = useState(null);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -53,21 +43,21 @@ function AllSalles() {
         columnName === "state"
       ) {
         const newFilter =
-          salles.length > 0 &&
-          salles.filter((salle) =>
+          imagesSessions.length > 0 &&
+          imagesSessions.filter((salle) =>
             salle[columnName].toLowerCase().includes(searchWord.toLowerCase())
           );
         setFilteredData(newFilter);
       } else if (columnName === "capacity") {
         const newFilter =
-          salles.length > 0 &&
-          salles.filter((salle) => salle[columnName] >= searchWord);
+          imagesSessions.length > 0 &&
+          imagesSessions.filter((salle) => salle[columnName] >= searchWord);
         setFilteredData(newFilter);
       }
     } else {
       const newFilter =
-        salles.length > 0 &&
-        salles.filter((salle) => {
+        imagesSessions.length > 0 &&
+        imagesSessions.filter((salle) => {
           const salleFields = Object.values(salle).join(" ").toLowerCase();
           return salleFields.includes(searchWord);
         });
@@ -103,28 +93,14 @@ function AllSalles() {
     });
 
   const handleButtonEdit = (id) => {
-    navigate(`/edit-salle/${id}`);
-  };
-
-  const fetchData = async () => {
-    try {
-      const response = await fetchAllSalles();
-      return response;
-    } catch (error) {
-      console.log("Error fetching salles :", error);
-    }
+    navigate(`/edit-image-session/${id}`);
   };
 
   useEffect(() => {
-    const u = async () => {
-      const d = await fetchData();
-      setSalles(d);
-    };
-
-    u();
+    fetchAllImageSessions().then(setImagesSessions);
   }, [showModal]);
 
-  const handleDeleteSalle = async (id) => {
+  const handleDeleteImageSession = async (id) => {
     Swal.fire({
       title: "Êtes-vous sûr?",
       text: "Vous ne pourrez pas revenir en arrière !",
@@ -136,14 +112,14 @@ function AllSalles() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await deleteSalle(id);
+          const res = await deleteImageSession(id);
           Swal.fire({
             title: "Supprimé avec succès!",
-            text: "Salle est supprimée !",
+            text: "Image de la session est supprimée !",
             icon: "success",
           });
-          const d = await fetchData();
-          setSalles(d);
+          const d = await fetchAllImageSessions();
+          setImagesSessions(d);
           handleSuccess(res.message);
         } catch (error) {
           if (error && error.response.status === 422) {
@@ -170,9 +146,14 @@ function AllSalles() {
     }
   };
 
-  const handleLogin = () => {
-    window.location.href = "http://localhost:8000/auth/linkedin";
-    // window.location.href = "https://www.linkedin.com/oauth/v2/authorization?client_id=78qcie9wzyy5ml&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Flinkedin%2Fcallback&scope=openid+profile+email+w_member_social&response_type=code"
+  const handleShowShareModal = (i) => {
+    setImageToShare(i);
+    setShowShareModal(true);
+  };
+
+  const handleCloseShareModal = () => {
+    setImageToShare(null);
+    setShowShareModal(false);
   };
 
   return (
@@ -194,18 +175,16 @@ function AllSalles() {
                   Ajouter une Image
                 </Button>
               </div>
-              {/* {loginUrl != null && (
-                <Link
-                  to={loginUrl}
-                  type="button"
-                  className="btn btn-linkedin btn-social-icon-text mb-3"
-                >
-                  <i className="mdi mdi-linkedin"></i> LinkedIn
-                </Link>
-              )} */}
-              <button onClick={handleLogin}>Login with LinkedIn</button>
               <ShareImageOnLinkedIn />
-              <SalleModal show={showModal} handleClose={handleCloseAddModal} />
+              <SessionImageModal
+                show={showModal}
+                handleClose={handleCloseAddModal}
+              />
+              <ImageSessionShareModal
+                show={showShareModal}
+                handleClose={handleCloseShareModal}
+                imageToShare={imageToShare}
+              />
               <div className="d-flex justify-content-center mt-3 mb-5">
                 <Form style={{ width: "50%" }}>
                   <div className="inner-form">
@@ -216,47 +195,30 @@ function AllSalles() {
                             style={{ border: "none" }}
                             value={columnName}
                             onChange={(e) => {
-                              // e.target.options[4].selected
-                              //   ? setShowDispoModal(true)
-                              //   : setShowDispoModal(false);
-                              // !e.target.options[4].selected &&
-                              //   setOtherFilters(true);
                               return setColumnName(e.target.value);
                             }}
                             required
                           >
                             <option>Colonne</option>
-                            <option value="name">Nom</option>
-                            <option value="capacity">Capacité</option>
-                            <option value="disposition">Disposition</option>
-                            <option value="state">Etat</option>
-                            {/* <option value="disponibility">
-                                  Disponibilité
-                                </option> */}
+                            <option value="type">Type</option>
+                            <option value="session_id">Session</option>
                           </Form.Select>
                         </InputGroup>
-                        {/* <DisponibilityModal
-                              show={showDispoModal}
-                              handleClose={handleCloseDispoModal}
-                              handleCallback={handleCallback}
-                            /> */}
                       </Form.Group>
                     </div>
                     <div className="input-field second-wrap">
                       <Form.Group>
                         <InputGroup>
-                          {/* {!showDispoModal && ( */}
                           <Form.Control
                             id="search"
                             type="text"
-                            placeholder="Recherchez des salles ..."
+                            placeholder="Recherchez des images de sessions ..."
                             size="lg"
                             name=""
                             value={wordEntered}
                             onChange={handleFilter}
                             required
                           />
-                          {/* )} */}
                         </InputGroup>
                       </Form.Group>
                     </div>
@@ -279,32 +241,15 @@ function AllSalles() {
                       </button>
                     </div>
                   </div>
-                  {/* {modalDates && !otherFilters && (
-                        <Card className="shadow-lg p-3 mb-2 mt-3 rounded">
-                          {modalDates.map((d, i) => (
-                            <div
-                              pill
-                              className="badge badge-outline-success badge-pill mb-2"
-                              key={i}
-                            >
-                              {moment(d.startDate).locale("fr").format("LL")} -{" "}
-                              {moment(d.endDate).locale("fr").format("LL")}
-                            </div>
-                          ))}
-                        </Card>
-                      )} */}
                 </Form>
               </div>
               <div className="table-responsive">
                 <table className="table table-striped table-hover">
                   <thead>
                     <tr>
-                      <th>Image de la Salle</th>
-                      <th>Nom de la Salle</th>
-                      <th>Capacité</th>
-                      <th>Disponibilité</th>
-                      <th>Etat</th>
-                      <th>Disposition (Forme de la Salle)</th>
+                      <th>Image de la session</th>
+                      <th>Type de l'image</th>
+                      <th>Session</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -315,8 +260,8 @@ function AllSalles() {
                           <tr key={index}>
                             <td style={{ width: "25%" }}>
                               <img
-                                src={`http://localhost:8000/sallePictures/${u.image}`}
-                                alt={u.iamge}
+                                src={`http://localhost:8000/SessionImages/${u.path}`}
+                                alt={u.path}
                                 style={{
                                   borderRadius: "8px",
                                   width: "100%",
@@ -325,32 +270,9 @@ function AllSalles() {
                               />
                             </td>
                             <td>
-                              <h6>{u.name}</h6>
+                              <h6>{u.type}</h6>
                             </td>
-                            <td>{u.capacity}</td>
-                            <td>
-                              {u.disponibility}
-                              {/* {Array.isArray(u.disponibility) &&
-                                    u.disponibility.map((d, i) => {
-                                      const startDate = moment(d.startDate.date)
-                                        .locale("fr")
-                                        .format("LL");
-                                      const endDate = moment(d.endDate.date)
-                                        .locale("fr")
-                                        .format("LL");
-                                      return (
-                                        <div
-                                          pill
-                                          className="badge badge-outline-success badge-pill mb-2"
-                                          key={i}
-                                        >
-                                          <p>{`${startDate} - ${endDate}`}</p>
-                                        </div>
-                                      );
-                                    })} */}
-                            </td>
-                            <td>{u.state}</td>
-                            <td>{u.disposition}</td>
+                            <td>{u.session_id}</td>
                             <td style={{ width: "15%" }}>
                               <div className="d-flex flex-column justify-content-center">
                                 <Button
@@ -362,28 +284,36 @@ function AllSalles() {
                                   <i className="mdi mdi-tooltip-edit"></i>
                                 </Button>
                                 <Button
-                                  onClick={() => handleDeleteSalle(u.id)}
+                                  onClick={() => handleDeleteImageSession(u.id)}
                                   variant="outline-danger"
                                   className="btn btn-sm"
                                 >
                                   Supprimer <i className="mdi mdi-delete"></i>
+                                </Button>
+                                <Button
+                                  onClick={() => handleShowShareModal(u)}
+                                  variant="outline-info"
+                                  className="btn btn-sm"
+                                >
+                                  Partager <PiShareFat size={20} />
                                 </Button>
                               </div>
                             </td>
                           </tr>
                         );
                       })
-                    ) : filteredData.length === 0 && salles.length === 0 ? (
+                    ) : filteredData.length === 0 &&
+                      imagesSessions.length === 0 ? (
                       <></>
                     ) : (
-                      salles.length > 0 &&
-                      sallesPage.map((u, index) => {
+                      imagesSessions.length > 0 &&
+                      imagesSessionsPage.map((u, index) => {
                         return (
                           <tr key={index}>
                             <td style={{ width: "25%" }}>
                               <img
-                                src={`http://localhost:8000/sallePictures/${u.image}`}
-                                alt={u.iamge}
+                                src={`http://localhost:8000/SessionImages/${u.path}`}
+                                alt={u.path}
                                 style={{
                                   borderRadius: "8px",
                                   width: "100%",
@@ -392,32 +322,9 @@ function AllSalles() {
                               />
                             </td>
                             <td>
-                              <h6>{u.name}</h6>
+                              <h6>{u.type}</h6>
                             </td>
-                            <td>{u.capacity}</td>
-                            <td>
-                              {u.disponibility}
-                              {/* {Array.isArray(u.disponibility) &&
-                                    u.disponibility.map((d, i) => {
-                                      const startDate = moment(d.startDate.date)
-                                        .locale("fr")
-                                        .format("LL");
-                                      const endDate = moment(d.endDate.date)
-                                        .locale("fr")
-                                        .format("LL");
-                                      return (
-                                        <div
-                                          pill
-                                          className="badge badge-outline-success badge-pill mb-2"
-                                          key={i}
-                                        >
-                                          <p>{`${startDate} - ${endDate}`}</p>
-                                        </div>
-                                      );
-                                    })} */}
-                            </td>
-                            <td>{u.state}</td>
-                            <td>{u.disposition}</td>
+                            <td>{u.session_id}</td>
                             <td style={{ width: "15%" }}>
                               <div className="d-flex flex-column justify-content-center">
                                 <Button
@@ -429,11 +336,18 @@ function AllSalles() {
                                   <i className="mdi mdi-tooltip-edit"></i>
                                 </Button>
                                 <Button
-                                  onClick={() => handleDeleteSalle(u.id)}
+                                  onClick={() => handleDeleteImageSession(u.id)}
                                   variant="outline-danger"
-                                  className="btn btn-sm"
+                                  className="btn btn-sm mb-2"
                                 >
                                   Supprimer <i className="mdi mdi-delete"></i>
+                                </Button>
+                                <Button
+                                  onClick={() => handleShowShareModal(u)}
+                                  variant="outline-info"
+                                  className="btn btn-sm"
+                                >
+                                  Partager <PiShareFat size={20} />
                                 </Button>
                               </div>
                             </td>
@@ -482,4 +396,4 @@ function AllSalles() {
   );
 }
 
-export default AllSalles;
+export default AllimagesSessions;

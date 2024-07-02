@@ -119,6 +119,12 @@ function App() {
   const LinkedInCallback = lazy(() =>
     import("./pages/session_images_management/LinkedInCallback")
   );
+  const EditImageSession = lazy(() =>
+    import("./pages/session_images_management/EditImageSession")
+  );
+  const SharePage = lazy(() =>
+    import("./pages/session_images_management/SharePage")
+  );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
 
@@ -817,6 +823,25 @@ function App() {
                 </RequireAuth>
               }
             />
+            <Route
+              path="/edit-image-session/:id"
+              element={
+                <RequireAuth
+                  allowedRoles={[
+                    "Admin",
+                    "SuperAdmin",
+                    "PiloteDuProcessus",
+                    "Sales",
+                    "ChargéFormation",
+                    "CommunityManager",
+                    "AssistanceAcceuil",
+                    "ServiceFinancier",
+                  ]}
+                >
+                  <EditImageSession />
+                </RequireAuth>
+              }
+            />
           </Route>
           {/* Public Routes */}
           <Route element={<AuthLayout />}>
@@ -844,6 +869,7 @@ function App() {
             path="/auth/linkedin/callback"
             element={<LinkedInCallback />}
           />
+          <Route path="/share" element={<SharePage />} />
           <Route path="*" element={<Unauthorized status="404" />} />
         </Routes>
       </div>

@@ -1,56 +1,75 @@
-// LinkedInCallback.js
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
-import { setUser } from "../../store/slices/authenticatedUserSlice";
-import Swal from "sweetalert2";
-import { fetchUserData } from "../../services/UserServices";
-import { setNotifications } from "../../store/slices/notificationsSlice";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "../../services/axios";
 
 function LinkedInCallback() {
-  const [loading, setLoading] = useState(true);
-  const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // window.location.href = "http://localhost:8000/linkedin/share";
-    window.location.href =
-      "https://www.linkedin.com/sharing/share-offsite/?url=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Flinkedin%2Fcallback";
-  }, []);
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const state = urlParams.get("state");
+    const imageId = urlParams.get("imageId");
+    const message = decodeURIComponent(urlParams.get("message") || "");
 
-  // useEffect(() => {
-  //   fetch(`http://localhost:8000/auth/linkedin/callback`, {
-  //     method: "POST", // Specify the method as POST
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Accept: "application/json",
-  //     },
-  //     body: JSON.stringify({
-  //       code: new URLSearchParams(location.search).get("code"), // Send code as part of the request body
-  //       state: new URLSearchParams(location.search).get("state"), // Send state as part of the request body
-  //     }),
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       if (data.error) {
-  //         Swal.fire({
-  //           icon: "error",
-  //           title: data.error,
-  //           showConfirmButton: false,
-  //         });
-  //         navigate("/login"); // Redirect to login on error
-  //       } else {
-  //         setLoading(false);
-  //         localStorage.setItem("token", data.access_token); // Store the token
-  //         fetchUserData().then((user) => {
-  //           dispatch(setUser(user));
-  //           dispatch(setNotifications(user.notifications));
-  //           navigate("/dashboard"); // Navigate based on user role or preference
-  //         });
-  //       }
-  //     });
-  // }, [dispatch, location.search, navigate]);
+    if (!code) {
+      navigate("/login");
+      return;
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    axios
+      .post("/api/linkedin/exchange-code", { code, state }, { headers })
+      .then((response) => {
+        const { data } = response;
+        if (data.error) {
+          console.error("Error:", data.error);
+          navigate("/login");
+        } else {
+          sessionStorage.setItem("accessToken", data.accessToken);
+          sessionStorage.setItem("personURN", data.personURN);
+          setLoading(false);
+          shareImageOnLinkedIn(
+            data.accessToken,
+            data.personURN,
+            imageId,
+            message
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        navigate("/login");
+      });
+  }, [navigate]);
+
+  const shareImageOnLinkedIn = (accessToken, personURN, imageId, message) => {
+    axios
+      .post("http://localhost:8000/api/share-image", {
+        accessToken,
+        personURN,
+        imageId,
+        message,
+      })
+      .then((response) => {
+        console.log("Shared successfully:", response.data);
+        navigate("/success");
+      })
+      .catch((error) => {
+        console.error("Error sharing on LinkedIn:", error);
+        navigate("/error");
+      });
+  };
 
   if (loading) {
     return <DisplayLoading />;
