@@ -1,23 +1,28 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Button } from "react-bootstrap";
 import "./imageSessionShare.css";
 import { FaFacebook, FaLinkedin } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { setImage, setMessage } from "../store/slices/shareInLinkedinSlice";
 
 const ImageSessionShareModal = ({ show, handleClose, imageToShare }) => {
   const [popupVisible, setPopupVisible] = useState(false);
-  const [imageId, setImageId] = useState(imageToShare?.id);
-  const [imageFile, setImageFile] = useState(imageToShare?.path);
-  const [message, setMessage] = useState("");
+  const [imageId, setImageId] = useState("");
+  const [messageToSend, setMessageToSend] = useState("");
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    setImageId(imageToShare?.id);
+  }, [imageToShare]);
 
   const handleTogglePopup = () => {
     setPopupVisible(!popupVisible);
   };
 
   const handleLogin = () => {
-    const encodedMessage = encodeURIComponent(message);
-    const redirectUri = encodeURIComponent(
-      `http://localhost:3000/auth/linkedin/callback?imageId=${imageId}&message=${encodedMessage}`
-    );
+    dispatch(setImage(imageId));
+    dispatch(setMessage(messageToSend));
+    const redirectUri = `http://localhost:3000/auth/linkedin/callback`;
     const clientId = "78qcie9wzyy5ml";
     const scope = encodeURIComponent("openid profile email w_member_social");
     const state = "YOUR_UNIQUE_STATE_STRING"; // Generate a unique state string for security
@@ -56,8 +61,8 @@ const ImageSessionShareModal = ({ show, handleClose, imageToShare }) => {
                     type="text"
                     className="form-control"
                     id="message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    value={messageToSend}
+                    onChange={(e) => setMessageToSend(e.target.value)}
                     placeholder="Saisir un message pour le partager avec l'image"
                   />
                 </div>

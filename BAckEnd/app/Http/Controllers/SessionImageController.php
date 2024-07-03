@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SessionImage;
+use Cache;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -214,11 +215,21 @@ class SessionImageController extends Controller
 
     public function exchangeCodeForAccessToken(Request $request)
     {
+        $code = $request->code;
+        $cacheKey = 'code_used_' . $code;
+
+        if (Cache::has($cacheKey)) {
+            return response()->json(['error' => 'Code has already been used'], 400);
+        }
+
         $client_id = config('services.linkedin.client_id');
         $client_secret = config('services.linkedin.client_secret');
         $redirect_uri = config('services.linkedin.redirect');
 
         $response = $this->client->post('https://www.linkedin.com/oauth/v2/accessToken', [
+            'headers' => [
+                'Content-Type' => 'application/x-www-form-urlencoded'  // Ensure correct Content-Type
+            ],
             'form_params' => [
                 'grant_type' => 'authorization_code',
                 'code' => $request->code,
@@ -229,6 +240,7 @@ class SessionImageController extends Controller
         ]);
 
         $accessToken = json_decode($response->getBody()->getContents(), true)['access_token'];
+        Cache::put($cacheKey, true, 300); // Prevent reuse of the code for 5 minutes
 
         // Fetch user's LinkedIn profile to get personURN
         $profileResponse = $this->client->request('GET', 'https://api.linkedin.com/v2/userinfo', [
@@ -240,7 +252,6 @@ class SessionImageController extends Controller
 
         $profileData = json_decode($profileResponse->getBody()->getContents(), true);
         $personURN = $profileData['sub'];
-
         return response()->json(['accessToken' => $accessToken, 'personURN' => $personURN]);
     }
 
@@ -292,6 +303,7 @@ class SessionImageController extends Controller
             ],
             'json' => [
                 'author' => 'urn:li:person:' . $personURN,
+                // "author" => "urn:li:organization:104499319",
                 'lifecycleState' => 'PUBLISHED',
                 'specificContent' => [
                     'com.linkedin.ugc.ShareContent' => [
@@ -352,9 +364,9 @@ class SessionImageController extends Controller
             $this->uploadMedia($uploadUrl, $imagePath, $accessToken);  // Ensure accessToken is passed if needed
             $shareResponse = $this->createShare($accessToken, $personURN, $asset, $message);
 
-            return response()->json(['message' => 'Image shared successfully on LinkedIn!', 'data' => $shareResponse], 200);
+            return response()->json(['message' => 'Image et message partagé avec succès sur LinkedIn !', 'data' => $shareResponse], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to share image on LinkedIn: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Echec de la partage de l\'image et du message sur LinkedIn : ' . $e->getMessage()], 500);
         }
     }
 }

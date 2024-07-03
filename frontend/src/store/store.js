@@ -13,6 +13,7 @@ import {
 import storage from "redux-persist/lib/storage";
 import successMessageSlice from "./slices/successMessageSlice";
 import notificationsSlice from "./slices/notificationsSlice";
+import shareInLinkedinSlice from "./slices/shareInLinkedinSlice";
 
 const persistConfig = {
   key: "root",
@@ -25,6 +26,7 @@ const persistedReducer = persistReducer(
     user: authenticatedUserSlice,
     msg: successMessageSlice,
     notifications: notificationsSlice,
+    linkedin: shareInLinkedinSlice,
   })
 );
 
