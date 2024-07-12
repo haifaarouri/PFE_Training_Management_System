@@ -47,4 +47,11 @@ class Formation extends Model
     {
         return $this->belongsToMany(Candidat::class, 'candidat_formation');
     }
+
+    public function participants()
+    {
+        return $this->belongsToMany(Participant::class, 'participant_feedback')
+            ->withPivot('averageFeedback')
+            ->withTimestamps();
+    }
 }

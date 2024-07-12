@@ -18,6 +18,7 @@ import {
   defaults,
   ArcElement,
 } from "chart.js";
+import Swal from "sweetalert2";
 
 ChartJS.register(
   CategoryScale,
@@ -243,7 +244,7 @@ function ParticipantFeedback() {
 
       res.data[0].data.forEach((item, i) => {
         Object.keys(item).forEach((key) => {
-          if (key.endsWith("_sentiment")) {
+          if (key.endsWith("_sentiment") && key !== "ParticipantID_sentiment") {
             const question = key.replace("_sentiment", "");
             labels.add(`Participant ${i + 1}`);
             if (!datasets[question]) {
@@ -311,7 +312,7 @@ function ParticipantFeedback() {
 
       response.data[0].data.forEach((item, i) => {
         Object.keys(item).forEach((key) => {
-          if (key.endsWith("_sentiment")) {
+          if (key.endsWith("_sentiment") && key !== "ParticipantID_sentiment") {
             const question = key.replace("_sentiment", "");
             labels.add(`Participant ${i + 1}`);
             if (!datasets[question]) {
@@ -411,14 +412,17 @@ function ParticipantFeedback() {
     return averageSentiments;
   };
 
-  const calculateOverallAverageSentimentPerParticipant = (data) => {
+  const calculateOverallAverageSentimentPerParticipant = async (data) => {
     let totalAverage = 0;
     let participantCount = 0;
     const participantAverages = {};
+    const averages = {};
 
     data.data.forEach((entry) => {
       let sumSentiments = 0;
       let countSentiments = 0;
+      let sessionId = entry["Session ID"]; // Extract the Session ID from the entry
+
       Object.keys(entry).forEach((key) => {
         if (key.includes("_sentiment")) {
           sumSentiments += entry[key];
@@ -429,9 +433,63 @@ function ParticipantFeedback() {
         const participantAverage = sumSentiments / countSentiments;
         totalAverage += participantAverage;
         participantCount++;
-        participantAverages[entry.Timestamp] = participantAverage;
+        participantAverages[entry["Participant ID"]] = participantAverage;
+
+        // Store both the average and the session ID in the averages object
+        averages[entry["Participant ID"]] = {
+          average: participantAverage,
+          sessionId: sessionId,
+        };
       }
     });
+
+    //store avg in DB
+    if (!localStorage.getItem("token")) {
+      const res = await axios.post(
+        "/api/save-avg-feedback",
+        { averages },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (res.status === 201) {
+        Swal.fire({
+          icon: "success",
+          title: "Feedback moyen enregistré avec succès !",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+      }
+    } else {
+      const headers = {
+        "Content-Type": "multipart/form-data",
+      };
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await axios.post(
+        "/api/save-avg-feedback",
+        { averages },
+        {
+          headers: headers,
+        }
+      );
+
+      if (response.status === 201) {
+        Swal.fire({
+          icon: "success",
+          title: "Feedback moyen enregistré avec succès !",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+      }
+    }
 
     const overallAverage =
       participantCount > 0 ? totalAverage / participantCount : 0;
@@ -464,7 +522,7 @@ function ParticipantFeedback() {
 
     return { overallAverage, participantAverages };
   };
-console.log(averagePerParticipant);
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -682,6 +740,9 @@ console.log(averagePerParticipant);
               )}
               {averagePerParticipant && (
                 <div className="row card shadow-lg p-3 mb-2 bg-white rounded">
+                  <Button className="btn-block btn-inverse-success">
+                    Save average
+                  </Button>
                   {averagePerParticipant.labels &&
                     averagePerParticipant.datasets && (
                       <div

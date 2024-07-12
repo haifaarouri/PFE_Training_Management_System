@@ -21,32 +21,34 @@ class SendEmailsThankAndEvaluation implements ShouldQueue
 
     protected $session;
     protected $participant;
+    protected $prefilledUrl;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($session, $participant)
+    public function __construct($session, $participant, $prefilledUrl)
     {
         $this->session = $session;
         $this->participant = $participant;
+        $this->prefilledUrl = $prefilledUrl;
     }
 
     // public function replaceVariables($templateContent, $context) {
     //     $variables = TemplateVariable::where('document_type_id', $context['document_type_id'])->get();
-    
+
     //     foreach ($variables as $variable) {
     //         $modelClass = 'App\\Models\\' . $variable->source_model;
     //         $modelInstance = new $modelClass();
-    
+
     //         // Assuming you have a way to determine the specific record, e.g., through a context ID
     //         $record = $modelInstance->find($context[$variable->source_model . '_id']);
-    
+
     //         $value = $record->{$variable->source_field};
     //         $templateContent = str_replace("{" . $variable->variable_name . "}", $value, $templateContent);
     //     }
-    
+
     //     return $templateContent;
     // }
 
@@ -83,7 +85,8 @@ class SendEmailsThankAndEvaluation implements ShouldQueue
             'firstName' => $this->participant->firstName,
             'lastName' => $this->participant->lastName,
             'formationRef' => $this->session->reference,
-            'link' => $survey->surveyLink
+            // 'link' => $survey->surveyLink
+            'link' => $this->prefilledUrl
         ];
 
         $subject = $this->replacePlaceholders($template->subject, $data);

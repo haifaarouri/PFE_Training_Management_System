@@ -32,7 +32,7 @@ class ProxyController extends Controller
             'title' => $request->input('title'),
             'questions' => $request->input('questions'),
             // 'theme' => $request->input('theme'),
-            'sessionIds' => $request->input('sessionIds')
+            'sessionIds' => $request->input('sessionIds'),
         ];
 
         $questions = json_decode($request->input('questions'), true);
@@ -51,7 +51,7 @@ class ProxyController extends Controller
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://script.google.com/macros/s/AKfycbxVGukxNSEYIMnsBC2vLilRFI6oAV5vi-1RiL08-x2uxwbxtYaMqre71efUS1Are4Sp/exec', $data);
+        ])->post('https://script.google.com/macros/s/AKfycbzByRS_hpLFXbKXfYP8LxZ7O_Pl47U1_AG5CK7NfTFbdAH3wu5X35NmIYN9HFvpza68/exec', $data);
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();
@@ -92,7 +92,7 @@ class ProxyController extends Controller
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://script.google.com/macros/s/AKfycbyO3O7r6unETHAhrsQ1jAyinUgkrtPpURXWeOmKsLaZl9R69cwGbBsB8197XLSZXO8_/exec', $data);
+        ])->post('https://script.google.com/macros/s/AKfycbxCUk62z50bTIc2vtJPljuos4fzufUJiuZ11ijjxdSeDYby55VRLhQHqr33UkVWl8qg/exec', $data);
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();

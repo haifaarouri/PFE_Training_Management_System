@@ -72,4 +72,11 @@ class Participant extends Model
             }
         });
     }
+
+    public function formations()
+    {
+        return $this->belongsToMany(Formation::class, 'participant_feedback')
+            ->withPivot('averageFeedback')
+            ->withTimestamps();
+    }
 }

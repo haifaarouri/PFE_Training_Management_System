@@ -12,6 +12,7 @@ use App\Http\Controllers\FormationController;
 use App\Http\Controllers\materielController;
 use App\Http\Controllers\PartenaireController;
 use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\ParticipantFeedbackController;
 use App\Http\Controllers\ProxyController;
 use App\Http\Controllers\SalleController;
 use App\Http\Controllers\SentimentAnalysisController;
@@ -227,6 +228,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/sentiment', [SentimentAnalysisController::class, 'getSentiment']);
 });
+Route::post('/get-recommendations/{participantId}', [SentimentAnalysisController::class, 'getRecommendations']);
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/tasks', [TaskController::class, 'index']);
@@ -256,4 +258,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/linkedin/create-share', [SessionImageController::class, 'createShare']);
     Route::post('/linkedin/exchange-code', [SessionImageController::class, 'exchangeCodeForAccessToken']);
     Route::post('/share-image', [SessionImageController::class, 'shareImageOnLinkedIn']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/save-avg-feedback', [ParticipantFeedbackController::class, 'saveAverages']);
 });

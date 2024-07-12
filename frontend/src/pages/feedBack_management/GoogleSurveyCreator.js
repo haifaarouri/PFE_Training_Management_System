@@ -22,6 +22,7 @@ function GoogleSurveyCreator() {
   const [loading, setLoading] = useState(false);
   const [sessionIds, setSessionIds] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [participantIds, setParticipantIds] = useState([]);
 
   useEffect(() => {
     fetchAllSessions().then(setSessions);
@@ -84,6 +85,7 @@ function GoogleSurveyCreator() {
       formData.append("questions", JSON.stringify(questions));
       // formData.append("theme", theme);
       formData.append("sessionIds", JSON.stringify(sessionIds));
+      formData.append("participantIds", JSON.stringify(participantIds));
 
       if (!localStorage.getItem("token")) {
         const res = await axios.post(

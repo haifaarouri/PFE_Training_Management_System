@@ -6,9 +6,11 @@ use App\Jobs\GenerateDocuments;
 use App\Jobs\SendEmailsThankAndEvaluation;
 use App\Models\DocumentTemplate;
 use App\Models\EmailTemplate;
+use App\Models\Formulaire;
 use App\Models\JourSession;
 use App\Models\Session;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 
 class AfterSessionTasks extends Command
@@ -53,6 +55,28 @@ class AfterSessionTasks extends Command
         return $context;
     }
 
+    public function generatePrefilledUrl($formId, $participantId, $sessionId)
+    {
+        $client = new Client();
+        $scriptUrl = 'https://script.google.com/macros/s/AKfycbxdhYqCFNuFo7YgoZ00k3S8DWsXGLxnAGS9vT3chV5LNkLp4lk95SWX2uEk0qo0L1LTMw/exec';
+
+        try {
+            $response = $client->request('GET', $scriptUrl, [
+                'query' => [
+                    'formId' => $formId,
+                    'participantId' => $participantId,
+                    'sessionId' => $sessionId
+                ]
+            ]);
+
+            $prefilledUrl = (string) $response->getBody();
+            return $prefilledUrl;
+        } catch (\Exception $e) {
+            // Handle errors appropriately
+            return 'Error generating URL: ' . $e->getMessage();
+        }
+    }
+
     /**
      * Execute the console command.
      *
@@ -67,7 +91,7 @@ class AfterSessionTasks extends Command
             $dayAfterTomorrow = now()->addDays(2);
             $endDate = Carbon::parse($session->endDate);
 
-            if ($endDate->isTomorrow()) {
+            // if ($endDate->isTomorrow()) {
                 $participants = $session->participants;
 
                 if ($session->jour_sessions->count() > 0 && $session->participants()->count() > 0) {
@@ -88,16 +112,27 @@ class AfterSessionTasks extends Command
                                     'categorie_id' => $session->formation->sousCategorie->categorie->id,
                                     'joursSession' => $session->jour_sessions,
                                     'programme_formation_id' => $session->formation->programme->id,
-                                    'jours_formation_id' => $session->formation->programme->jourFormations->id,
-                                    'sous_parties_id' => $session->formation->programme->jourFormations->sousParties->id
+                                    // 'jours_formation_id' => $session->formation->programme->jourFormations->id,
+                                    // 'sous_parties_id' => $session->formation->programme->jourFormations->sousParties->id
                                 ];
 
+                                $forms = Formulaire::all();
+
+                                foreach ($forms as $form) {
+                                    if ($form->session_ids) {
+                                        // $sessionsIds = explode(',', $form->session_ids);
+                                        if (in_array($session->id, $form->session_ids)) {
+                                            $prefilledUrl = $this->generatePrefilledUrl($form->surveyId, $participant->id, $session->id);
+                                            SendEmailsThankAndEvaluation::dispatch($session, $participant, $prefilledUrl)->delay($tomorrow);
+                                        }
+                                    }
+                                }
+
                                 GenerateDocuments::dispatch($context)->delay($tomorrow);
-                                SendEmailsThankAndEvaluation::dispatch($session, $participant)->delay($tomorrow);
                             }
                         }
                     }
-                }
+                // }
             } elseif (now()->greaterThanOrEqualTo($dayAfterTomorrow)) {
                 // Do not generate documents or send emails
                 continue;
