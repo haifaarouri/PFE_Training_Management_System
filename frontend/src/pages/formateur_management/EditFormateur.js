@@ -205,7 +205,7 @@ const EditFormateur = () => {
 
       const res = await editFormateur(id, formData);
 
-      if (res.status === 200) {
+      if (res) {
         Swal.fire({
           icon: "success",
           title: "Formateur modifié avec succès !",

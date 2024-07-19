@@ -165,6 +165,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/trainer-booked-days/{trainerId}', [SessionController::class, 'getJourSessionsForTrainer']);
     Route::get('/available-trainers/{sessionId}/{dayID}', [SessionController::class, 'getAvailableTrinersForDay']);
     Route::post('/book-material/{sessionId}', [SessionController::class, 'reserveMaterialsForSession']);
+    Route::get('/sessions/{sessionId}/materials', [SessionController::class, 'getMaterialsForSession']);
+    Route::get('/sessions/{sessionId}/commandes', [SessionController::class, 'getCommandesBySessionId']);
 });
 
 Route::get('/confirm-session/{id}/{action}', [SessionController::class, 'confirmSession']);

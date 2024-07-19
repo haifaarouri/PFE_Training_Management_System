@@ -1,5 +1,7 @@
+import Swal from "sweetalert2";
 import { apiFetch } from "./api";
 import axios from "./axios";
+import { toast } from "react-toastify";
 
 export const fetchAllDocuments = async () => {
   try {
@@ -43,6 +45,18 @@ export const fetchDocumentById = async (id) => {
   }
 };
 
+const handleError = (err) =>
+  toast.error(err, {
+    position: "top-center",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+  });
+
 export const editDocument = async (id, formData) => {
   try {
     if (!localStorage.getItem("token")) {
@@ -78,6 +92,12 @@ export const editDocument = async (id, formData) => {
     }
   } catch (error) {
     console.log("Error editing Document with this id :", error);
+    handleError(Object.values(error.response.data.error)[0][0]);
+    Swal.fire({
+      title: Object.values(error.response.data.error)[0][0],
+      text: "Il doit avoir au moins une inscription confirmée !",
+      icon: "error",
+    });
   }
 };
 

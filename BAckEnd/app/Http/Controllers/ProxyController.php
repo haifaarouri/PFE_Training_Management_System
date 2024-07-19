@@ -96,7 +96,7 @@ class ProxyController extends Controller
 
         if ($response->successful() && $response->json()) {
             $responseData = $response->json();
-
+\Log::info($responseData);
             return response()->json([
                 'spreadsheetUrl' => $responseData['spreadsheetUrl'] ?? 'No spreadsheet URL found',
                 'data' => $responseData['data'] ?? [],

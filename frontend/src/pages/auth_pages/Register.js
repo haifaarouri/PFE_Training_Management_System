@@ -6,6 +6,7 @@ import { Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import Spinner from "../../components/Spinner";
 
 function Register() {
   const [firstName, setFirstName] = useState("");
@@ -19,6 +20,7 @@ function Register() {
   const formRef = useRef();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -75,6 +77,7 @@ function Register() {
 
   const handleRegister = async (event) => {
     event.preventDefault();
+    setLoading(true);
     await csrf();
     try {
       const form = formRef.current;
@@ -105,33 +108,36 @@ function Register() {
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log(res);
-      handleSuccess("Enregistré avec succès !");
+      if (res) {
+        setLoading(false);
 
-      Swal.fire({
-        title: "Vérifier votre adresse e-mail !",
-        text: "Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
-        confirmButtonColor: "#3085d6",
-        confirmButtonText: "Renvoyer E-mail de vérification",
-        showClass: {
-          popup: "animate__animated animate__fadeInUp animate__faster",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutDown animate__faster",
-        },
-        preConfirm: () => {
-          resendVerifLink();
-          return false;
-        },
-      });
+        handleSuccess("Enregistré avec succès !");
 
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPassword("");
-      setPasswordConfirm("");
-      setPhoneNumber("");
-      setProfileImage("");
+        Swal.fire({
+          title: "Vérifier votre adresse e-mail !",
+          text: "Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification. Si vous n'avez pas reçu l'e-mail, cliquez ici pour en demander un autre !",
+          confirmButtonColor: "#3085d6",
+          confirmButtonText: "Renvoyer E-mail de vérification",
+          showClass: {
+            popup: "animate__animated animate__fadeInUp animate__faster",
+          },
+          hideClass: {
+            popup: "animate__animated animate__fadeOutDown animate__faster",
+          },
+          preConfirm: () => {
+            resendVerifLink();
+            return false;
+          },
+        });
+
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setPassword("");
+        setPasswordConfirm("");
+        setPhoneNumber("");
+        setProfileImage("");
+      }
     } catch (error) {
       if (error.response.status === 422) {
         handleError(error.response.data.message);
@@ -145,6 +151,7 @@ function Register() {
       className="shadow-lg p-3 mb-5 bg-white rounded"
       style={{ width: "130%", marginLeft: "-15%" }}
     >
+      {loading ? <Spinner /> : null}
       <h4 className="mb-3">S'inscrire</h4>
       <h6 className="font-weight-light mt-3 mb-4">
         Créer un nouveau compte administrateur

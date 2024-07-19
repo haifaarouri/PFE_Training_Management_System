@@ -225,7 +225,7 @@ class UserController extends Controller
         }
     }
 
-    public function updateIsActive($id, Request $request)
+    public function updateIsActive(Request $request, $id)
     {
         if (auth()->user()->role === 'SuperAdmin') {
 
@@ -239,6 +239,7 @@ class UserController extends Controller
             } else {
                 $user->isActive = 1;
                 $user->save();
+                Mail::to($user->email)->send(new ChangeIsActiveEmail($request->causes, $user));
                 return response()->json(['message' => 'Compte activé avec succès !']);
             }
         } else {

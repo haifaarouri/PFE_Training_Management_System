@@ -351,3 +351,33 @@ export const reserveMaterielForSession = async (sessionId, formData) => {
     });
   }
 };
+
+export const fetchMaterialsForSession = async (sessionId) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/sessions/${sessionId}/materials`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`sessions/${sessionId}/materials`);
+      return response;
+    }
+  } catch (error) {
+    console.error("Error fetching materials for session:", error);
+    throw error;
+  }
+};
+
+export const fetchCommandesBySessionId = async (sessionId) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/sessions/${sessionId}/commandes`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`sessions/${sessionId}/commandes`);
+      return response;
+    }
+  } catch (error) {
+    console.error("Error fetching commandes for session:", error);
+    throw error;
+  }
+};

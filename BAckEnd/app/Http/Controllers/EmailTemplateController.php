@@ -41,7 +41,7 @@ class EmailTemplateController extends Controller
             'htmlcontent' => 'string',
             'imageAttachement' => 'nullable|array',
             'imageAttachement.*' => 'nullable|image|max:2048',
-            'variable_ids' => 'required|array',
+            'variable_ids' => 'required',
             'variable_ids.*' => 'required|exists:variable_templates,id'
         ]);
 
@@ -63,7 +63,7 @@ class EmailTemplateController extends Controller
         }
 
         $template->save();
-        $template->variableTemplates()->attach($request->variable_ids);
+        $template->variableTemplates()->attach(json_decode($request->variable_ids, true));
 
         return response()->json(['message' => 'Modèle d\'e-mail enregistré avec succès !'], 201);
     }
@@ -135,7 +135,9 @@ class EmailTemplateController extends Controller
                     'content' => 'required|string',
                     'htmlcontent' => 'string',
                     'imageAttachement' => 'nullable|array',
-                    'imageAttachement.*' => 'nullable|max:2048'
+                    'imageAttachement.*' => 'nullable|max:2048',
+                    'variable_ids' => 'required',
+                    'variable_ids.*' => 'required|exists:variable_templates,id'
                 ]);
 
                 if ($validator->fails()) {
@@ -161,6 +163,8 @@ class EmailTemplateController extends Controller
                 }
 
                 $emailTemplate->save();
+
+                $emailTemplate->variableTemplates()->sync(json_decode($request->variable_ids, true));
 
                 return response()->json($emailTemplate, 200);
             } catch (\Exception $e) {

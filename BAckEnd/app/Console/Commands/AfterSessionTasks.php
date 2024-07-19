@@ -91,7 +91,7 @@ class AfterSessionTasks extends Command
             $dayAfterTomorrow = now()->addDays(2);
             $endDate = Carbon::parse($session->endDate);
 
-            // if ($endDate->isTomorrow()) {
+            if ($endDate->isTomorrow()) {
                 $participants = $session->participants;
 
                 if ($session->jour_sessions->count() > 0 && $session->participants()->count() > 0) {
@@ -132,7 +132,7 @@ class AfterSessionTasks extends Command
                             }
                         }
                     }
-                // }
+                }
             } elseif (now()->greaterThanOrEqualTo($dayAfterTomorrow)) {
                 // Do not generate documents or send emails
                 continue;

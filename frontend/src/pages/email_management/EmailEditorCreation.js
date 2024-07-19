@@ -1,6 +1,6 @@
-import React, { useRef, useState } from "react";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import React, { useEffect, useRef, useState } from "react";
+// import { CKEditor } from "@ckeditor/ckeditor5-react";
+// import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { Alert, Button, Form, InputGroup } from "react-bootstrap";
 import Swal from "sweetalert2";
 import axios from "../../services/axios";
@@ -8,8 +8,10 @@ import { BiSolidCategory } from "react-icons/bi";
 import { FaMailBulk } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import { MdAttachEmail } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { EmailEditor } from "react-email-editor";
+import { fetchAllVariables } from "../../services/VariableServices";
+import { PiTableLight } from "react-icons/pi";
 
 function EmailEditorCreation() {
   const [editorData, setEditorData] = useState("");
@@ -24,6 +26,12 @@ function EmailEditorCreation() {
   const navigate = useNavigate();
   const emailEditorRef = useRef(null);
   // const [preview, setPreview] = useState(false);
+  const [variables, setVariables] = useState([]);
+  const [variableTemplates, setVariableTemplates] = useState([]);
+
+  useEffect(() => {
+    fetchAllVariables().then(setVariableTemplates);
+  }, []);
 
   const saveDesignJson = () => {
     const unlayer = emailEditorRef.current?.editor;
@@ -479,6 +487,7 @@ function EmailEditorCreation() {
           formData.append(`imageAttachement[${index}]`, file);
         });
       }
+      formData.append("variable_ids", JSON.stringify(variables));
 
       try {
         if (!localStorage.getItem("token")) {
@@ -568,7 +577,7 @@ function EmailEditorCreation() {
               <ToastContainer />
               <Button onClick={saveDesignHtml}>save</Button>
               <Form
-                // onSubmit={saveEmailTemplate}
+                onSubmit={saveEmailTemplate}
                 ref={formRef}
                 noValidate
                 validated={validated}
@@ -643,6 +652,57 @@ function EmailEditorCreation() {
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
+                <Alert variant="info">
+                  Veuillez saisir dans le contenu de l'e-mail les variables qui
+                  seront remplacées par des valeurs dynamiques lors de l'envoi
+                  de l'e-mail selon cette format : <b>{"{nomDuVariable}"}</b>
+                </Alert>
+                <Form.Group className="mb-3">
+                  <Form.Label>Variables</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i className="text-primary">
+                            <PiTableLight size={30} />
+                          </i>
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Select
+                      multiple
+                      name="variables"
+                      value={variables}
+                      // onChange={(e) =>
+                      //   setVariables((prev) => [
+                      //     ...prev,
+                      //     e.target.selectedOptions,
+                      //   ])
+                      // }
+                      onChange={(e) =>
+                        setVariables(
+                          [...e.target.selectedOptions].map((o) => o.value)
+                        )
+                      }
+                      required
+                    >
+                      <option value="">
+                        Selectionner les variables liée à ce document
+                      </option>
+                      {variableTemplates.length > 0 &&
+                        variableTemplates.map((variable) => (
+                          <option value={variable.id}>
+                            {variable.variable_name}
+                          </option>
+                        ))}
+                    </Form.Select>
+                  </InputGroup>
+                  <Link to="/templates-variables">
+                    <Button className="btn-inverse-primary">
+                      Ajouter nouvelle variable
+                    </Button>
+                  </Link>
+                </Form.Group>
                 <EmailEditor
                   ref={emailEditorRef}
                   // onLoad={()=>onLoad(<div>tempalte</div>)}
@@ -669,12 +729,6 @@ function EmailEditorCreation() {
                 {/* <button onClick={saveDesignHtml}>Save Design</button> */}
                 {/* <Form.Group>
                   <Form.Label>Contenu de l'e-mail</Form.Label>
-                  <Alert variant="info">
-                    Veuillez saisir dans le contenu de l'e-mail les variables
-                    qui seront remplacées par des valeurs dynamiques lors de
-                    l'envoi de l'e-mail selon cette format :{" "}
-                    <b>{"{nomDuVariable}"}</b>
-                  </Alert>
                   <InputGroup className="mb-3 d-flex justify-content-center">
                     <div style={{ width: "100%" }}>
                       <Form.Control
@@ -746,7 +800,6 @@ function EmailEditorCreation() {
                           setImageAttachements(e.target.files);
                         }}
                         multiple
-                        // hidden
                       />
                     </InputGroup>
                   </Form.Group>

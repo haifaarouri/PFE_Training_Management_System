@@ -98,7 +98,7 @@ const TrainerCalendarModal = ({ show, onHide, calendarIdTrainer }) => {
             });
         }
       });
-  }, [show, calendarIdTrainer, trainerAvailabilities, bookedDays]);
+  }, [show, calendarIdTrainer]);
 
   useEffect(() => {
     setFormateur({});

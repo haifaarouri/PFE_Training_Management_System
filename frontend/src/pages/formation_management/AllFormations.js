@@ -211,23 +211,49 @@ function AllFormations() {
         const response = await axios.get(`/api/training-catalog/${type}`);
         return response.data;
       } else {
-        const response = await apiFetch(`training-catalog/${type}`);
+        const token = localStorage.getItem("token");
+        const headers = {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          withCredentials: true,
+        };
 
-        if (response) {
-          handleSuccess(response.message);
-          Swal.fire({
-            icon: "success",
-            title: "Document généré avec succès !",
-          });
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
         }
+
+        const response = await fetch(
+          `http://localhost:8000/api/training-catalog/${type}`,
+          { headers }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`API request failed: ${errorData.error}`);
+        }
+        const data = await response.json();
+        handleSuccess(data.message);
+        Swal.fire({
+          icon: "success",
+          title: "Document généré avec succès !",
+        });
       }
     } catch (error) {
-      handleError(error.response.data.error);
-      Swal.fire({
-        icon: "error",
-        title: error.response.data.error,
-        text: "Veillez vérifier si ce modèle existe si non, créez un nouveau modèle de document !",
-      });
+      if (!localStorage.getItem("token")) {
+        handleError(error.response.data.error);
+        Swal.fire({
+          icon: "error",
+          title: error.response.data.error,
+          text: "Veillez vérifier si ce modèle existe si non, créez un nouveau modèle de document !",
+        });
+      } else {
+        handleError(error);
+        Swal.fire({
+          icon: "error",
+          title: error,
+          text: "Veillez vérifier si ce modèle existe si non, créez un nouveau modèle de document !",
+        });
+      }
     }
   };
 

@@ -232,9 +232,10 @@ function AllCandidats() {
             handleSuccess(res.message);
           }
         } catch (error) {
-          if (error && error.response.status === 422) {
-            handleError(error.response.data.message);
-          }
+          console.log(error);
+          // if (error && error.response.status === 422) {
+          //   handleError(error.response.data.message);
+          // }
         }
       }
     });

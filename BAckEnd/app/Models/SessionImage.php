@@ -9,7 +9,7 @@ class SessionImage extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['session_id', 'path', 'type'];
+    protected $fillable = ['session_id', 'path', 'type', 'is_shared_on_linkedin', 'is_shared_on_facebook', 'shared_message'];
 
     public function session()
     {

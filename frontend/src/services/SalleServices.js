@@ -18,7 +18,7 @@ export const fetchAllSalles = async () => {
 export const fetchSalleById = async (id) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.get(`salle-id/${id}`);
+      const response = await axios.get(`/api/salle-id/${id}`);
       return response.data;
     } else {
       const response = await apiFetch(`salle-id/${id}`);

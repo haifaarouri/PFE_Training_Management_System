@@ -96,7 +96,7 @@ const EditFormation = () => {
 
     f();
   }, [id]);
-  console.log(formData);
+
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
   const handleError = (err) =>
@@ -203,7 +203,6 @@ const EditFormation = () => {
         navigate("/formations");
       }
     } catch (error) {
-      console.log(error);
       if (error && error.response.status === 422) {
         handleError(error.response.data.message);
         Swal.fire({
@@ -657,8 +656,9 @@ const EditFormation = () => {
                 <FileModal
                   show={showFileModal}
                   handleClose={handleCloseFileModal}
-                  selectedFile={courseMaterial}
+                  selectedFile={formData.courseMaterial}
                   urlFile={urlFile}
+                  fileContent="CourseMaterial"
                 />
                 <Form.Group className="mb-3">
                   <Form.Label>Prérequis</Form.Label>

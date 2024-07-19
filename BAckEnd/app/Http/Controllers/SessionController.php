@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\SessionUpdatedMail;
 use App\Mail\TrainerConfirmationEmail;
+use App\Models\Commande;
 use App\Models\Disponibility;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
@@ -151,18 +152,18 @@ class SessionController extends Controller
 
     // public function replaceVariables($templateContent, $context) {
     //     $variables = TemplateVariable::where('document_type_id', $context['document_type_id'])->get();
-    
+
     //     foreach ($variables as $variable) {
     //         $modelClass = 'App\\Models\\' . $variable->source_model;
     //         $modelInstance = new $modelClass();
-    
+
     //         // Assuming you have a way to determine the specific record, e.g., through a context ID
     //         $record = $modelInstance->find($context[$variable->source_model . '_id']);
-    
+
     //         $value = $record->{$variable->source_field};
     //         $templateContent = str_replace("{" . $variable->variable_name . "}", $value, $templateContent);
     //     }
-    
+
     //     return $templateContent;
     // }
 
@@ -768,4 +769,32 @@ class SessionController extends Controller
         }
         return abort(404);
     }
+
+    public function getMaterialsForSession($sessionId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $session = Session::find($sessionId);
+        if (!$session) {
+            return response()->json(['error' => 'Session non trouvée !'], 404);
+        }
+
+        $materials = $session->materials()->withPivot('quantity')->get();
+
+        return response()->json($materials);
+    }
+
+    public function getCommandesBySessionId($sessionId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $commandes = Commande::where('session_id', $sessionId)->get();
+
+        return response()->json($commandes);
+    }
+
 }

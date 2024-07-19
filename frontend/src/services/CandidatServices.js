@@ -109,11 +109,13 @@ export const convertToParticipant = async (candidatId) => {
       return response;
     }
   } catch (error) {
-    handleError(error.response.data.error);
-    Swal.fire({
-      title: error.response.data.error,
-      text: "Il doit avoir au moins une inscription confirmée !",
-      icon: "error",
-    });
+    if (!localStorage.getItem("token")) {
+      handleError(error.response.data.error);
+      Swal.fire({
+        title: error.response.data.error,
+        text: "Il doit avoir au moins une inscription confirmée !",
+        icon: "error",
+      });
+    }
   }
 };

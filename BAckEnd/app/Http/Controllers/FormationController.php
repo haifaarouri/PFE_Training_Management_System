@@ -4,10 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Categorie;
 use App\Models\Formation;
-use App\Models\JourFormation;
-use App\Models\ProgrammeFormation;
 use App\Models\SousCategorie;
-use App\Models\SousPartie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -54,7 +51,8 @@ class FormationController extends Controller
             $programme = json_decode($request->input('programme'), true);
             $request->merge(['programme' => $programme]);
         }
-
+\Log::info($request->all());
+\Log::info($request->hasFile('courseMaterial'));
         $validator = Validator::make($request->all(), [
             'reference' => 'required|string|max:255',
             'entitled' => 'required|string|max:255',
@@ -63,7 +61,7 @@ class FormationController extends Controller
             'personnesCible' => 'required|string|max:255',
             'price' => 'required|numeric',
             'certificationOrganization' => 'required|string|max:255',
-            'courseMaterial' => 'required|file|mimes:pdf|max:2048',
+            'courseMaterial' => 'required|file|mimes:pdf,jpeg,png,jpg|max:2048',
             'categorie_name' => 'required|string|max:255',
             'sous_categorie_name' => 'required|string|max:255',
             'programme' => 'required|array',

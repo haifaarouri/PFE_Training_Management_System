@@ -124,23 +124,18 @@ export const assignRole = async (data) => {
 
 export const editIsActive = async (id, causes) => {
   try {
+    const data = JSON.stringify({ causes: causes });
     if (!localStorage.getItem("token")) {
-      const response = await axios.post(
-        `/api/change-is-active/${id}`,
-        {
-          causes,
+      const response = await axios.post(`/api/change-is-active/${id}`, data, {
+        headers: {
+          ContentType: "multipart/form-data",
         },
-        {
-          headers: {
-            ContentType: "multipart/form-data",
-          },
-        }
-      );
+      });
       return response.data;
     } else {
       const response = await apiFetch(`change-is-active/${id}`, {
         method: "POST",
-        body: JSON.stringify(causes),
+        body: data,
         withCredentials: true,
       });
       return response;

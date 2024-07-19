@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
@@ -97,7 +98,7 @@ class ProviderController extends Controller
         }
 
         try {
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $redirectUri = 'http://localhost:3000/auth/linkedin/callback';
             $response = $client->post('https://www.linkedin.com/oauth/v2/accessToken', [
                 'headers' => [
@@ -137,6 +138,85 @@ class ProviderController extends Controller
             \Log::error("Error during LinkedIn authentication: " . $e->getMessage());
             return redirect()->to('/login')->withErrors('Failed to login with LinkedIn.');
         }
+    }
+
+    public function redirectToFacebook()
+    {
+        $clientId = env('FACEBOOK_CLIENT_ID');
+        $redirectUri = env('FACEBOOK_REDIRECT_URI');
+        $url = "https://www.facebook.com/v12.0/dialog/oauth?client_id={$clientId}&redirect_uri={$redirectUri}&scope=email,public_profile,publish_actions";
+        return redirect()->to($url);
+    }
+
+    public function handleFacebookCallback(Request $request)
+    {
+        $code = $request->code;
+        if (!$code) {
+            return redirect('/')->with('error', 'Unauthorized access to Facebook');
+        }
+
+        $token = $this->getFacebookAccessToken($code);
+        $user = $this->getFacebookUser($token);
+
+        // Logic to handle user data
+
+        return redirect('/home')->with('success', 'Successfully logged in with Facebook.');
+    }
+
+    protected function getFacebookAccessToken($code)
+    {
+        $clientId = env('FACEBOOK_CLIENT_ID');
+        $clientSecret = env('FACEBOOK_CLIENT_SECRET');
+        $redirectUri = env('FACEBOOK_REDIRECT_URI');
+        $client = new Client();
+        $response = $client->post('https://graph.facebook.com/v12.0/oauth/access_token', [
+            'form_params' => [
+                'client_id' => $clientId,
+                'redirect_uri' => $redirectUri,
+                'client_secret' => $clientSecret,
+                'code' => $code,
+            ],
+        ]);
+
+        $data = json_decode($response->getBody(), true);
+        return $data['access_token'];
+    }
+
+    protected function getFacebookUser($accessToken)
+    {
+        $client = new Client();
+        $response = $client->get('https://graph.facebook.com/v12.0/me', [
+            'query' => [
+                'access_token' => $accessToken,
+                'fields' => 'id,name,email',
+            ],
+        ]);
+
+        return json_decode($response->getBody(), true);
+    }
+
+    public function shareOnFacebook(Request $request)
+    {
+        $accessToken = $request->accessToken;
+        $imagePath = public_path('path_to_your_image.jpg');
+        $client = new Client();
+        $response = $client->post('https://graph.facebook.com/v12.0/me/photos', [
+            'multipart' => [
+                [
+                    'name' => 'source',
+                    'contents' => fopen($imagePath, 'r')
+                ],
+                [
+                    'name' => 'message',
+                    'contents' => $request->message
+                ]
+            ],
+            'headers' => [
+                'Authorization' => 'Bearer ' . $accessToken
+            ]
+        ]);
+
+        return response()->json(json_decode($response->getBody(), true));
     }
 
 }

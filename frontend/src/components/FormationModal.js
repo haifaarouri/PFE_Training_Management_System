@@ -99,10 +99,7 @@ const FormationModal = ({ show, handleClose }) => {
 
     try {
       const form = formRef.current;
-      if (
-        form.checkValidity() === false ||
-        courseMaterial.size > 2000000
-      ) {
+      if (form.checkValidity() === false || courseMaterial.size > 2000000) {
         event.preventDefault();
         event.stopPropagation();
         handleError("Fichier est trop volumineux !");
@@ -919,12 +916,12 @@ const FormationModal = ({ show, handleClose }) => {
                         onChange={(e) => {
                           const newDescription = e.target.value; // Get the new description from the event
                           const updatedJours = formData.programme.jours.map(
-                            (jour, jourIndex) => {
-                              if (jourIndex === jourIndex) {
+                            (currentJour, currentJourIndex) => {
+                              if (currentJourIndex === jourIndex) {
                                 // Check if this is the jour being edited
                                 return {
-                                  ...jour,
-                                  sousParties: jour.sousParties.map(
+                                  ...currentJour,
+                                  sousParties: currentJour.sousParties.map(
                                     (sp, spIdx) => {
                                       if (spIdx === sousPartieIndex) {
                                         // Check if this is the sousPartie being edited
@@ -938,7 +935,7 @@ const FormationModal = ({ show, handleClose }) => {
                                   ),
                                 };
                               }
-                              return jour; // Return unmodified jour
+                              return currentJour; // Return unmodified jour
                             }
                           );
 
@@ -963,15 +960,20 @@ const FormationModal = ({ show, handleClose }) => {
                         onClick={() => {
                           const updatedSousParties = [...jour.sousParties];
                           updatedSousParties.splice(sousPartieIndex, 1);
+                          const updatedJours = formData.programme.jours.map(
+                            (currentJour, currentJourIndex) =>
+                              currentJourIndex === jourIndex
+                                ? {
+                                    ...currentJour,
+                                    sousParties: updatedSousParties,
+                                  }
+                                : currentJour
+                          );
                           setFormData({
                             ...formData,
                             programme: {
                               ...formData.programme,
-                              jours: formData.programme.jours.map((j, jIdx) =>
-                                jIdx === jourIndex
-                                  ? { ...j, sousParties: updatedSousParties }
-                                  : j
-                              ),
+                              jours: updatedJours,
                             },
                           });
                         }}

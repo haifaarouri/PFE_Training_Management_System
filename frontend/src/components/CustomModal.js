@@ -3,6 +3,7 @@ import { Modal, Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
+import Spinner from "./Spinner";
 
 const CustomModal = ({ show, handleClose, typeModal }) => {
   const [firstName, setFirstName] = useState("");
@@ -13,6 +14,7 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
   const [profileImage, setProfileImage] = useState("");
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
+  const [loading, setLoading] = useState(false);
 
   const isWhitespace = (str) => {
     return str.trim() === "";
@@ -160,15 +162,18 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
               Swal.fire({
                 title: "E-mail est en cours d'envoit !",
                 html: "E-mail sera envoyé dans quelques <b></b> milliseconds.",
-                timer: 2000,
+                timer: 5000,
                 timerProgressBar: true,
               }).then((result) => {
                 if (result.dismiss === Swal.DismissReason.timer) {
                   console.log("I was closed by the timer");
                 }
               });
+              setLoading(true);
 
               if (res && res.data.status) {
+                setLoading(false);
+
                 Swal.fire({
                   title: "Bravo !",
                   text: "Vérifier votre boite d'e-mail !",
@@ -199,6 +204,7 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
 
   return typeModal === "ForgotPassword" ? (
     <Modal show={show} onHide={handleClose} dialogClassName="modal-lg">
+      {loading ? <Spinner /> : null}
       <Modal.Header closeButton>
         <Modal.Title>
           <h5 className="modal-title">

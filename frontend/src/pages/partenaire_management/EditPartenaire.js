@@ -90,7 +90,7 @@ const EditPartenaire = () => {
 
       const res = await editPartenaire(id, formData);
 
-      if (res.status === 200) {
+      if (res) {
         Swal.fire({
           icon: "success",
           title: "Partenaire modifié avec succès !",

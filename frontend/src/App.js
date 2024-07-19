@@ -122,8 +122,8 @@ function App() {
   const EditImageSession = lazy(() =>
     import("./pages/session_images_management/EditImageSession")
   );
-  const SharePage = lazy(() =>
-    import("./pages/session_images_management/SharePage")
+  const FacebookCallback = lazy(() =>
+    import("./pages/session_images_management/FacebookCallback")
   );
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
@@ -869,7 +869,10 @@ function App() {
             path="/auth/linkedin/callback"
             element={<LinkedInCallback />}
           />
-          <Route path="/share" element={<SharePage />} />
+          <Route
+            path="/facebook/callback"
+            element={<FacebookCallback />}
+          />
           <Route path="*" element={<Unauthorized status="404" />} />
         </Routes>
       </div>

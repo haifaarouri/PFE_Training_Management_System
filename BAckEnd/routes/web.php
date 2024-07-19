@@ -33,3 +33,7 @@ Route::get('/test', function () {
 Route::get('auth/linkedin', [ProviderController::class, 'redirectToLinkedIn']);
 Route::post('auth/linkedin/callback', [ProviderController::class, 'handleLinkedInCallback']);
 // Route::get('/linkedin/share/{image_id}', [SessionImageController::class, 'shareOnLinkedIn'])->name('linkedin.share');
+
+Route::get('/auth/facebook', 'FacebookController@redirectToFacebook');
+Route::get('/facebook/callback', 'FacebookController@handleFacebookCallback');
+Route::post('/share/facebook', 'FacebookController@shareOnFacebook');

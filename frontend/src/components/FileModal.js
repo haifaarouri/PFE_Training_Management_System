@@ -19,33 +19,35 @@ const FileModal = ({
 
   useEffect(() => {
     if (urlFile && urlFile.imgUpload) {
-      let fileTypeResult;
-      switch (urlFile.fileType) {
-        case "application/pdf":
-          fileTypeResult = "pdf";
-          break;
-        case "application/doc":
-          fileTypeResult = "doc";
-          break;
-        case "application/docx":
-          fileTypeResult = "docx";
-          break;
-        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-          fileTypeResult = "docx";
-          break;
-        case "image/png":
-          fileTypeResult = "png";
-          break;
-        case "image/jpeg":
-          fileTypeResult = "jpeg";
-          break;
-        case "image/jpg":
-          fileTypeResult = "jpg";
-          break;
-        default:
-          fileTypeResult = "unknown";
-          break;
-      }
+      // let fileTypeResult;
+      // switch (urlFile.fileType) {
+      //   case "application/pdf":
+      //     fileTypeResult = "pdf";
+      //     break;
+      //   case "application/doc":
+      //     fileTypeResult = "doc";
+      //     break;
+      //   case "application/docx":
+      //     fileTypeResult = "docx";
+      //     break;
+      //   case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      //     fileTypeResult = "docx";
+      //     break;
+      //   case "image/png":
+      //     fileTypeResult = "png";
+      //     break;
+      //   case "image/jpeg":
+      //     fileTypeResult = "jpeg";
+      //     break;
+      //   case "image/jpg":
+      //     fileTypeResult = "jpg";
+      //     break;
+      //   default:
+      //     fileTypeResult = "unknown";
+      //     break;
+      // }
+
+      let fileTypeResult = urlFile.fileType.split("/").pop();
 
       setDocs([
         {
@@ -76,12 +78,14 @@ const FileModal = ({
               ? "Document"
               : fileContent === "documentGenerated"
               ? "Document généré"
-              : "Fichier sélectionné pour les spécifications techniques du matériel"}
+              : fileContent === "MaterielDocs"
+              ? "Fichier sélectionné pour les spécifications techniques du matériel"
+              : ""}
           </h5>
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="row">
-        {!urlFile ? (
+        {!urlFile || urlFile === undefined ? (
           <iframe
             src={`http://localhost:8000/${
               fileContent === "Template"
@@ -90,6 +94,8 @@ const FileModal = ({
                 ? "CoursesMaterials"
                 : fileContent === "documentGenerated"
                 ? "DocumentsGenerated"
+                : "CV"
+                ? "TrainersCV"
                 : "MaterielDocs"
             }/${selectedFile}`}
             width="100%"

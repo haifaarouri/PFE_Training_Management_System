@@ -10,6 +10,8 @@ import {
   deleteSession,
   editSession,
   fetchAllSessions,
+  fetchCommandesBySessionId,
+  fetchMaterialsForSession,
   fetchSessionById,
   fetchSessionDays,
   getSessionByCriteria,
@@ -27,6 +29,8 @@ import { MdLaptopChromebook } from "react-icons/md";
 import ReservationTrainersModal from "../../components/ReservationTrainersModal";
 import ReserveMaterialForSessionModal from "../../components/ReserveMaterialForSessionModal";
 import CommandeModal from "../../components/CommandeModal";
+import { fetchSalleById } from "../../services/SalleServices";
+import { fetchFormateurById } from "../../services/FormateurServices";
 
 const CustomEvent = ({ event }) => {
   return (
@@ -83,6 +87,48 @@ const EventModal = ({ show, onHide, event }) => {
   const [showBookMaterialsModal, setShowBookMaterialsModal] = useState(false);
   const [showCommandeModal, setShowCommandeModal] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [sessionMaterials, setSessionMaterials] = useState([]);
+  const [sessionCommandes, setSessionCommandes] = useState([]);
+
+  useEffect(() => {
+    if (event && event.id) {
+      fetchSessionDays(event.id).then((days) => {
+        Promise.all(
+          days.map(async (day) => {
+            const [salle, trainer] = await Promise.all([
+              fetchSalleById(day.salle_id),
+              fetchFormateurById(day.formateur_id),
+            ]);
+
+            return {
+              ...day,
+              salleName: salle && salle.name,
+              trainerName:
+                trainer && `${trainer.firstName} ${trainer.lastName}`,
+            };
+          })
+        ).then((updatedDays) => {
+          setDaySessions(updatedDays);
+        });
+      });
+
+      fetchMaterialsForSession(event.id)
+        .then((materials) => {
+          setSessionMaterials(materials);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch materials:", error);
+        });
+
+      fetchCommandesBySessionId(event.id)
+        .then((commandes) => {
+          setSessionCommandes(commandes);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch commandes:", error);
+        });
+    }
+  }, [event]);
 
   useEffect(() => {
     event && event.id && fetchSessionDays(event.id).then(setDaySessions);
@@ -325,15 +371,64 @@ const EventModal = ({ show, onHide, event }) => {
               <Card.Body>
                 <b>Jours :</b>
                 {daySessions.map((d) => (
-                  <p key={d.id}>
-                    <i className="fas fa-calendar-day"></i>{" "}
-                    <b>Date du jour : </b>
-                    {d.day} <br /> <i className="fas fa-clock"></i>{" "}
-                    <b>Heure de début : </b> {d.startTime} -
-                    <i className="fas fa-clock"></i> <b> Heure de fin : </b>{" "}
-                    {d.endTime}
-                  </p>
+                  <div className="d-flex justify-content-between">
+                    <p key={d.id}>
+                      <i className="fas fa-calendar-day"></i>{" "}
+                      <b>Date du jour : </b>
+                      {d.day} <br /> <i className="fas fa-clock"></i>{" "}
+                      <b>Heure de début : </b> {d.startTime} -
+                      <i className="fas fa-clock"></i> <b> Heure de fin : </b>{" "}
+                      {d.endTime}
+                    </p>
+                    <p key={d.id}>
+                      <b>Salle réservée : </b>
+                      {d.salle_id ? (
+                        d.salleName
+                      ) : (
+                        <span style={{ color: "red" }}>Pas de salle</span>
+                      )}
+                      <br />
+                      <b>Formateur : </b>
+                      {d.formateur_id ? (
+                        d.trainerName
+                      ) : (
+                        <span style={{ color: "red" }}>Pas de formateur</span>
+                      )}
+                    </p>
+                  </div>
                 ))}
+              </Card.Body>
+            </Card>
+          )}
+          {sessionMaterials.length > 0 && (
+            <Card className="mb-3">
+              <Card.Body>
+                <b>Matériaux réservés pour cette session :</b>
+                <ul>
+                  {sessionMaterials.map((material) => (
+                    <li key={material.id}>
+                      Nom : {material.name} - Quantité réservée :{" "}
+                      {material.pivot.quantity}
+                    </li>
+                  ))}
+                </ul>
+              </Card.Body>
+            </Card>
+          )}
+          {sessionCommandes.length > 0 && (
+            <Card className="mb-3">
+              <Card.Body>
+                <b>Commandes pour cette session :</b>
+                <ul>
+                  {sessionCommandes.map((commande) => (
+                    <li key={commande.id}>
+                      Date de création: {commande.date}, Date de livraison
+                      maximale: {commande.deliveryDate}, Statut:{" "}
+                      {commande.status}, Méthode de paiement:{" "}
+                      {commande.paymentMethod}, Total: {commande.total}
+                    </li>
+                  ))}
+                </ul>
               </Card.Body>
             </Card>
           )}
@@ -607,6 +702,11 @@ const AllSessions = () => {
     const now = new Date();
     const start = slotInfo.start;
     const end = slotInfo.end;
+
+    // Set the start time to 08:00
+    start.setHours(10, 0, 0, 0); // Set hours, minutes, seconds, milliseconds
+    // Set the end time to 17:00
+    end.setHours(19, 0, 0, 0);
 
     if (new Date(start) < now) {
       Swal.fire({

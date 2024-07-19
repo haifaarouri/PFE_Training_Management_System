@@ -17,6 +17,9 @@ return new class extends Migration {
             $table->foreignId('session_id')->constrained()->onDelete('cascade');
             $table->string('path');
             $table->enum('type', ['Picture', 'ScreenShot']);
+            $table->boolean('is_shared_on_linkedin')->default(false);
+            $table->boolean('is_shared_on_facebook')->default(false);
+            $table->text('shared_message')->nullable();
             $table->timestamps();
         });
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AssignRoleToUserEmail;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Mail\MyEmail;
@@ -58,7 +59,7 @@ class EmailController extends Controller
                 'role' => $request->input('role'),
             ]);
 
-            // Mail::to($user->email)->send(new DeleteUserEmail($user));
+            Mail::to($user->email)->send(new AssignRoleToUserEmail($user));
 
             return response()->json(['message' => 'Role assigné à l\'administrateur avec succès !']);
         } else {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+// import { CKEditor } from "@ckeditor/ckeditor5-react";
+// import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { Alert, Button, Form, InputGroup } from "react-bootstrap";
 import Swal from "sweetalert2";
 import axios from "../../services/axios";
@@ -14,11 +14,13 @@ import {
   editEmailTemplate,
   fetchEmailTemplateById,
 } from "../../services/EmailTemplateServices";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { MdCloudUpload, MdDelete } from "react-icons/md";
 import { AiFillFileImage } from "react-icons/ai";
 import "react-toastify/dist/ReactToastify.css";
 import EmailEditor from "react-email-editor";
+import { PiTableLight } from "react-icons/pi";
+import { fetchAllVariables } from "../../services/VariableServices";
 
 function EmailEditorEdit() {
   const [emailTemplate, setEmailTemplate] = useState({
@@ -26,6 +28,7 @@ function EmailEditorEdit() {
     type: "",
     subject: "",
     content: "",
+    htmlContent: "",
     imageAttachement: [],
   });
   const [validated, setValidated] = useState(false);
@@ -39,15 +42,21 @@ function EmailEditorEdit() {
   const [urlimgs, setURLimgs] = useState([]);
   const navigate = useNavigate();
   const emailEditorRef = useRef(null);
+  const [variables, setVariables] = useState([]);
+  const [variableTemplates, setVariableTemplates] = useState([]);
+
+  useEffect(() => {
+    fetchAllVariables().then(setVariableTemplates);
+  }, []);
 
   useEffect(() => {
     fetchEmailTemplateById(id).then((res) => {
       setEmailTemplate(res);
       const imageAttachmentsArray = JSON.parse(res.imageAttachement);
-      setEmailTemplate((prev) => ({
-        ...prev,
+      setEmailTemplate({
+        ...res,
         imageAttachement: imageAttachmentsArray,
-      }));
+      });
     });
   }, [id]);
 
@@ -88,13 +97,27 @@ function EmailEditorEdit() {
     });
 
   const saveDesignHtml = () => {
-    emailEditorRef.current.editor.exportHtml((data) => {
-      console.log(data);
-      const { design, html } = data;
+    emailEditorRef.current.editor.saveDesign((designData) => {
+      console.log(designData?.body?.rows[0].columns[0].contents[0].values.text);
       setEmailTemplate((prev) => ({
         ...prev,
-        content: JSON.stringify(data),
+        content: JSON.stringify(designData),
+        htmlContent:
+          JSON.stringify(designData)?.body?.rows[0].columns[0].contents[0]
+            .values.text,
       }));
+
+      emailEditorRef.current.editor.exportHtml((data) => {
+        const { design, html } = data;
+        if (html) {
+          setEmailTemplate((prev) => ({
+            ...prev,
+            htmlContent: html,
+          }));
+        } else {
+          console.error("HTML content is null");
+        }
+      });
     });
   };
 
@@ -112,17 +135,19 @@ function EmailEditorEdit() {
       setValidated(true);
 
       saveDesignHtml();
-
+      console.log(emailTemplate);
       const formData = new FormData();
       formData.append("_method", "PUT");
       formData.append("emailType", emailTemplate.type);
       formData.append("subject", emailTemplate.subject);
       formData.append("content", emailTemplate.content);
+      formData.append("htmlContent", emailTemplate.htmlContent);
       if (emailTemplate.imageAttachement.length > 0) {
         emailTemplate.imageAttachement.forEach((file, index) => {
           formData.append(`imageAttachement[${index}]`, file);
         });
       }
+      formData.append("variable_ids", JSON.stringify(variables));
 
       setUploading(true);
       try {
@@ -278,12 +303,10 @@ function EmailEditorEdit() {
   };
 
   function onReady(editor) {
-    if (emailTemplate.content !== "") {
-      let jsonString = emailTemplate.content;
-      // Log the jsonString to debug
-      console.log("JSON String:", jsonString);
+    let jsonString = emailTemplate?.content;
 
-      let design;
+    let design;
+    if (emailTemplate.content !== "") {
       if (typeof jsonString === "string") {
         try {
           design = JSON.parse(jsonString);
@@ -397,18 +420,66 @@ function EmailEditorEdit() {
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
-                <EmailEditor
-                  ref={emailEditorRef}
-                  onReady={onReady}
-                  // onLoad={onLoad}
-                  options={{
-                    projectId: 239297,
-                    version: "latest",
-                    appearance: {
-                      theme: "modern_light",
-                    },
-                  }}
-                />
+                <Alert variant="info">
+                  Veuillez saisir dans le contenu d'e-mail, les variables qui
+                  seront remplacées par des valeurs dynamiques lors de l'envoi
+                  automatique d'e-mail, selon cette format :{" "}
+                  <b>{"${nomDuVariable}"}</b>
+                </Alert>
+                <Form.Group className="mb-3">
+                  <Form.Label>Variables</Form.Label>
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text id="inputGroup-sizing-default">
+                      <div className="input-group-prepend bg-transparent">
+                        <span className="input-group-text bg-transparent border-right-0">
+                          <i className="text-primary">
+                            <PiTableLight size={30} />
+                          </i>
+                        </span>
+                      </div>
+                    </InputGroup.Text>
+                    <Form.Select
+                      multiple
+                      name="variables"
+                      value={variables}
+                      onChange={(e) =>
+                        setVariables(
+                          [...e.target.selectedOptions].map((o) => o.value)
+                        )
+                      }
+                      required
+                    >
+                      <option value="">
+                        Selectionner les variables liée à ce document
+                      </option>
+                      {variableTemplates.length > 0 &&
+                        variableTemplates.map((variable) => (
+                          <option value={variable.id}>
+                            {variable.variable_name}
+                          </option>
+                        ))}
+                    </Form.Select>
+                  </InputGroup>
+                  <Link to="/templates-variables">
+                    <Button className="btn-inverse-primary">
+                      Ajouter nouvelle variable
+                    </Button>
+                  </Link>
+                </Form.Group>
+                {emailTemplate && emailTemplate.content !== "" && (
+                  <EmailEditor
+                    ref={emailEditorRef}
+                    onReady={onReady}
+                    // onLoad={onLoad}
+                    options={{
+                      projectId: 239297,
+                      version: "latest",
+                      appearance: {
+                        theme: "modern_light",
+                      },
+                    }}
+                  />
+                )}
                 {/* <Form.Group>
                   <Form.Label>Contenu de l'e-mail</Form.Label>
                   <Alert variant="info">

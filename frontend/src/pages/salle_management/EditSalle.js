@@ -115,7 +115,7 @@ const EditSalle = () => {
 
       const res = await editSalle(id, formData);
 
-      if (res.status === 200) {
+      if (res) {
         Swal.fire({
           icon: "success",
           title: "Salle modifiée avec succès !",

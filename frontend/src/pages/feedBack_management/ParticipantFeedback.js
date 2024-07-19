@@ -144,23 +144,28 @@ function ParticipantFeedback() {
         setSurveyTemplates(surveys.data);
 
         if (surveys.data.length > 0) {
-          surveys.data.forEach(async (element) => {
-            const response = await axios.post(
-              `http://localhost:8000/api/get-form-responses`,
-              {
-                surveyId: element.surveyId,
-                sessionId: element.session_id,
-              },
-              {
-                headers: {
-                  "Content-Type": "multipart/form-data",
+          for (let index = 0; index < surveys.data.length; index++) {
+            let ids = [];
+            if (surveys.data[index].session_ids.length > 0) {
+              ids = surveys.data[index].session_ids.map((id) => id);
+            }
+
+            for (let index = 0; index < ids.length; index++) {
+              const response = await axios.post(
+                `http://localhost:8000/api/get-form-responses`,
+                {
+                  surveyId: surveys.data[index].surveyId,
+                  sessionId: parseInt(ids[index]),
                 },
-              }
-            );
-            responsesNotToken.push(response.data);
-          });
-          setLoading(false);
-          return responsesNotToken;
+                {
+                  headers: { "Content-Type": "multipart/form-data" },
+                }
+              );
+              responsesNotToken.push(response.data);
+              setLoading(false);
+              return responsesNotToken;
+            }
+          }
         }
       } else {
         let responsesToken = [];
@@ -740,9 +745,6 @@ function ParticipantFeedback() {
               )}
               {averagePerParticipant && (
                 <div className="row card shadow-lg p-3 mb-2 bg-white rounded">
-                  <Button className="btn-block btn-inverse-success">
-                    Save average
-                  </Button>
                   {averagePerParticipant.labels &&
                     averagePerParticipant.datasets && (
                       <div
@@ -761,6 +763,12 @@ function ParticipantFeedback() {
                       {totalAverage}
                     </p>
                   )}
+                  <div className="d-flex justify-content-center">
+                    <Button className="mt-3 btn-block btn-inverse-success">
+                      Afficher les recommendations des formations pour tous les
+                      participants
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

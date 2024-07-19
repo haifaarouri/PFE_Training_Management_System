@@ -34,7 +34,7 @@ class FormateurController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
             try {
-
+\Log::info($request->all());
                 $validator = Validator::make($request->all(), [
                     'firstName' => 'required|string|max:255',
                     'lastName' => 'required|string|max:255',

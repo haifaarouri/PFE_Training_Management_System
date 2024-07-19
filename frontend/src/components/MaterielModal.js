@@ -680,6 +680,7 @@ const MaterielModal = ({ show, handleClose }) => {
           handleClose={handleCloseFileModal}
           selectedFile={technicalSpecifications}
           urlFile={urlFile}
+          fileContent="MaterielDocs"
         />
         <ToastContainer />
       </Modal.Body>

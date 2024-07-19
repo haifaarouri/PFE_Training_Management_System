@@ -150,7 +150,12 @@ const TaskList = () => {
           }
         }
       } catch (error) {
-        console.log("Error adding a new materiel :", error);
+        console.log("Error adding a new task :", error);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Quelque chose s'est mal passé !",
+        });
       }
     } catch (error) {
       if (error && error.response.status === 422) {
@@ -196,9 +201,10 @@ const TaskList = () => {
           fetchAllTasks().then(setTasks);
           handleSuccess(res.message);
         } catch (error) {
-          if (error && error.response.status === 422) {
-            handleError(error.response.data.message);
-          }
+          handleError(error);
+          // if (error && error.response.status === 422) {
+          //   handleError(error.response.data.message);
+          // }
         }
       }
     });

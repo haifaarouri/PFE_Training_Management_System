@@ -116,8 +116,8 @@ const EventCreationModal = ({
     }
 
     // Validate each jour day is within the session start and end dates
-    const sessionStart = new Date(startDate).setHours(0, 0, 0, 0);
-    const sessionEnd = new Date(endDate).setHours(23, 59, 59, 999);
+    const sessionStart = new Date(startDate ? startDate : selectedStartDate).setHours(0, 0, 0, 0);
+    const sessionEnd = new Date(endDate ? endDate : selectedEndDate).setHours(23, 59, 59, 999);
     for (let jour of jours) {
       const jourDate = new Date(jour.day).setHours(0, 0, 0, 0);
       if (jourDate < sessionStart || jourDate > sessionEnd) {
@@ -144,10 +144,10 @@ const EventCreationModal = ({
           end: slotInfo.end,
         });
 
-      const formattedStartDate = toUTCDate(startDate)
+      const formattedStartDate = toUTCDate(startDate ? startDate : selectedStartDate)
         .toISOString()
         .slice(0, 16);
-      const formattedEndDate = toUTCDate(endDate).toISOString().slice(0, 16);
+      const formattedEndDate = toUTCDate(endDate ? endDate : selectedEndDate).toISOString().slice(0, 16);
 
       // const formattedJours = jours.map((jour) => ({
       //   day: new Date(jour.day).toISOString().slice(0, 10),

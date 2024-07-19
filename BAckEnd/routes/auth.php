@@ -17,7 +17,7 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store'])
                 ->name('login');
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
-                ->middleware('guest')
+                ->middleware('api')
                 ->name('password.email');
 
 Route::post('/reset-password', [NewPasswordController::class, 'store'])

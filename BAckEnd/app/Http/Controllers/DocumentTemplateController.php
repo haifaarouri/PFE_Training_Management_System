@@ -88,7 +88,7 @@ class DocumentTemplateController extends Controller
                 $validator = Validator::make($request->all(), [
                     'type' => 'required|string|max:255',
                     'docName' => 'required|max:2048',
-                    'variable_ids' => 'required|array',
+                    'variable_ids' => 'required',
                     'variable_ids.*' => 'required|exists:variable_templates,id'
                 ]);
 
@@ -110,10 +110,10 @@ class DocumentTemplateController extends Controller
 
                     $documentTemplate->docName = $fileName;
                 }
-                \Log::info($documentTemplate);
+
                 $documentTemplate->save();
 
-                $documentTemplate->variableTemplates()->sync($request->input('variable_ids'));
+                $documentTemplate->variableTemplates()->sync(json_decode($request->variable_ids, true));
 
                 return response()->json($documentTemplate, 200);
             } catch (\Exception $e) {

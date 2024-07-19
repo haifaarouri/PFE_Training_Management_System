@@ -25,7 +25,6 @@ import { fetchAllSuppliers } from "../services/CommandeServices";
 import { useNavigate } from "react-router-dom";
 
 const CommandeModal = ({ show, handleClose, sessionId }) => {
-  console.log(sessionId);
   const [deliveryDate, setDeliveryDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [validated, setValidated] = useState(false);

@@ -4,6 +4,7 @@ import "./imageSessionShare.css";
 import { FaFacebook, FaLinkedin } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { setImage, setMessage } from "../store/slices/shareInLinkedinSlice";
+import axios from "../services/axios";
 
 const ImageSessionShareModal = ({ show, handleClose, imageToShare }) => {
   const [popupVisible, setPopupVisible] = useState(false);
@@ -27,6 +28,16 @@ const ImageSessionShareModal = ({ show, handleClose, imageToShare }) => {
     const scope = encodeURIComponent("openid profile email w_member_social");
     const state = "YOUR_UNIQUE_STATE_STRING"; // Generate a unique state string for security
     const url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
+
+    window.location.href = url;
+  };
+
+  const handleFacebookLogin = () => {
+    dispatch(setImage(imageId));
+    dispatch(setMessage(messageToSend));
+    const redirectUri = `http://localhost:3000/facebook/callback`;
+    const clientId = "925700196029185";
+    const url = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=email,public_profile,pages_manage_posts`;
 
     window.location.href = url;
   };
@@ -70,7 +81,7 @@ const ImageSessionShareModal = ({ show, handleClose, imageToShare }) => {
                 <ul className="icons no-bullets d-flex justify-content-center">
                   <li>
                     <a href="#">
-                      <FaFacebook size={25} />
+                      <FaFacebook size={25} onClick={handleFacebookLogin} />
                     </a>
                   </li>
                   <li>

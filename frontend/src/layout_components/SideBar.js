@@ -104,7 +104,7 @@ function SideBar({ isSidebarVisible }) {
     {
       path: "/sessions-images",
       icon: <IoMdImages size={22} />,
-      title: "Gestion des Images des sessions",
+      title: "Gestion des ImageSession",
     },
   ];
 

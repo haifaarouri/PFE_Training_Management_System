@@ -8,14 +8,15 @@ import { Alert, Button, Form, InputGroup } from "react-bootstrap";
 import { BsFiletypeDocx } from "react-icons/bs";
 import axios from "../../services/axios";
 import Swal from "sweetalert2";
-import { PiFileDocDuotone } from "react-icons/pi";
+import { PiFileDocDuotone, PiTableLight } from "react-icons/pi";
 import { toast, ToastContainer } from "react-toastify";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   editDocument,
   fetchDocumentById,
 } from "../../services/DocumentServices";
 import { BiUpload } from "react-icons/bi";
+import { fetchAllVariables } from "../../services/VariableServices";
 
 function DocumentTemplateEdit() {
   let editorObj = useRef(null);
@@ -30,6 +31,12 @@ function DocumentTemplateEdit() {
   const params = useParams();
   const { id } = params;
   const [otherTemplate, setOtherTemplate] = useState(false);
+  const [variables, setVariables] = useState([]);
+  const [variableTemplates, setVariableTemplates] = useState([]);
+
+  useEffect(() => {
+    fetchAllVariables().then(setVariableTemplates);
+  }, []);
 
   const toggleOtherTemplate = () => {
     setOtherTemplate(!otherTemplate);
@@ -89,6 +96,7 @@ function DocumentTemplateEdit() {
       const formData = new FormData();
       formData.append("_method", "PUT");
       formData.append("type", docTemplate.type);
+      formData.append("variable_ids", JSON.stringify(variables));
 
       const blob = await getDocumentAsBlob();
       blob
@@ -100,8 +108,8 @@ function DocumentTemplateEdit() {
         : formData.append("docName", docTemplate.docName);
 
       const res = await editDocument(id, formData);
-      if (res.status === 200) {
-        handleSuccess(res.data.message);
+      if (res) {
+        handleSuccess("Modifié avec succès !");
         Swal.fire(
           "Success",
           "Modèle du document modifié avec succès !",
@@ -117,13 +125,14 @@ function DocumentTemplateEdit() {
         navigate("/documents");
       }
     } catch (error) {
-      if (error && error.response.status === 422) {
-        handleError(error.response.data.message);
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Quelque chose s'est mal passé !",
-        });
+      if (error) {
+        console.log(error);
+        // handleError(error.response.data.message);
+        // Swal.fire({
+        //   icon: "error",
+        //   title: "Oops...",
+        //   text: "Quelque chose s'est mal passé !",
+        // });
       }
     }
   };
@@ -228,6 +237,52 @@ function DocumentTemplateEdit() {
                 </div>
                 {docTemplate.docName !== "" && otherTemplate ? (
                   <>
+                    <Alert variant="info">
+                      Veuillez saisir dans le contenu du document, les variables
+                      qui seront remplacées par des valeurs dynamiques lors de
+                      la génération automatique du document, selon cette format
+                      : <b>{"${nomDuVariable}"}</b>
+                    </Alert>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Variables</Form.Label>
+                      <InputGroup className="mb-3">
+                        <InputGroup.Text id="inputGroup-sizing-default">
+                          <div className="input-group-prepend bg-transparent">
+                            <span className="input-group-text bg-transparent border-right-0">
+                              <i className="text-primary">
+                                <PiTableLight size={30} />
+                              </i>
+                            </span>
+                          </div>
+                        </InputGroup.Text>
+                        <Form.Select
+                          multiple
+                          name="variables"
+                          value={variables}
+                          onChange={(e) =>
+                            setVariables(
+                              [...e.target.selectedOptions].map((o) => o.value)
+                            )
+                          }
+                          required
+                        >
+                          <option value="">
+                            Selectionner les variables liée à ce document
+                          </option>
+                          {variableTemplates.length > 0 &&
+                            variableTemplates.map((variable) => (
+                              <option value={variable.id}>
+                                {variable.variable_name}
+                              </option>
+                            ))}
+                        </Form.Select>
+                      </InputGroup>
+                      <Link to="/templates-variables">
+                        <Button className="btn-inverse-primary">
+                          Ajouter nouvelle variable
+                        </Button>
+                      </Link>
+                    </Form.Group>
                     <div className="d-flex justify-content-end">
                       <button
                         onClick={saveDocumentTemplate}

@@ -207,7 +207,14 @@ class SessionImageController extends Controller
                 ]
             ]);
 
-            return response()->json(['message' => 'Shared successfully on LinkedIn!']);
+            if ($response->getStatusCode() == 200) {
+                $image->is_shared_on_linkedin = true;
+                $image->shared_message = $request->message ?? 'Default share message';
+                $image->save();
+                return response()->json(['message' => 'Partagé avec succès sur Linkedin !']);
+            }
+
+            // return response()->json(['message' => 'Shared successfully on LinkedIn!']);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to share on LinkedIn: ' . $e->getMessage()], 500);
         }
