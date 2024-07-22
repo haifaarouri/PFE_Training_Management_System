@@ -114,6 +114,10 @@ const MarkPresenceModal = ({ show, handleClose }) => {
             showConfirmButton: false,
             timer: 2000,
           });
+
+          fetchPresenceSessionId(selectedSession).then((presence) =>
+            setPresences(presence)
+          );
         }
       } else {
         const headers = {
@@ -140,6 +144,10 @@ const MarkPresenceModal = ({ show, handleClose }) => {
             showConfirmButton: false,
             timer: 2000,
           });
+
+          fetchPresenceSessionId(selectedSession).then((presence) =>
+            setPresences(presence)
+          );
         }
       }
     } catch (error) {
@@ -226,7 +234,6 @@ const MarkPresenceModal = ({ show, handleClose }) => {
                       {p.firstName} {p.lastName}
                     </td>
                     {days.length > 0 &&
-                      presences.length > 0 &&
                       days.map((d) => (
                         <td key={d.id} className="attend-col">
                           <input

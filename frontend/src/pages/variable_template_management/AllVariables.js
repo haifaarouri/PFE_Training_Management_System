@@ -15,7 +15,7 @@ function Allvariables() {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const variablesPerPage = 2;
+  const variablesPerPage = 5;
   const lastIndex = currentPage * variablesPerPage;
   const firstIndex = lastIndex - variablesPerPage;
   const variablesPage =

@@ -5,7 +5,7 @@ import { Alert, Button, Form, InputGroup } from "react-bootstrap";
 import Swal from "sweetalert2";
 import axios from "../../services/axios";
 import { BiSolidCategory } from "react-icons/bi";
-import { FaMailBulk } from "react-icons/fa";
+import { FaCode, FaMailBulk } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import { MdAttachEmail } from "react-icons/md";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
@@ -21,6 +21,7 @@ import "react-toastify/dist/ReactToastify.css";
 import EmailEditor from "react-email-editor";
 import { PiTableLight } from "react-icons/pi";
 import { fetchAllVariables } from "../../services/VariableServices";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 
 function EmailEditorEdit() {
   const [emailTemplate, setEmailTemplate] = useState({
@@ -44,6 +45,9 @@ function EmailEditorEdit() {
   const emailEditorRef = useRef(null);
   const [variables, setVariables] = useState([]);
   const [variableTemplates, setVariableTemplates] = useState([]);
+  const [htmlContent, setHtmlContent] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [content, setContent] = useState("");
 
   useEffect(() => {
     fetchAllVariables().then(setVariableTemplates);
@@ -59,16 +63,6 @@ function EmailEditorEdit() {
       });
     });
   }, [id]);
-
-  // const handleEditorChange = (event, editor) => {
-  //   const data = editor.getData();
-  //   if (data !== emailTemplate.content) {
-  //     setEmailTemplate((prev) => ({
-  //       ...prev,
-  //       content: data,
-  //     }));
-  //   }
-  // };
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
@@ -96,28 +90,28 @@ function EmailEditorEdit() {
       theme: "light",
     });
 
-  const saveDesignHtml = () => {
-    emailEditorRef.current.editor.saveDesign((designData) => {
-      console.log(designData?.body?.rows[0].columns[0].contents[0].values.text);
-      setEmailTemplate((prev) => ({
-        ...prev,
-        content: JSON.stringify(designData),
-        htmlContent:
-          JSON.stringify(designData)?.body?.rows[0].columns[0].contents[0]
-            .values.text,
-      }));
+  const saveDesignJson = () => {
+    const unlayer = emailEditorRef.current?.editor;
 
-      emailEditorRef.current.editor.exportHtml((data) => {
-        const { design, html } = data;
-        if (html) {
-          setEmailTemplate((prev) => ({
-            ...prev,
-            htmlContent: html,
-          }));
-        } else {
-          console.error("HTML content is null");
-        }
-      });
+    unlayer?.saveDesign((design) => {
+      console.log("saveDesign", design);
+      alert("Design JSON has been logged in your developer console.");
+    });
+  };
+
+  const saveDesignHtml = () => {
+    emailEditorRef.current.editor.saveDesign((data) => {
+      const { body } = data;
+      if (data) {
+        setContent(JSON.stringify(data));
+      }
+    });
+
+    emailEditorRef.current.editor.exportHtml((data) => {
+      const { design, html } = data;
+      if (html) {
+        setHtmlContent(html);
+      }
     });
   };
 
@@ -135,51 +129,64 @@ function EmailEditorEdit() {
       setValidated(true);
 
       saveDesignHtml();
-      console.log(emailTemplate);
-      const formData = new FormData();
-      formData.append("_method", "PUT");
-      formData.append("emailType", emailTemplate.type);
-      formData.append("subject", emailTemplate.subject);
-      formData.append("content", emailTemplate.content);
-      formData.append("htmlContent", emailTemplate.htmlContent);
-      if (emailTemplate.imageAttachement.length > 0) {
-        emailTemplate.imageAttachement.forEach((file, index) => {
-          formData.append(`imageAttachement[${index}]`, file);
-        });
-      }
-      formData.append("variable_ids", JSON.stringify(variables));
 
-      setUploading(true);
-      try {
-        const res = await editEmailTemplate(id, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            const { loaded, total } = progressEvent;
-            const percent = Math.floor((loaded * 100) / total);
-            setUploadProgress(percent);
-          },
-        });
+      if (emailTemplate.content && emailTemplate.htmlContent) {
+        const formData = new FormData();
+        formData.append("_method", "PUT");
+        formData.append("emailType", emailTemplate.type);
+        formData.append("subject", emailTemplate.subject);
+        formData.append("content", content);
+        formData.append("htmlContent", htmlContent);
+        if (emailTemplate.imageAttachement.length > 0) {
+          emailTemplate.imageAttachement.forEach((file, index) => {
+            formData.append(`imageAttachement[${index}]`, file);
+          });
+        }
+        formData.append("variable_ids", JSON.stringify(variables));
 
-        if (res) {
-          handleSuccess("Modifié avec succès !");
-          Swal.fire({
-            icon: "success",
-            title: "Succès",
-            text: "Le modèle d'e-mail a été modifié avec succès !",
+        setUploading(true);
+        try {
+          const res = await editEmailTemplate(id, formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            onUploadProgress: (progressEvent) => {
+              const { loaded, total } = progressEvent;
+              const percent = Math.floor((loaded * 100) / total);
+              setUploadProgress(percent);
+            },
           });
 
-          navigate("/email-templates");
+          if (res) {
+            handleSuccess("Modifié avec succès !");
+            Swal.fire({
+              icon: "success",
+              title: "Succès",
+              text: "Le modèle d'e-mail a été modifié avec succès !",
+            });
+
+            setContent("");
+            setHtmlContent("");
+            setEmailTemplate({
+              id: "",
+              type: "",
+              subject: "",
+              content: "",
+              htmlContent: "",
+              imageAttachement: [],
+            });
+
+            navigate("/email-templates");
+          }
+        } catch (error) {
+          Swal.fire(
+            "Error",
+            "Echec de la modification du modèle d'e-mail.",
+            "error"
+          );
+        } finally {
+          setUploading(false);
         }
-      } catch (error) {
-        Swal.fire(
-          "Error",
-          "Echec de la modification du modèle d'e-mail.",
-          "error"
-        );
-      } finally {
-        setUploading(false);
       }
     } catch (error) {
       if (error && error.response.status === 422) {
@@ -194,7 +201,7 @@ function EmailEditorEdit() {
   };
 
   const handleDeleteAttachment = async (index) => {
-    const fileToDelete = emailTemplate.imageAttachement[index];
+    const fileToDelete = emailTemplate?.imageAttachement[index];
     if (!fileToDelete) {
       console.error("No file to delete at index", index);
       return;
@@ -223,6 +230,13 @@ function EmailEditorEdit() {
 
       if (res.status === 200) {
         handleSuccess(res.data.message);
+        const newImageNames = [...imagesNames];
+        newImageNames.splice(index, 1);
+        setImagesNames(newImageNames);
+
+        const newUrls = [...urlimgs];
+        newUrls.splice(index, 1);
+        setURLimgs(newUrls);
       }
     } else {
       const headers = {
@@ -244,6 +258,13 @@ function EmailEditorEdit() {
 
       if (response.status === 200) {
         handleSuccess(response.data.message);
+        const newImageNames = [...imagesNames];
+        newImageNames.splice(index, 1);
+        setImagesNames(newImageNames);
+
+        const newUrls = [...urlimgs];
+        newUrls.splice(index, 1);
+        setURLimgs(newUrls);
       }
     }
 
@@ -263,10 +284,17 @@ function EmailEditorEdit() {
 
     setImagesNames((prevNames) => [...prevNames, ...newImageNames]);
     setURLimgs((prevUrls) => [...prevUrls, ...newUrls]);
-    setEmailTemplate((prev) => ({
-      ...prev,
-      imageAttachement: [...prev.imageAttachement, ...files],
-    }));
+    if (emailTemplate?.imageAttachement?.length > 0) {
+      setEmailTemplate((prev) => ({
+        ...prev,
+        imageAttachement: [...prev.imageAttachement, ...files],
+      }));
+    } else {
+      setEmailTemplate((prev) => ({
+        ...prev,
+        imageAttachement: files,
+      }));
+    }
   };
 
   const onDesignLoad = (data) => {
@@ -279,49 +307,41 @@ function EmailEditorEdit() {
     unlayer.loadDesign(template);
   };
 
-  const [preview, setPreview] = useState(false);
+  // const [preview, setPreview] = useState(false);
 
-  const saveDesignJson = () => {
-    const unlayer = emailEditorRef.current?.editor;
+  // const togglePreview = () => {
+  //   const unlayer = emailEditorRef.current?.editor;
 
-    unlayer?.saveDesign((design) => {
-      console.log("saveDesign", design);
-      alert("Design JSON has been logged in your developer console.");
-    });
-  };
-
-  const togglePreview = () => {
-    const unlayer = emailEditorRef.current?.editor;
-
-    if (preview) {
-      unlayer?.hidePreview();
-      setPreview(false);
-    } else {
-      unlayer?.showPreview("desktop");
-      setPreview(true);
-    }
-  };
+  //   if (preview) {
+  //     unlayer?.hidePreview();
+  //     setPreview(false);
+  //   } else {
+  //     unlayer?.showPreview("desktop");
+  //     setPreview(true);
+  //   }
+  // };
 
   function onReady(editor) {
-    let jsonString = emailTemplate?.content;
+    console.log("onReady", editor);
+    // let jsonString = emailTemplate?.content;
 
-    let design;
-    if (emailTemplate.content !== "") {
-      if (typeof jsonString === "string") {
-        try {
-          design = JSON.parse(jsonString);
-        } catch (error) {
-          console.error("Parsing error:", error);
-          return; // Stop further execution if JSON is not valid
-        }
-      } else if (typeof jsonString === "object") {
-        design = jsonString; // If it's already an object, use it directly
-      } else {
-        console.error("Invalid JSON data type:", typeof jsonString);
-        return; // Stop further execution if data type is not valid
-      }
-      editor.loadDesign(design);
-    }
+    // let design;
+    // if (emailTemplate.content !== "") {
+    //   if (typeof jsonString === "string") {
+    //     try {
+    //       design = JSON.parse(jsonString);
+    //     } catch (error) {
+    //       console.error("Parsing error:", error);
+    //       return; // Stop further execution if JSON is not valid
+    //     }
+    //   } else if (typeof jsonString === "object") {
+    //     design = jsonString; // If it's already an object, use it directly
+    //   } else {
+    //     console.error("Invalid JSON data type:", typeof jsonString);
+    //     return; // Stop further execution if data type is not valid
+    //   }
+    //   editor.loadDesign(design);
+    // }
   }
 
   return (
@@ -424,7 +444,7 @@ function EmailEditorEdit() {
                   Veuillez saisir dans le contenu d'e-mail, les variables qui
                   seront remplacées par des valeurs dynamiques lors de l'envoi
                   automatique d'e-mail, selon cette format :{" "}
-                  <b>{"${nomDuVariable}"}</b>
+                  <b>{"{nomDuVariable}"}</b>
                 </Alert>
                 <Form.Group className="mb-3">
                   <Form.Label>Variables</Form.Label>
@@ -466,6 +486,51 @@ function EmailEditorEdit() {
                     </Button>
                   </Link>
                 </Form.Group>
+                {emailTemplate.content && (
+                  <>
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          JSON.parse(emailTemplate?.content)?.body?.rows[0]
+                            .columns[0].contents[0].values.html ||
+                          emailTemplate.htmlContent,
+                      }}
+                    ></div>
+                    <Alert variant="info" className="my-3">
+                      Le contenu de ce type d'e-mail est présenté ci-dessus. Si
+                      vous souhaitez apporter des modifications, vous pouvez le
+                      copier et coller, sinon vous pouvez créer un nouveau
+                      contenu !
+                    </Alert>
+                    <div className="d-flex justify-content-center">
+                      <CopyToClipboard
+                        text={
+                          JSON.parse(emailTemplate?.content)?.body?.rows[0]
+                            .columns[0].contents[0].values.html ||
+                          emailTemplate.htmlContent
+                        }
+                        onCopy={() => {
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 5000);
+                        }}
+                      >
+                        <Button
+                          // onClick={copyHtmlContent}
+                          className={`mx-2 mb-3 btn-inverse-${
+                            copied ? "success" : "primary"
+                          }`}
+                        >
+                          Copier le contenu HTML <FaCode size={20} />
+                        </Button>
+                      </CopyToClipboard>
+                      {copied ? (
+                        <Alert style={{ width: "30%" }} variant="success">
+                          Contenu HTML est copié avec succès !
+                        </Alert>
+                      ) : null}
+                    </div>
+                  </>
+                )}
                 {emailTemplate && emailTemplate.content !== "" && (
                   <EmailEditor
                     ref={emailEditorRef}
@@ -476,6 +541,17 @@ function EmailEditorEdit() {
                       version: "latest",
                       appearance: {
                         theme: "modern_light",
+                      },
+                      tools: {
+                        button: {
+                          enabled: true,
+                          properties: {
+                            link: {
+                              defaultValue:
+                                "http://localhost:8000/api/track-click",
+                            },
+                          },
+                        },
                       },
                     }}
                   />

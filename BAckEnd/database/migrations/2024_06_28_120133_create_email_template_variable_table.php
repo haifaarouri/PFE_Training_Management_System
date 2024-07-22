@@ -14,8 +14,8 @@ return new class extends Migration {
     {
         Schema::create('email_template_variable', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('email_template_id')->constrained('email_templates');
-            $table->foreignId('variable_template_id')->constrained('variable_templates');
+            $table->foreignId('email_template_id')->constrained('email_templates')->onDelete('cascade');
+            $table->foreignId('variable_template_id')->constrained('variable_templates')->onDelete('cascade');
             $table->timestamps();
             $table->unique(['email_template_id', 'variable_template_id'], 'email_variable_unique');
         });

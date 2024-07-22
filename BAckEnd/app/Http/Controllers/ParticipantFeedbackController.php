@@ -69,4 +69,42 @@ class ParticipantFeedbackController extends Controller
 
         return $session->formation_id;
     }
+
+    public function filterFeedbacks(Request $request)
+    {
+        $query = Participant::query();
+
+        // Eager load formations and sessions
+        $query->with(['formations.sessions']);
+
+        // Apply filters based on the request
+        if ($request->has('sessionTitle')) {
+            $query->whereHas('formations.sessions', function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->sessionTitle . '%');
+            });
+        }
+        if ($request->has('formationRef')) {
+            $query->whereHas('formations', function ($q) use ($request) {
+                $q->where('reference', 'like', '%' . $request->formationRef . '%');
+            });
+        }
+        if ($request->has('formationEntitled')) {
+            $query->whereHas('formations', function ($q) use ($request) {
+                $q->where('entitled', 'like', '%' . $request->formationEntitled . '%');
+            });
+        }
+        if ($request->has('firstNameParticipant')) {
+            $query->where('firstName', 'like', '%' . $request->firstNameParticipant . '%');
+        }
+        if ($request->has('lastNameParticipant')) {
+            $query->where('lastName', 'like', '%' . $request->lastNameParticipant . '%');
+        }
+        if ($request->has('emailParticipant')) {
+            $query->where('email', 'like', '%' . $request->emailParticipant . '%');
+        }
+
+        $participants = $query->get();
+
+        return response()->json($participants);
+    }
 }

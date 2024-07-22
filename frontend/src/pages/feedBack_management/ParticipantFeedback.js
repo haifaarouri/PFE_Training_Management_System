@@ -60,6 +60,14 @@ function ParticipantFeedback() {
   const [averagePerQuestion, setAveragePerQuestion] = useState(null);
   const [averagePerParticipant, setAveragePerParticipant] = useState(null);
   const [totalAverage, setTotalAverage] = useState(null);
+  const [filters, setFilters] = useState({
+    sessionTitle: "",
+    formationRef: "",
+    formationEntitled: "",
+    firstNameParticipant: "",
+    lastNameParticipant: "",
+    emailParticipant: "",
+  });
 
   const options = {
     scales: {
@@ -105,11 +113,38 @@ function ParticipantFeedback() {
   useEffect(() => {
     const u = async () => {
       const d = await fetchData();
-      setFeedbacks(d);
+      // setFeedbacks(d);
     };
 
     u();
   }, []);
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [name]: value,
+    }));
+  };
+  const fetchFeedbacks = async () => {
+    const queryParams = new URLSearchParams(filters).toString();
+
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/filter-feedbacks?${queryParams}`);
+      const data = await response.data;
+      console.log(data);
+      setFeedbacks(data);
+    } else {
+      const response = await apiFetch(`/api/filter-feedbacks?${queryParams}`);
+      const data = await response.json();
+      console.log(data);
+      setFeedbacks(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeedbacks();
+  }, [filters]);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -549,6 +584,26 @@ function ParticipantFeedback() {
               </div>
               {loading && <Spinner />}
               <div className="d-flex justify-content-center mt-3 mb-5">
+                <div>
+                  <input
+                    type="text"
+                    name="sessionTitle"
+                    value={filters.sessionTitle}
+                    onChange={handleFilterChange}
+                    placeholder="Session Title"
+                  />
+                  {/* Repeat for other filters */}
+                  <button onClick={fetchFeedbacks}>Search</button>
+                  <div>
+                    {feedbacks?.length > 0 &&
+                      feedbacks.map((feedback) => (
+                        <div key={feedback.id}>
+                          {feedback.sessionTitle} -{" "}
+                          {feedback.firstNameParticipant}
+                        </div>
+                      ))}
+                  </div>
+                </div>
                 <Form style={{ width: "50%" }}>
                   <div className="inner-form">
                     <div className="input-select">
@@ -565,7 +620,19 @@ function ParticipantFeedback() {
                               Titre de session
                             </option>
                             <option value="formationRef">
-                              Référence de la formation
+                              Réference de la formation
+                            </option>
+                            <option value="formationEntitled">
+                              Titre de la formation
+                            </option>
+                            <option value="firstNameParticipant">
+                              Prénom du participant
+                            </option>
+                            <option value="lastNameParticipant">
+                              Nom du participant
+                            </option>
+                            <option value="emailParticipant">
+                              E-mail du participant
                             </option>
                           </Form.Select>
                         </InputGroup>
@@ -617,7 +684,7 @@ function ParticipantFeedback() {
                   Réponses <RiSurveyFill size={20} />
                 </Button>
               </div>
-              <div className="table-responsive">
+              {/* <div className="table-responsive">
                 <table className="table table-striped table-hover">
                   <thead>
                     {feedbacks?.length > 0 &&
@@ -770,7 +837,7 @@ function ParticipantFeedback() {
                     </Button>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>

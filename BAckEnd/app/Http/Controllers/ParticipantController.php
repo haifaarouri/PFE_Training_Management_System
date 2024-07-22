@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Mail\ConvocationEmail;
 use App\Models\Candidat;
 use App\Models\EmailTemplate;
+use App\Models\JourFormation;
 use App\Models\JourSession;
+use App\Models\ProgrammeFormation;
 use App\Models\Session;
+use App\Models\SousPartie;
 use App\Rules\CandidatTypeRule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -195,49 +198,113 @@ class ParticipantController extends Controller
 
     public function sendConvocationEmail($firstName, $lastName, $session, $templateId, $participantEmail)
     {
-        $template = EmailTemplate::find($templateId);
-        if (!$template) {
-            return response()->json(['error' => 'Modèle d\'e-mail non trouvé !'], 404);
+        try {
+            $template = EmailTemplate::find($templateId);
+            if (!$template) {
+                return response()->json(['error' => 'Modèle d\'e-mail non trouvé !'], 404);
+            }
+
+            $from = Carbon::parse($session->startDate, 'Africa/Tunis');
+            $to = Carbon::parse($session->endDate, 'Africa/Tunis');
+
+            $link = Link::create($session->title, $from, $to)
+                ->description($session->reference)
+                ->address($session->location);
+
+            // Generate links for different calendars
+            $googleLink = $link->google();
+            $outlookLink = $link->webOutlook();
+
+            $programme = ProgrammeFormation::where("formation_id", $session->formation_id)->get();
+
+            $jours = JourFormation::where("programme_formation_id", $programme[0]->id)->get();
+
+            $data = [];
+            $joursData = [];
+
+            foreach ($jours as $j) {
+                $sousParties = SousPartie::where("jour_formation_id", $j->id)->get();
+
+                foreach ($sousParties as $sp) {
+                    $sousPartiesData[] = ['description' => $sp['description']];
+                }
+
+                $joursData[] = [
+                    'jourName' => $j['dayName'],
+                    'sousPartie' => $sousPartiesData
+                ];
+            }
+
+            $data = [
+                'prénomParticipant' => $firstName,
+                'nomParticipant' => $lastName,
+                'sessionTitle' => $session->title,
+                'formationRef' => $session->reference,
+                'dateDébutSession' => $session->startDate,
+                'dateFinSession' => $session->endDate,
+                'googleLink' => $googleLink,
+                'outlookLink' => $outlookLink,
+                'programme' => $programme[0]->title,
+                'jour' => $joursData,
+                'sessionMode' => $session->sessionMode,
+                'sessionLocation' => $session->location
+                // 'sousPartie' => $sousPartiesData
+            ];
+            \Log::info(json_encode($data));
+            $subject = $this->replacePlaceholders($template->subject, $data);
+            $content = $this->replacePlaceholders($template->htmlContent, $data);
+
+            $imageAttachments = json_decode($template->imageAttachement, true) ?? [];
+
+            Mail::to($participantEmail)->send(new ConvocationEmail($subject, $content, $imageAttachments));
+
+            return response()->json(['message' => 'E-mail envoyé avec succès !']);
+        } catch (\PDOException $e) {
+            \Log::error('Error : ' . $e->getMessage());
+            if ($e->getCode() == 23000) {
+                return response()->json(['error' => 'Ce participant est déjà inscrit à cette session !'], 400);
+            }
+            return response()->json(['error' => 'Erreur lors de l\'inscription à la session !'], 500);
         }
-
-        $from = Carbon::parse($session->startDate, 'Africa/Tunis');
-        $to = Carbon::parse($session->endDate, 'Africa/Tunis');
-
-        $link = Link::create($session->title, $from, $to)
-            ->description($session->reference)
-            ->address($session->location);
-
-        // Generate links for different calendars
-        $googleLink = $link->google();
-        $outlookLink = $link->webOutlook();
-
-        $data = [
-            'firstName' => $firstName,
-            'lastName' => $lastName,
-            'sessionTitle' => $session->title,
-            'sessionStartDate' => $session->startDate,
-            'sessionEndDate' => $session->endDate,
-            'googleLink' => $googleLink,
-            'outlookLink' => $outlookLink
-        ];
-
-        $subject = $this->replacePlaceholders($template->subject, $data);
-        $content = $this->replacePlaceholders($template->htmlContent, $data);
-                
-        $imageAttachments = json_decode($template->imageAttachement, true) ?? [];
-
-        Mail::to($participantEmail)->send(new ConvocationEmail($subject, $content, $imageAttachments));
-
-        return response()->json(['message' => 'E-mail envoyé avec succès !']);
     }
 
-    private function replacePlaceholders($text, $data)
+    function replacePlaceholders($template, $data)
     {
         foreach ($data as $key => $value) {
-            $text = str_replace("{" . $key . "}", $value, $text);
+            if (is_array($value)) {
+                $tempContent = "";
+                foreach ($value as $item) {
+                    if (is_array($item)) {
+                        $itemContent = "";
+                        foreach ($item as $itemKey => $subItem) {
+                            if ($itemKey == 'sousPartie') {
+                                foreach ($subItem as $sp) {
+                                    $itemContent .= $sp['description'] . ", "; // Customize formatting as needed
+                                }
+                            } else {
+                                $itemContent .= $item[$itemKey] . " "; // Customize formatting as needed
+                            }
+                        }
+                        $tempContent .= trim($itemContent) . "\n"; // Customize formatting as needed
+                    } else {
+                        $tempContent .= $value . " "; // Handle non-array data
+                    }
+                }
+                $template = str_replace("{" . $key . "}", trim($tempContent), $template);
+            } else {
+                $template = str_replace("{" . $key . "}", $value, $template);
+            }
         }
-        return $text;
+        return $template;
     }
+
+    // private function replacePlaceholders($text, $data)
+    // {
+    //     foreach ($data as $key => $value) {
+    //         $text = str_replace("{" . $key . "}", $value, $text);
+    //     }
+    //     return $text;
+    // }
 
     // public function replaceVariables($templateContent, $context) {
     //     $variables = TemplateVariable::where('document_type_id', $context['document_type_id'])->get();

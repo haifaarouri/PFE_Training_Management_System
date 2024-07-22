@@ -264,4 +264,5 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/save-avg-feedback', [ParticipantFeedbackController::class, 'saveAverages']);
+    Route::get('/filter-feedbacks', [ParticipantFeedbackController::class, 'filterFeedbacks']);
 });

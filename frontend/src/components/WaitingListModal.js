@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Form, InputGroup, Modal } from "react-bootstrap";
+import { Alert, Button, Form, InputGroup, Modal } from "react-bootstrap";
 import { BsCalendar } from "react-icons/bs";
 import axios from "../services/axios";
 import {
@@ -115,7 +115,7 @@ const WaitingListModal = ({ show, handleClose }) => {
             </Button>
           </div>
         </Form>
-        {waitingList.length > 0 && (
+        {waitingList.length > 0 ? (
           <div className="table-responsive">
             <table className="table table-striped table-hover">
               <thead>
@@ -149,6 +149,12 @@ const WaitingListModal = ({ show, handleClose }) => {
                 })}
               </tbody>
             </table>
+          </div>
+        ) : (
+          <div className="d-flex justify-content-center">
+            <Alert variant="info" style={{ width: "43%" }}>
+              Pas de participants dans la liste d'attente !
+            </Alert>
           </div>
         )}
       </Modal.Body>

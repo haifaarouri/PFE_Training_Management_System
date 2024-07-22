@@ -10,7 +10,7 @@ import FileModal from "../../components/FileModal";
 import { HiDocumentPlus } from "react-icons/hi2";
 import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
-import { Tab, Tabs } from "react-bootstrap";
+import { Pagination, Tab, Tabs } from "react-bootstrap";
 
 function Alldocuments() {
   const [documents, setDocuments] = useState([]);
@@ -20,11 +20,33 @@ function Alldocuments() {
   const [docLogs, setDocLogs] = useState([]);
   const [showDoc, setShowDoc] = useState(false);
   const [doc, setDoc] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const documentsPerPage = 5;
+  const lastIndex = currentPage * documentsPerPage;
+  const firstIndex = lastIndex - documentsPerPage;
+  const documentsPage =
+    documents.length > 0 && documents.slice(firstIndex, lastIndex);
+  const numberPages = Math.ceil(
+    documents.length > 0 && documents.length / documentsPerPage
+  );
+  const numbers = [...Array(numberPages + 1).keys()].slice(1);
+  const [currentPagedocLogs, setcurrentPagedocLogs] = useState(1);
+  const docLogsPerPage = 5;
+  const lastIndexEmailLog = currentPagedocLogs * docLogsPerPage;
+  const firstIndexEmailLog = lastIndexEmailLog - docLogsPerPage;
+  const docLogsPage =
+    docLogs.length > 0 &&
+    docLogs.slice(firstIndexEmailLog, lastIndexEmailLog);
+  const nbrPages = Math.ceil(
+    docLogs.length > 0 && docLogs.length / docLogsPerPage
+  );
+  const nbrs = [...Array(nbrPages + 1).keys()].slice(1);
 
   // const handleShowFileModal = (doc) => {
   //   setShowFileModal(true);
   //   setFile(doc);
   // };
+
   const handleCloseFileModal = () => setShowFileModal(false);
 
   useEffect(() => {
@@ -119,6 +141,38 @@ function Alldocuments() {
     setDoc(null);
   };
 
+  const prevPage = () => {
+    if (currentPage !== 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const changeCurrentPage = (n) => {
+    setCurrentPage(n);
+  };
+
+  const nextPage = () => {
+    if (currentPage !== numberPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevLogsPage = () => {
+    if (currentPagedocLogs !== 1) {
+      setcurrentPagedocLogs(currentPagedocLogs - 1);
+    }
+  };
+
+  const changeCurrentLogsPage = (n) => {
+    setcurrentPagedocLogs(n);
+  };
+
+  const nextLogsPage = () => {
+    if (currentPagedocLogs !== numberPages) {
+      setcurrentPagedocLogs(currentPagedocLogs + 1);
+    }
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -160,7 +214,7 @@ function Alldocuments() {
                       </thead>
                       <tbody>
                         {documents.length > 0 &&
-                          documents.map((d, index) => {
+                          documentsPage.map((d, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -208,6 +262,36 @@ function Alldocuments() {
                         />
                       </tbody>
                     </table>
+                    <Pagination className="d-flex justify-content-center mt-5">
+                      <Pagination.Prev
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
+                      >
+                        <i
+                          className="mdi mdi-arrow-left-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Prev>
+                      {numbers.map((n, i) => (
+                        <Pagination.Item
+                          className={`${currentPage === n ? "active" : ""}`}
+                          key={i}
+                          style={{ fontSize: "1.5em" }}
+                          onClick={() => changeCurrentPage(n)}
+                        >
+                          {n}
+                        </Pagination.Item>
+                      ))}
+                      <Pagination.Next
+                        onClick={nextPage}
+                        disabled={currentPage === numberPages}
+                      >
+                        <i
+                          className="mdi mdi-arrow-right-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Next>
+                    </Pagination>
                   </div>
                 </Tab>
                 <Tab eventKey="listLogs" title="Liste des documents générés">
@@ -225,7 +309,7 @@ function Alldocuments() {
                       </thead>
                       <tbody>
                         {docLogs.length > 0 &&
-                          docLogs.map((docLog, index) => {
+                          docLogsPage.map((docLog, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -254,6 +338,38 @@ function Alldocuments() {
                           })}
                       </tbody>
                     </table>
+                    <Pagination className="d-flex justify-content-center mt-5">
+                      <Pagination.Prev
+                        onClick={prevLogsPage}
+                        disabled={currentPagedocLogs === 1}
+                      >
+                        <i
+                          className="mdi mdi-arrow-left-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Prev>
+                      {nbrs.map((n, i) => (
+                        <Pagination.Item
+                          className={`${
+                            currentPagedocLogs === n ? "active" : ""
+                          }`}
+                          key={i}
+                          style={{ fontSize: "1.5em" }}
+                          onClick={() => changeCurrentLogsPage(n)}
+                        >
+                          {n}
+                        </Pagination.Item>
+                      ))}
+                      <Pagination.Next
+                        onClick={nextLogsPage}
+                        disabled={currentPagedocLogs === nbrPages}
+                      >
+                        <i
+                          className="mdi mdi-arrow-right-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Next>
+                    </Pagination>
                     <FileModal
                       show={showDoc}
                       handleClose={handleCloseDoc}

@@ -869,10 +869,7 @@ function App() {
             path="/auth/linkedin/callback"
             element={<LinkedInCallback />}
           />
-          <Route
-            path="/facebook/callback"
-            element={<FacebookCallback />}
-          />
+          <Route path="/facebook/callback" element={<FacebookCallback />} />
           <Route path="*" element={<Unauthorized status="404" />} />
         </Routes>
       </div>

@@ -69,10 +69,11 @@ const EmailTemplateModal = ({ show, onHide, emailTemplate }) => {
       }
     });
   };
-  emailTemplate && console.log(
-    JSON.parse(emailTemplate?.content)?.body?.rows[0].columns[0].contents[0]
-      .values.html
-  );
+  emailTemplate &&
+    console.log(
+      JSON.parse(emailTemplate?.content)?.body?.rows[0].columns[0].contents[0]
+        .values.html
+    );
   return (
     emailTemplate && (
       <Modal
@@ -115,8 +116,9 @@ const EmailTemplateModal = ({ show, onHide, emailTemplate }) => {
               </div>
               <div
                 dangerouslySetInnerHTML={{
-                  __html: JSON.parse(emailTemplate?.content)?.body?.rows[0]
-                    .columns[0].contents[0].values.html || emailTemplate.htmlContent,
+                  __html:
+                    JSON.parse(emailTemplate?.content)?.body?.rows[0].columns[0]
+                      .contents[0].values.html || emailTemplate.htmlContent,
                 }}
               ></div>
             </Card.Body>
@@ -148,6 +150,17 @@ function AllEmailTemplates() {
   const [showEmailTemplateModal, setShowEmailTemplateModal] = useState(false);
   const [emailTemplate, setEmailTemplate] = useState(null);
   const [emailLogs, setEmailLogs] = useState([]);
+  const [currentPageEmailLogs, setcurrentPageEmailLogs] = useState(1);
+  const emailLogsPerPage = 5;
+  const lastIndexEmailLog = currentPageEmailLogs * emailLogsPerPage;
+  const firstIndexEmailLog = lastIndexEmailLog - emailLogsPerPage;
+  const emailLogsPage =
+    emailLogs.length > 0 &&
+    emailLogs.slice(firstIndexEmailLog, lastIndexEmailLog);
+  const nbrPages = Math.ceil(
+    emailLogs.length > 0 && emailLogs.length / emailLogsPerPage
+  );
+  const nbrs = [...Array(nbrPages + 1).keys()].slice(1);
 
   const handleShowEmailTemplateModal = (t) => {
     setShowEmailTemplateModal(true);
@@ -233,6 +246,22 @@ function AllEmailTemplates() {
     }
   };
 
+  const prevLogsPage = () => {
+    if (currentPageEmailLogs !== 1) {
+      setcurrentPageEmailLogs(currentPageEmailLogs - 1);
+    }
+  };
+
+  const changeCurrentLogsPage = (n) => {
+    setcurrentPageEmailLogs(n);
+  };
+
+  const nextLogsPage = () => {
+    if (currentPageEmailLogs !== numberPages) {
+      setcurrentPageEmailLogs(currentPageEmailLogs + 1);
+    }
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -270,13 +299,6 @@ function AllEmailTemplates() {
                 >
                   <div className="table-responsive">
                     <table className="table table-striped table-hover">
-                      {/* <colgroup>
-                    <col span="1" style={{ width: "10%" }} />
-                    <col span="1" style={{ width: "10%" }} />
-                    <col span="1" style={{ width: "50%" }} />
-                    <col span="1" style={{ width: "18%" }} />
-                    <col span="1" style={{ width: "12%" }} />
-                  </colgroup> */}
                       <thead>
                         <tr>
                           <th>Type</th>
@@ -412,7 +434,7 @@ function AllEmailTemplates() {
                       </thead>
                       <tbody>
                         {emailLogs.length > 0 &&
-                          emailLogs.map((emailLog, index) => {
+                          emailLogsPage.map((emailLog, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -426,6 +448,38 @@ function AllEmailTemplates() {
                           })}
                       </tbody>
                     </table>
+                    <Pagination className="d-flex justify-content-center mt-5">
+                      <Pagination.Prev
+                        onClick={prevLogsPage}
+                        disabled={currentPageEmailLogs === 1}
+                      >
+                        <i
+                          className="mdi mdi-arrow-left-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Prev>
+                      {nbrs.map((n, i) => (
+                        <Pagination.Item
+                          className={`${
+                            currentPageEmailLogs === n ? "active" : ""
+                          }`}
+                          key={i}
+                          style={{ fontSize: "1.5em" }}
+                          onClick={() => changeCurrentLogsPage(n)}
+                        >
+                          {n}
+                        </Pagination.Item>
+                      ))}
+                      <Pagination.Next
+                        onClick={nextLogsPage}
+                        disabled={currentPageEmailLogs === nbrPages}
+                      >
+                        <i
+                          className="mdi mdi-arrow-right-bold-circle-outline"
+                          style={{ fontSize: "1.5em" }}
+                        />
+                      </Pagination.Next>
+                    </Pagination>
                   </div>
                 </Tab>
               </Tabs>

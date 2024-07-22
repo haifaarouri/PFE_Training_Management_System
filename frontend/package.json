@@ -24,6 +24,7 @@
     "react-bootstrap": "^2.10.1",
     "react-chartjs-2": "^5.2.0",
     "react-circular-progressbar": "^2.1.0",
+    "react-copy-to-clipboard": "^5.1.0",
     "react-date-range": "^2.0.0-alpha.4",
     "react-datepicker": "^6.4.0",
     "react-dom": "^18.2.0",

@@ -85,31 +85,26 @@ class EmailTemplateController extends Controller
     public function deleteImagesAttachements(Request $request, $id)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
-            $emailTemplate = emailTemplate::find($id);
+            $emailTemplate = EmailTemplate::find($id);
             if (!$emailTemplate) {
                 return response()->json(['error' => 'Modèle d\'e-mail avec cette ID non trouvé !'], 404);
             }
 
             if ($request->has('deleteImages')) {
                 $deleteImages = json_decode($request->deleteImages, true); // Decode JSON as an array
+                $existingImages = json_decode($emailTemplate->imageAttachement, true) ?? [];
 
-                if (is_array($deleteImages)) {
-                    $existingImages = json_decode($emailTemplate->imageAttachement, true);
-
-                    foreach ($deleteImages as $deleteImage) {
-                        if (($key = array_search($deleteImage, $existingImages)) !== false) {
-                            unset($existingImages[$key]);
-                            // Optionally delete the file from the server
-                            $file_path = public_path('emailAttachements') . '/' . $deleteImage;
-                            if (file_exists($file_path)) {
-                                unlink($file_path);
-                            }
+                foreach ($deleteImages as $deleteImage) {
+                    if (($key = array_search($deleteImage, $existingImages)) !== false) {
+                        unset($existingImages[$key]);
+                        $file_path = public_path('emailAttachements') . '/' . $deleteImage;
+                        if (file_exists($file_path)) {
+                            unlink($file_path);
                         }
                     }
-
-                    $emailTemplate->imageAttachement = json_encode(array_values($existingImages));
                 }
 
+                $emailTemplate->imageAttachement = json_encode(array_values($existingImages));
                 $emailTemplate->save();
             }
             return response()->json(['message' => 'Pièces jointes supprimées avec succès !'], 200);
@@ -121,7 +116,6 @@ class EmailTemplateController extends Controller
 
     public function update(Request $request, $id)
     {
-
         if ($this->list_roles->contains(auth()->user()->role)) {
             try {
                 $emailTemplate = emailTemplate::find($id);
@@ -185,6 +179,9 @@ class EmailTemplateController extends Controller
             if (!$emailTemplate) {
                 return response()->json(['error' => 'Modèle d\'e-mail avec cette ID non trouvé !'], 404);
             }
+
+            // Delete related entries from email_template_variable
+            $emailTemplate->variableTemplates()->detach();
 
             $emailTemplate->delete();
             return response()->json(['message' => 'Modèle d\'e-mail supprimée avec succès !']);
