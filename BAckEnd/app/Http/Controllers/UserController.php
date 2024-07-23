@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
 class UserController extends Controller
 {
     public function show(Request $request)
-    {   
+    {
         $user = $request->user()->load('notifications');
         return response()->json($user);
     }
@@ -195,7 +195,7 @@ class UserController extends Controller
                     $user->password = Hash::make($request->input('password'));
 
                     $user->save();
-                    return response()->json(['message' => 'Votre Profil est modifié avec succès !']);
+                    return response()->json(['message' => 'Votre Profil est modifié avec succès !', 'user' => $user]);
                 } else {
                     $user->firstName = $request->input('firstName');
                     $user->lastName = $request->input('lastName');
@@ -205,7 +205,7 @@ class UserController extends Controller
                     $user->password = Hash::make($request->input('password'));
 
                     $user->save();
-                    return response()->json(['message' => 'Votre Profil est modifié avec succès !']);
+                    return response()->json(['message' => 'Votre Profil est modifié avec succès !', 'user' => $user]);
                 }
             }
         } else {

@@ -19,6 +19,7 @@ import {
   ArcElement,
 } from "chart.js";
 import Swal from "sweetalert2";
+import { fetchAllSessions } from "../../services/SessionServices";
 
 ChartJS.register(
   CategoryScale,
@@ -50,24 +51,17 @@ function ParticipantFeedback() {
     feedbacks?.length > 0 && feedbacks?.length / feedbacksPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
-  const [filteredData, setFilteredData] = useState([]);
+  const [filteredData, setFilteredData] = useState(null);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [surveyTemplates, setSurveyTemplates] = useState([]);
   const [chartData, setChartData] = useState(null);
   const [sentiments, setSentiments] = useState(null);
   const [averagePerQuestion, setAveragePerQuestion] = useState(null);
   const [averagePerParticipant, setAveragePerParticipant] = useState(null);
   const [totalAverage, setTotalAverage] = useState(null);
-  const [filters, setFilters] = useState({
-    sessionTitle: "",
-    formationRef: "",
-    formationEntitled: "",
-    firstNameParticipant: "",
-    lastNameParticipant: "",
-    emailParticipant: "",
-  });
+  const [sessions, setSessions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState(null);
 
   const options = {
     scales: {
@@ -111,63 +105,52 @@ function ParticipantFeedback() {
   };
 
   useEffect(() => {
+    fetchAllSessions().then(setSessions);
+
     const u = async () => {
       const d = await fetchData();
-      // setFeedbacks(d);
+      setFeedbacks(d);
     };
 
-    u();
-  }, []);
+    if (selectedSession) u();
+  }, [selectedSession]);
 
   const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [name]: value,
-    }));
+    const searchWord = e.target.value.toLowerCase();
+    setWordEntered(searchWord);
   };
-  const fetchFeedbacks = async () => {
-    const queryParams = new URLSearchParams(filters).toString();
 
-    if (!localStorage.getItem("token")) {
-      const response = await axios.get(`/api/filter-feedbacks?${queryParams}`);
-      const data = await response.data;
-      console.log(data);
-      setFeedbacks(data);
-    } else {
-      const response = await apiFetch(`/api/filter-feedbacks?${queryParams}`);
-      const data = await response.json();
-      console.log(data);
-      setFeedbacks(data);
+  const fetchFeedbacks = async () => {
+    if (columnName && columnName !== "Colonne") {
+      const filter = { [columnName]: wordEntered };
+      const queryParams = new URLSearchParams(filter).toString();
+
+      if (!localStorage.getItem("token")) {
+        const response = await axios.get(
+          `/api/filter-feedbacks?${queryParams}`
+        );
+        const data = await response.data;
+        if (data?.length > 0) {
+          setFilteredData(data);
+        }
+      } else {
+        const response = await apiFetch(`/api/filter-feedbacks?${queryParams}`);
+        const data = await response.json();
+        setFilteredData(data);
+      }
+    } else if (wordEntered && !columnName) {
+      Swal.fire({
+        icon: "warning",
+        title: "Veilliez séléctionner une colonne pour filtrer les feedbacks !",
+        showConfirmButton: false,
+        timer: 3000,
+      });
     }
   };
 
   useEffect(() => {
     fetchFeedbacks();
-  }, [filters]);
-
-  const handleFilter = (event) => {
-    const searchWord = event.target.value.toLowerCase();
-    setWordEntered(searchWord);
-    if (columnName && columnName !== "Colonne") {
-      const newFilter =
-        feedbacks?.length > 0 &&
-        feedbacks?.filter((feedback) =>
-          feedback[columnName].toLowerCase().includes(searchWord.toLowerCase())
-        );
-      setFilteredData(newFilter);
-    } else {
-      const newFilter =
-        feedbacks?.length > 0 &&
-        feedbacks?.filter((feedback) => {
-          const feedbackFields = Object.values(feedback)
-            .join(" ")
-            .toLowerCase();
-          return feedbackFields.includes(searchWord);
-        });
-      setFilteredData(newFilter);
-    }
-  };
+  }, [columnName, wordEntered]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -176,37 +159,51 @@ function ParticipantFeedback() {
         let responsesNotToken = [];
 
         const surveys = await axios.get(`/api/get-all-surveys`);
-        setSurveyTemplates(surveys.data);
 
         if (surveys.data.length > 0) {
+          let ids = [];
           for (let index = 0; index < surveys.data.length; index++) {
-            let ids = [];
             if (surveys.data[index].session_ids.length > 0) {
               ids = surveys.data[index].session_ids.map((id) => id);
             }
+          }
 
-            for (let index = 0; index < ids.length; index++) {
+          if (ids.includes(selectedSession)) {
+            // for (let index = 0; index < ids.length; index++) {
+            try {
               const response = await axios.post(
                 `http://localhost:8000/api/get-form-responses`,
                 {
-                  surveyId: surveys.data[index].surveyId,
-                  sessionId: parseInt(ids[index]),
+                  surveyId: surveys.data[0].surveyId,
+                  sessionId: selectedSession,
                 },
                 {
                   headers: { "Content-Type": "multipart/form-data" },
                 }
               );
               responsesNotToken.push(response.data);
-              setLoading(false);
-              return responsesNotToken;
+            } catch (error) {
+              console.error(`Error fetching responses : `, error);
             }
+            // }
+
+            setLoading(false);
+            return responsesNotToken;
+          } else {
+            Swal.fire({
+              icon: "warning",
+              title: "Cette session de formation n'a pas de feedbacks !",
+              showConfirmButton: false,
+              timer: 3000,
+            });
+            setLoading(false);
           }
         }
       } else {
         let responsesToken = [];
 
         const surveys = await apiFetch(`get-all-surveys`);
-        setSurveyTemplates(surveys);
+
         const headers = {
           "Content-Type": "multipart/form-data",
         };
@@ -217,27 +214,33 @@ function ParticipantFeedback() {
         }
 
         if (surveys.length > 0) {
+          let ids = [];
           for (let index = 0; index < surveys.length; index++) {
-            let ids = [];
             if (surveys[index].session_ids.length > 0) {
               ids = surveys[index].session_ids.map((id) => id);
             }
-
+          }
+          if (ids.includes(selectedSession)) {
             for (let index = 0; index < ids.length; index++) {
-              const response = await axios.post(
-                `http://localhost:8000/api/get-form-responses`,
-                {
-                  surveyId: surveys[index].surveyId,
-                  sessionId: parseInt(ids[index]),
-                },
-                {
-                  headers: headers,
-                }
-              );
-              responsesToken.push(response.data);
-              setLoading(false);
-              return responsesToken;
+              try {
+                const response = await axios.post(
+                  `http://localhost:8000/api/get-form-responses`,
+                  {
+                    surveyId: surveys[index].surveyId,
+                    sessionId: parseInt(ids[index]),
+                  },
+                  {
+                    headers: headers,
+                  }
+                );
+                responsesToken.push(response.data);
+              } catch (error) {
+                console.error(`Error fetching responses : `, error);
+              }
             }
+
+            setLoading(false);
+            return responsesToken;
           }
         }
       }
@@ -245,9 +248,6 @@ function ParticipantFeedback() {
       setLoading(false);
       console.log("Error fetching feedbacks :", error);
     }
-    // finally {
-    //   setLoading(false);
-    // }
   };
 
   const prevPage = () => {
@@ -584,26 +584,6 @@ function ParticipantFeedback() {
               </div>
               {loading && <Spinner />}
               <div className="d-flex justify-content-center mt-3 mb-5">
-                <div>
-                  <input
-                    type="text"
-                    name="sessionTitle"
-                    value={filters.sessionTitle}
-                    onChange={handleFilterChange}
-                    placeholder="Session Title"
-                  />
-                  {/* Repeat for other filters */}
-                  <button onClick={fetchFeedbacks}>Search</button>
-                  <div>
-                    {feedbacks?.length > 0 &&
-                      feedbacks.map((feedback) => (
-                        <div key={feedback.id}>
-                          {feedback.sessionTitle} -{" "}
-                          {feedback.firstNameParticipant}
-                        </div>
-                      ))}
-                  </div>
-                </div>
                 <Form style={{ width: "50%" }}>
                   <div className="inner-form">
                     <div className="input-select">
@@ -648,7 +628,7 @@ function ParticipantFeedback() {
                             size="lg"
                             name=""
                             value={wordEntered}
-                            onChange={handleFilter}
+                            onChange={handleFilterChange}
                             required
                           />
                         </InputGroup>
@@ -684,49 +664,95 @@ function ParticipantFeedback() {
                   Réponses <RiSurveyFill size={20} />
                 </Button>
               </div>
-              {/* <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  <thead>
-                    {feedbacks?.length > 0 &&
-                      feedbacksPage.map((f, i) => (
-                        <tr key={i}>
-                          {f.data[0].length > 0 &&
-                            f.data[0].map((q, ind) => <th key={ind}>{q}</th>)}
-                        </tr>
-                      ))}
-                  </thead>
-                  <tbody>
-                    {filteredData.length > 0 ? (
-                      filteredData.map((f, index) => {
-                        return (
-                          <tr key={index} className="text-center">
-                            <td>
-                              {f.data.length > 0 &&
-                                f.data.map((r, i) => <p key={i}>{r}</p>)}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : filteredData.length === 0 && feedbacks?.length === 0 ? (
-                      <></>
-                    ) : (
-                      feedbacks?.length > 0 &&
-                      feedbacksPage.map((f) =>
-                        f.data.map(
-                          (response, i) =>
-                            i !== 0 && (
-                              <tr key={i}>
-                                {Object.keys(response).map((key, j) => (
-                                  <td key={j}>{response[key]}</td>
-                                ))}
-                              </tr>
-                            )
-                        )
-                      )
-                    )}
-                  </tbody>
-                </table>
+              <div className="d-flex justify-content-center mt-3 mb-5">
+                <Form style={{ width: "50%" }}>
+                  <div className="inner-form">
+                    <div className="input-select">
+                      <Form.Group>
+                        <InputGroup>
+                          <Form.Select
+                            style={{ border: "none" }}
+                            value={selectedSession}
+                            onChange={(e) => setSelectedSession(e.target.value)}
+                            required
+                          >
+                            <option value="">
+                              Séléctionner une session pour voir ses feedbacks
+                            </option>
+                            {sessions?.length > 0 &&
+                              sessions.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.title} - {s.reference}
+                                </option>
+                              ))}
+                          </Form.Select>
+                        </InputGroup>
+                      </Form.Group>
+                    </div>
+                  </div>
+                </Form>
               </div>
+              {!filteredData && (
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover">
+                    <thead>
+                      {feedbacks?.length > 0 &&
+                        feedbacksPage?.length > 0 &&
+                        feedbacksPage.map((f, i) => (
+                          <tr key={i}>
+                            {f.data[0].length > 0 &&
+                              f.data[0].map((q, ind) => <th key={ind}>{q}</th>)}
+                          </tr>
+                        ))}
+                    </thead>
+                    <tbody>
+                      {feedbacks?.length > 0 &&
+                        feedbacksPage.map((f) =>
+                          f.data.map(
+                            (response, i) =>
+                              i !== 0 && (
+                                <tr key={i}>
+                                  {Object.keys(response).map((key, j) => (
+                                    <td key={j}>{response[key]}</td>
+                                  ))}
+                                </tr>
+                              )
+                          )
+                        )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {filteredData?.length > 0 && (
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>Participant ID</th>
+                        <th>Formation ID</th>
+                        <th>Score moyen de feedback du participant</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredData.map(
+                        (f, index) =>
+                          f.formations.length > 0 &&
+                          f.formations.map((formation, ind) => (
+                            <tr key={index} className="text-center">
+                              <td key={ind}>
+                                {formation.pivot.participant_id}
+                              </td>
+                              <td key={ind}>{formation.pivot.formation_id}</td>
+                              <td key={ind}>
+                                {formation.pivot.averageFeedback}
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <Pagination className="d-flex justify-content-center mt-5">
                 <Pagination.Prev
                   onClick={prevPage}
@@ -837,7 +863,7 @@ function ParticipantFeedback() {
                     </Button>
                   </div>
                 </div>
-              )} */}
+              )}
             </div>
           </div>
         </div>

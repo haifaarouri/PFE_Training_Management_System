@@ -31,9 +31,9 @@ return [
     |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 120),
+    'lifetime' => env('SESSION_LIFETIME', 43200), // Set to 43200 minutes (30 days)
 
-    'expire_on_close' => false,
+    'expire_on_close' => false, // Ensure session does not expire when the browser is closed
 
     /*
     |--------------------------------------------------------------------------
@@ -168,7 +168,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', false), // Set to true if using HTTPS
 
     /*
     |--------------------------------------------------------------------------

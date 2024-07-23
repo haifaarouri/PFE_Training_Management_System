@@ -523,6 +523,7 @@ const AllSessions = () => {
         status: session.status,
         sessionMode: session.sessionMode,
         style: session.salle_id ? {} : { backgroundColor: "red" },
+        allDay: false
       }));
       setSessions(fetchedEvents);
     } catch (error) {
@@ -787,7 +788,9 @@ const AllSessions = () => {
       console.error("Error fetching session by criteria:", error);
     }
   };
-
+  useEffect(() => {
+    console.log(sessions); // Log the sessions to see what data is being passed to the calendar
+  }, [sessions]);
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -813,7 +816,7 @@ const AllSessions = () => {
               />
               <DragAndDropCalendar
                 defaultDate={new Date()}
-                defaultView={Views.MONTH}
+                // defaultView={Views.MONTH}
                 events={sessions}
                 localizer={localizer}
                 step={15}

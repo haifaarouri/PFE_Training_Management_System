@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../store/slices/authenticatedUserSlice";
 import Swal from "sweetalert2";
 
-const EditProfileModal = ({ show, handleClose, handleMsg }) => {
+const EditProfileModal = ({ show, handleClose }) => {
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const [userToEdit, setUserToEdit] = useState({
@@ -105,13 +105,14 @@ const EditProfileModal = ({ show, handleClose, handleMsg }) => {
 
         if (res.data.message) {
           //stock user in redux
-          dispatch(setUser(userToEdit));
+          console.log(res.data.user);
+          dispatch(setUser(res.data.user));
 
           Swal.fire({
             icon: "success",
             title: res.data.message,
             showConfirmButton: false,
-            timer: 1500,
+            timer: 2000,
           });
 
           setUserToEdit({
