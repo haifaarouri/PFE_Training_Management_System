@@ -46,6 +46,14 @@ const CustomEvent = ({ event }) => {
   );
 };
 
+const CustomTimeGutterHeader = () => {
+  return (
+    <div className="rbc-label rbc-time-header-gutter">
+      <span style={{fontSize: "14px"}}>Sessions à plusieurs jours</span>
+    </div>
+  );
+};
+
 function formatDateToFrench(date) {
   const options = {
     weekday: "long", // "lundi"
@@ -522,8 +530,11 @@ const AllSessions = () => {
         location: session.location,
         status: session.status,
         sessionMode: session.sessionMode,
-        style: session.salle_id ? {} : { backgroundColor: "red" },
-        allDay: false
+        allDay:
+          new Date(session.startDate).getHours() === 0 &&
+          new Date(session.endDate).getHours() === 0 &&
+          new Date(session.startDate).getMinutes() === 0 &&
+          new Date(session.endDate).getMinutes() === 0,
       }));
       setSessions(fetchedEvents);
     } catch (error) {
@@ -817,6 +828,7 @@ const AllSessions = () => {
               <DragAndDropCalendar
                 defaultDate={new Date()}
                 // defaultView={Views.MONTH}
+                // showMultiDayTimes={true}
                 events={sessions}
                 localizer={localizer}
                 step={15}
@@ -841,7 +853,10 @@ const AllSessions = () => {
                     event.reference
                   );
                 }}
-                components={{ event: CustomEvent }}
+                components={{
+                  event: CustomEvent,
+                  timeGutterHeader: CustomTimeGutterHeader,
+                }}
               />
               <EventCreationModal
                 isOpen={modalOpen}

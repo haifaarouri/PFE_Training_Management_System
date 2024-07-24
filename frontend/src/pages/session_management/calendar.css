@@ -12,7 +12,7 @@
 }
   
 .rbc-allday-cell {
-  display: block !important; /* Change from 'none' to 'block' if it was set to 'none' */
+  display: block !important;
 }
 
 .rbc-time-header-cell .rbc-today {
@@ -26,7 +26,7 @@
 }
 
 .rbc-event-label {
-  display: none !important;
+  display: block !important;
 }
 
 .rbc-events-container {
@@ -42,14 +42,6 @@
   z-index: 2;
   padding: 0px !important;
   border: none !important;
-}
-
-.rbc-event-label {
-  display: none !important;
-}
-
-.rbc-events-container {
-  width: 100% !important;
 }
  
 .rbc-event {
@@ -104,4 +96,53 @@
 
 .event-modal .text-primary {
   color: #1097ff !important;
+}
+
+/* Ensure the table rows are displayed as table rows */
+.rbc-agenda-view .rbc-agenda-table tr {
+  display: table-row !important;
+}
+
+/* Ensure the table cells are displayed as table cells */
+.rbc-agenda-view .rbc-agenda-table td {
+  display: table-cell !important;
+  vertical-align: top;
+}
+
+/* Ensure the table headers are displayed as table headers */
+.rbc-agenda-view .rbc-agenda-table th {
+  display: table-cell !important;
+  vertical-align: middle;
+}
+
+/* Ensure the table has a consistent layout */
+.rbc-agenda-view .rbc-agenda-table {
+  width: 100%;
+  /* table-layout: fixed; */
+}
+
+/* Ensure the columns have consistent width and alignment */
+.rbc-agenda-view .rbc-agenda-table .rbc-agenda-date-cell,
+.rbc-agenda-view .rbc-agenda-table .rbc-agenda-time-cell,
+.rbc-agenda-view .rbc-agenda-table .rbc-agenda-event-cell {
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Additional styles to ensure proper alignment and spacing */
+.rbc-agenda-view .rbc-agenda-content {
+  overflow-y: auto;
+}
+
+.rbc-agenda-view .rbc-agenda-table tbody tr {
+  background-color: rgb(0, 120, 212);
+  border-radius: 0px;
+  opacity: 0.8;
+  color: white;
+  border: 0px;
+}
+
+.rbc-agenda-view .rbc-agenda-table tbody tr td {
+  padding: 8px;
+  box-sizing: border-box;
 }

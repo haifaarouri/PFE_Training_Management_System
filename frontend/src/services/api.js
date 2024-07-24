@@ -33,7 +33,6 @@ export async function apiFetch(endpoint, options = {}) {
   });
 
   if (!response.ok) {
-    console.log(response);
     handleError("Erreur !");
     Swal.fire({
       title: "Erreur !",

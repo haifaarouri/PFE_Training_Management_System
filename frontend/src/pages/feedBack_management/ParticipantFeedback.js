@@ -51,9 +51,9 @@ function ParticipantFeedback() {
     feedbacks?.length > 0 && feedbacks?.length / feedbacksPerPage
   );
   const numbers = [...Array(numberPages + 1).keys()].slice(1);
-  const [filteredData, setFilteredData] = useState(null);
-  const [wordEntered, setWordEntered] = useState(null);
-  const [columnName, setColumnName] = useState(null);
+  // const [filteredData, setFilteredData] = useState(null);
+  // const [wordEntered, setWordEntered] = useState(null);
+  // const [columnName, setColumnName] = useState(null);
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState(null);
   const [sentiments, setSentiments] = useState(null);
@@ -115,42 +115,42 @@ function ParticipantFeedback() {
     if (selectedSession) u();
   }, [selectedSession]);
 
-  const handleFilterChange = (e) => {
-    const searchWord = e.target.value.toLowerCase();
-    setWordEntered(searchWord);
-  };
+  // const handleFilterChange = (e) => {
+  //   const searchWord = e.target.value.toLowerCase();
+  //   setWordEntered(searchWord);
+  // };
 
-  const fetchFeedbacks = async () => {
-    if (columnName && columnName !== "Colonne") {
-      const filter = { [columnName]: wordEntered };
-      const queryParams = new URLSearchParams(filter).toString();
+  // const fetchFeedbacks = async () => {
+  //   if (columnName && columnName !== "Colonne") {
+  //     const filter = { [columnName]: wordEntered };
+  //     const queryParams = new URLSearchParams(filter).toString();
 
-      if (!localStorage.getItem("token")) {
-        const response = await axios.get(
-          `/api/filter-feedbacks?${queryParams}`
-        );
-        const data = await response.data;
-        if (data?.length > 0) {
-          setFilteredData(data);
-        }
-      } else {
-        const response = await apiFetch(`/api/filter-feedbacks?${queryParams}`);
-        const data = await response.json();
-        setFilteredData(data);
-      }
-    } else if (wordEntered && !columnName) {
-      Swal.fire({
-        icon: "warning",
-        title: "Veilliez séléctionner une colonne pour filtrer les feedbacks !",
-        showConfirmButton: false,
-        timer: 3000,
-      });
-    }
-  };
+  //     if (!localStorage.getItem("token")) {
+  //       const response = await axios.get(
+  //         `/api/filter-feedbacks?${queryParams}`
+  //       );
+  //       const data = await response.data;
+  //       if (data?.length > 0) {
+  //         setFilteredData(data);
+  //       }
+  //     } else {
+  //       const response = await apiFetch(`/api/filter-feedbacks?${queryParams}`);
+  //       const data = await response.json();
+  //       setFilteredData(data);
+  //     }
+  //   } else if (wordEntered && !columnName) {
+  //     Swal.fire({
+  //       icon: "warning",
+  //       title: "Veilliez séléctionner une colonne pour filtrer les feedbacks !",
+  //       showConfirmButton: false,
+  //       timer: 3000,
+  //     });
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchFeedbacks();
-  }, [columnName, wordEntered]);
+  // useEffect(() => {
+  //   fetchFeedbacks();
+  // }, [columnName, wordEntered]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -483,84 +483,95 @@ function ParticipantFeedback() {
       }
     });
 
-    //store avg in DB
-    if (!localStorage.getItem("token")) {
-      const res = await axios.post(
-        "/api/save-avg-feedback",
-        { averages },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
+    try {
+      //store avg in DB
+      if (!localStorage.getItem("token")) {
+        const res = await axios.post(
+          "/api/save-avg-feedback",
+          { averages },
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (res.status === 201) {
+          Swal.fire({
+            icon: "success",
+            title: "Feedback moyen enregistré avec succès !",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
+      } else {
+        const headers = {
+          "Content-Type": "multipart/form-data",
+        };
+
+        const token = localStorage.getItem("token");
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const response = await axios.post(
+          "/api/save-avg-feedback",
+          { averages },
+          {
+            headers: headers,
+          }
+        );
+
+        if (response.status === 201) {
+          Swal.fire({
+            icon: "success",
+            title: "Feedback moyen enregistré avec succès !",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
+      }
+
+      const overallAverage =
+        participantCount > 0 ? totalAverage / participantCount : 0;
+
+      const labels = Object.keys(participantAverages);
+      const datasets = Object.values(participantAverages);
+
+      const backgroundColors = datasets.map((score) =>
+        score > 3 ? "rgba(0, 208, 130, 0.8)" : "rgba(34, 62, 156, 0.8)"
+      );
+      const borderColors = datasets.map((score) =>
+        score > 3 ? "rgba(0, 208, 130, 1)" : "rgba(34, 62, 156, 1)"
+      );
+
+      setAveragePerParticipant({
+        labels: labels,
+        datasets: [
+          {
+            label: "Moyenne du score de l'analyse de sentiment",
+            data: datasets,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 2,
+            hoverOffset: 4,
           },
-        }
-      );
+        ],
+      });
 
-      if (res.status === 201) {
-        Swal.fire({
-          icon: "success",
-          title: "Feedback moyen enregistré avec succès !",
-          showConfirmButton: false,
-          timer: 2000,
-        });
-      }
-    } else {
-      const headers = {
-        "Content-Type": "multipart/form-data",
-      };
+      setTotalAverage(overallAverage);
 
-      const token = localStorage.getItem("token");
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const response = await axios.post(
-        "/api/save-avg-feedback",
-        { averages },
-        {
-          headers: headers,
-        }
-      );
-
-      if (response.status === 201) {
-        Swal.fire({
-          icon: "success",
-          title: "Feedback moyen enregistré avec succès !",
-          showConfirmButton: false,
-          timer: 2000,
-        });
-      }
+      return { overallAverage, participantAverages };
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops... !",
+        text: error.response.data.message,
+        showConfirmButton: false,
+        timer: 5000,
+      });
+      console.log(error);
     }
-
-    const overallAverage =
-      participantCount > 0 ? totalAverage / participantCount : 0;
-
-    const labels = Object.keys(participantAverages);
-    const datasets = Object.values(participantAverages);
-
-    const backgroundColors = datasets.map((score) =>
-      score > 3 ? "rgba(0, 208, 130, 0.8)" : "rgba(34, 62, 156, 0.8)"
-    );
-    const borderColors = datasets.map((score) =>
-      score > 3 ? "rgba(0, 208, 130, 1)" : "rgba(34, 62, 156, 1)"
-    );
-
-    setAveragePerParticipant({
-      labels: labels,
-      datasets: [
-        {
-          label: "Moyenne du score de l'analyse de sentiment",
-          data: datasets,
-          backgroundColor: backgroundColors,
-          borderColor: borderColors,
-          borderWidth: 2,
-          hoverOffset: 4,
-        },
-      ],
-    });
-
-    setTotalAverage(overallAverage);
-
-    return { overallAverage, participantAverages };
   };
 
   return (
@@ -583,7 +594,7 @@ function ParticipantFeedback() {
                 </Link>
               </div>
               {loading && <Spinner />}
-              <div className="d-flex justify-content-center mt-3 mb-5">
+              {/* <div className="d-flex justify-content-center mt-3 mb-5">
                 <Form style={{ width: "50%" }}>
                   <div className="inner-form">
                     <div className="input-select">
@@ -663,15 +674,14 @@ function ParticipantFeedback() {
                 <Button onClick={fetchData}>
                   Réponses <RiSurveyFill size={20} />
                 </Button>
-              </div>
+              </div> */}
               <div className="d-flex justify-content-center mt-3 mb-5">
-                <Form style={{ width: "50%" }}>
-                  <div className="inner-form">
-                    <div className="input-select">
+                <Form>
+                  <div>
+                    <div>
                       <Form.Group>
                         <InputGroup>
                           <Form.Select
-                            style={{ border: "none" }}
                             value={selectedSession}
                             onChange={(e) => setSelectedSession(e.target.value)}
                             required
@@ -692,38 +702,42 @@ function ParticipantFeedback() {
                   </div>
                 </Form>
               </div>
-              {!filteredData && (
-                <div className="table-responsive">
-                  <table className="table table-striped table-hover">
-                    <thead>
-                      {feedbacks?.length > 0 &&
-                        feedbacksPage?.length > 0 &&
-                        feedbacksPage.map((f, i) => (
-                          <tr key={i}>
-                            {f.data[0].length > 0 &&
-                              f.data[0].map((q, ind) => <th key={ind}>{q}</th>)}
-                          </tr>
-                        ))}
-                    </thead>
-                    <tbody>
-                      {feedbacks?.length > 0 &&
-                        feedbacksPage.map((f) =>
-                          f.data.map(
-                            (response, i) =>
-                              i !== 0 && (
-                                <tr key={i}>
-                                  {Object.keys(response).map((key, j) => (
-                                    <td key={j}>{response[key]}</td>
-                                  ))}
-                                </tr>
-                              )
-                          )
-                        )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {filteredData?.length > 0 && (
+              {/* {!filteredData && ( */}
+              <div className="table-responsive">
+                <table className="table table-striped table-hover">
+                  <thead>
+                    {feedbacks?.length > 0 &&
+                      feedbacksPage?.length > 0 &&
+                      feedbacksPage.map((f, i) => (
+                        <tr key={i}>
+                          {f.data[0].length > 0 &&
+                            f.data[0].map((q, ind) => (
+                              <th key={ind} style={{ color: "black" }}>
+                                {q}
+                              </th>
+                            ))}
+                        </tr>
+                      ))}
+                  </thead>
+                  <tbody>
+                    {feedbacks?.length > 0 &&
+                      feedbacksPage.map((f) =>
+                        f.data.map(
+                          (response, i) =>
+                            i !== 0 && (
+                              <tr key={i}>
+                                {Object.keys(response).map((key, j) => (
+                                  <td key={j}>{response[key]}</td>
+                                ))}
+                              </tr>
+                            )
+                        )
+                      )}
+                  </tbody>
+                </table>
+              </div>
+              {/* )} */}
+              {/* {filteredData?.length > 0 && (
                 <div className="table-responsive">
                   <table className="table table-striped table-hover">
                     <thead>
@@ -752,37 +766,39 @@ function ParticipantFeedback() {
                     </tbody>
                   </table>
                 </div>
-              )}
-              <Pagination className="d-flex justify-content-center mt-5">
-                <Pagination.Prev
-                  onClick={prevPage}
-                  disabled={currentPage === 1}
-                >
-                  <i
-                    className="mdi mdi-arrow-left-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Prev>
-                {numbers.map((n, i) => (
-                  <Pagination.Item
-                    className={`${currentPage === n ? "active" : ""}`}
-                    key={i}
-                    style={{ fontSize: "1.5em" }}
-                    onClick={() => changeCurrentPage(n)}
+              )} */}
+              {feedbacks?.length > 0 && feedbacksPage?.length > 0 && (
+                <Pagination className="d-flex justify-content-center mt-5">
+                  <Pagination.Prev
+                    onClick={prevPage}
+                    disabled={currentPage === 1}
                   >
-                    {n}
-                  </Pagination.Item>
-                ))}
-                <Pagination.Next
-                  onClick={nextPage}
-                  disabled={currentPage === numberPages}
-                >
-                  <i
-                    className="mdi mdi-arrow-right-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Next>
-              </Pagination>
+                    <i
+                      className="mdi mdi-arrow-left-bold-circle-outline"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </Pagination.Prev>
+                  {numbers.map((n, i) => (
+                    <Pagination.Item
+                      className={`${currentPage === n ? "active" : ""}`}
+                      key={i}
+                      style={{ fontSize: "1.5em" }}
+                      onClick={() => changeCurrentPage(n)}
+                    >
+                      {n}
+                    </Pagination.Item>
+                  ))}
+                  <Pagination.Next
+                    onClick={nextPage}
+                    disabled={currentPage === numberPages}
+                  >
+                    <i
+                      className="mdi mdi-arrow-right-bold-circle-outline"
+                      style={{ fontSize: "1.5em" }}
+                    />
+                  </Pagination.Next>
+                </Pagination>
+              )}
               <div className="my-5 d-flex justify-content-center">
                 {feedbacks?.length > 0 && (
                   <Button
@@ -860,6 +876,9 @@ function ParticipantFeedback() {
                     <Button className="mt-3 btn-block btn-inverse-success">
                       Afficher les recommendations des formations pour tous les
                       participants
+                    </Button>
+                    <Button className="mt-3 btn-block btn-inverse-success">
+                      Afficher le score moyen pour chaque formation
                     </Button>
                   </div>
                 </div>

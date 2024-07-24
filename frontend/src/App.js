@@ -6,6 +6,8 @@ import pusher from "./services/pusherConfig";
 import { setNotifications } from "./store/slices/notificationsSlice";
 import { fetchAllUnreadNotifs } from "./services/CommandeServices";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "./services/axios";
+import { setUser } from "./store/slices/authenticatedUserSlice";
 
 function App() {
   const persistRootData = localStorage.getItem("persist:root");
@@ -139,8 +141,32 @@ function App() {
     playNotificationSound();
   };
 
+  const csrf = () => axios.get("/sanctum/csrf-cookie");
+
+  const getAuthUser = async () => {
+    await csrf();
+
+    axios.get("/api/user").then((userResponse) => {
+      const user = userResponse.data;
+
+      //stock user in redux
+      dispatch(setUser(user));
+      dispatch(setNotifications(user.notifications));
+
+      if (user && user.email_verified_at) {
+        console.log(user);
+        if (user.role === "SuperAdministrateur") {
+          // navigate("/super-admin/users");
+        } else {
+          // navigate("/dashboard");
+        }
+      }
+    });
+  };
+
   useEffect(() => {
     const n = async () => {
+      await getAuthUser();
       const notif = await fetchAllUnreadNotifs();
       return notif;
     };

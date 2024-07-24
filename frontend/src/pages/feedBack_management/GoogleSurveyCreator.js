@@ -250,13 +250,13 @@ function GoogleSurveyCreator() {
                         <option value="text">Réponse courte</option>
                         <option value="paragraph">Paragraphe</option>
                         <option value="choice">Choix multiple</option>
-                        <option value="checkbox">Checkboxes</option>
-                        <option value="dropdown">Dropdown</option>
-                        {/* <option value="file">File Upload</option> */}
-                        <option value="scale">Echelle</option>
-                        <option value="grid">Grille</option>
-                        {/* <option value="date">Date</option>
-                        <option value="time">Time</option> */}
+                        <option value="checkbox">Cases à cocher</option>
+                        <option value="dropdown">Liste déroulante</option>
+                        {/* <option value="file">Importer un fichier</option> */}
+                        <option value="scale">Échelle linéaire</option>
+                        <option value="grid">Grille à choix multiples</option>
+                        <option value="date">Date</option>
+                        <option value="time">Heure</option>
                       </Form.Select>
                       <Form.Control
                         type="text"
@@ -266,11 +266,13 @@ function GoogleSurveyCreator() {
                           updateQuestion(index, "title", e.target.value)
                         }
                       />
-                      {question.type === "choice" && (
+                      {["choice", "checkbox", "dropdown"].includes(
+                        question.type
+                      ) && (
                         <Form.Control
                           type="text"
                           placeholder="Options (séparés par des virgules)"
-                          value={question.options.join(",")}
+                          value={question?.options?.join(",")}
                           onChange={(e) =>
                             updateQuestion(
                               index,
@@ -285,7 +287,7 @@ function GoogleSurveyCreator() {
                           <Form.Control
                             type="text"
                             placeholder="Lignes (séparés par des virgules)"
-                            value={question.rows.join(",")}
+                            value={question?.rows?.join(",")}
                             onChange={(e) =>
                               updateQuestion(
                                 index,
@@ -297,7 +299,7 @@ function GoogleSurveyCreator() {
                           <Form.Control
                             type="text"
                             placeholder="Colonnes (séparés par des virgules)"
-                            value={question.columns.join(",")}
+                            value={question?.columns?.join(",")}
                             onChange={(e) =>
                               updateQuestion(
                                 index,
@@ -308,13 +310,26 @@ function GoogleSurveyCreator() {
                           />
                         </>
                       )}
-                      {/* <Form.Control
-                        type="text"
-                        placeholder={`Saisir le question numéro : ${index + 1}`}
-                        value={question}
-                        onChange={(e) => handleQuestionChange(index, e)}
-                        required
-                      /> */}
+                      {question.type === "scale" && (
+                        <>
+                          <Form.Control
+                            type="number"
+                            placeholder="Minimum"
+                            value={question.min || 1}
+                            onChange={(e) =>
+                              updateQuestion(index, "min", e.target.value)
+                            }
+                          />
+                          <Form.Control
+                            type="number"
+                            placeholder="Maximum"
+                            value={question.max || 5}
+                            onChange={(e) =>
+                              updateQuestion(index, "max", e.target.value)
+                            }
+                          />
+                        </>
+                      )}
                       <Form.Control.Feedback>
                         Cela semble bon !
                       </Form.Control.Feedback>

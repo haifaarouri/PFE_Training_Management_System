@@ -37,20 +37,23 @@ class ParticipantFeedbackController extends Controller
             }
 
             $formationId = $this->getFormationIdForParticipant($participantId, $sessionId);
-
-            $formation = Formation::find($formationId);
-            if (!$formation) {
-                return response()->json(['message' => 'Formation avec l\'Id : ' . $formationId . ' non trouvé !'], 404);
+            if (!$formationId) {
+                return response()->json(['message' => 'Formation ID non trouvé pour le participant ID : ' . $participantId . ' et session ID : ' . $sessionId . ' !'], 404);
             }
 
             if ($formationId) {
+                $formation = Formation::find($formationId);
+                if (!$formation) {
+                    return response()->json(['message' => 'Formation avec l\'Id : ' . $formationId . ' non trouvé !'], 404);
+                }
+
                 $participant->formations()->syncWithoutDetaching([
                     $formationId => ['averageFeedback' => $average]
                 ]);
             }
         }
 
-        return response()->json(['message' => 'Scores moyen de chaque participant enregistrés avec succès !']);
+        return response()->json(['message' => 'Scores moyen de chaque participant enregistrés avec succès !', 201]);
     }
 
     public function getFormationIdForParticipant($participantId, $sessionId)
