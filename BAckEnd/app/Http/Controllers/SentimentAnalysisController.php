@@ -122,67 +122,29 @@ class SentimentAnalysisController extends Controller
             return response()->json(['message' => 'No courses found for this participant'], 404);
         }
 
-        // Prepare the data to send to the Flask API
-        $course_name = $lastCourse->entitled;
-        $n_recommendations = 5;
+        try {
+            $response = $this->client->request('POST', 'http://localhost:5000/recommend', [
+                'json' => [
+                    'course_name' => $lastCourse->entitled,
+                    'n_recommendations' => 5
+                ]
+            ]);
 
-        // Send the data to the Flask API
-        $response = $this->client->request('POST', 'http://localhost:5000/recommend', [
-            'json' => [
-                'course_name' => $course_name,
-                'n_recommendations' => $n_recommendations
-            ]
-        ]);
-
-        if ($response->getStatusCode() != 200) {
-            return response()->json(['error' => 'Failed to get recommendations from the Flask API'], 500);
-        }
-
-        // Decode the response body to get recommendations
-        $recommendations = json_decode($response->getBody(), true);
-
-        // Check if there is an error key in the response
-        if (isset($recommendations['error'])) {
-            return response()->json(['error' => $recommendations['error']], 404);
-        }
-
-        // Fetch all courses from the database
-        $allCourses = Formation::all();
-
-        // Process recommendations and perform fuzzy matching to compare the recommendations with the courses in the database
-        $formattedRecommendations = [];
-        foreach ($recommendations as $rec) {
-            $highestPercentage = 0;
-            $bestMatch = null;
-
-            foreach ($allCourses as $course) {
-                similar_text($rec['course'], $course->entitled, $percent);
-                if ($percent > $highestPercentage) {
-                    $highestPercentage = $percent;
-                    $bestMatch = $course;
+            if ($response->getStatusCode() == 200) {
+                $recommendations = json_decode($response->getBody(), true);
+                if (isset($recommendations['error'])) {
+                    return response()->json(['error' => $recommendations['error']], 404);
                 }
-            }
 
-            if ($highestPercentage > 50) { // Threshold for considering a match
-                $formattedRecommendations[] = [
-                    'type' => 'internal',
-                    'course_name' => $bestMatch->entitled,
-                    'similarity' => $highestPercentage,
-                    'message' => 'Similar course available in our database.'
-                ];
+                return response()->json([
+                    'recommendations' => $recommendations,
+                    'message' => 'Recommendations successfully retrieved.'
+                ]);
             } else {
-                $formattedRecommendations[] = [
-                    'type' => 'external',
-                    'course_name' => $rec['course'],
-                    'similarity' => $rec['distance'],
-                    'message' => 'Consider this course as a future addition.'
-                ];
+                return response()->json(['error' => 'Failed to get recommendations from the Flask API'], $response->getStatusCode());
             }
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            return response()->json(['error' => 'API request failed: ' . $e->getMessage()], 500);
         }
-
-        return response()->json([
-            'recommendations' => $formattedRecommendations,
-            'message' => 'Recommendations include both available formations and suggested external courses.'
-        ]);
     }
 }

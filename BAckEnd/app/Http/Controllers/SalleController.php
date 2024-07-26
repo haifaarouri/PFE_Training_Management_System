@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JourSession;
 use App\Rules\DispositionRule;
 use App\Rules\RoomStateRule;
 // use DateTimeZone;
@@ -42,7 +43,7 @@ class SalleController extends Controller
                 'capacity' => 'required|integer',
                 // 'disponibility' => 'required',
                 'disposition' => ['required', new DispositionRule()],
-                'state'=>['required', new RoomStateRule()],
+                'state' => ['required', new RoomStateRule()],
                 'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
 
@@ -104,7 +105,7 @@ class SalleController extends Controller
                 'name' => 'required|string|max:255',
                 'capacity' => 'required|integer',
                 // 'disponibility' => 'required',
-                'state'=> ['required', new RoomStateRule()],
+                'state' => ['required', new RoomStateRule()],
                 'disposition' => ['required', new DispositionRule()],
             ]);
 
@@ -181,5 +182,20 @@ class SalleController extends Controller
             // User does not have access, return a 403 response
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
+    }
+
+    public function getJourSessionBySalle($salleId)
+    {
+        if (!$this->list_roles->contains(auth()->user()->role)) {
+            return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
+        }
+
+        $jourSessions = JourSession::where('salle_id', $salleId)->get();
+
+        if ($jourSessions->isEmpty()) {
+            return response()->json(['message' => 'Pas de sessions trouvées pour cette salle !'], 404);
+        }
+
+        return response()->json($jourSessions);
     }
 }

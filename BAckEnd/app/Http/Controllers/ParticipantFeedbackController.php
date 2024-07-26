@@ -6,6 +6,7 @@ use App\Models\Formation;
 use App\Models\Participant;
 use App\Models\Session;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ParticipantFeedbackController extends Controller
 {
@@ -109,5 +110,28 @@ class ParticipantFeedbackController extends Controller
         $participants = $query->get();
 
         return response()->json($participants);
+    }
+
+    public function getFormationAverages()
+    {
+        $formationAverages = Formation::withAvg('participants as average_feedback', 'participant_feedback.averageFeedback')
+            ->get()
+            ->map(function ($formation) {
+                return [
+                    'id' => $formation->id,
+                    'reference' => $formation->reference,
+                    'entitled' => $formation->entitled,
+                    'averageFeedback' => round($formation->average_feedback, 2)
+                ];
+            });
+
+        return response()->json($formationAverages);
+    }
+
+    public function getParticipantIds()
+    {
+        $participantIds = DB::table('participant_feedback')->distinct()->pluck('participant_id');
+
+        return response()->json($participantIds);
     }
 }

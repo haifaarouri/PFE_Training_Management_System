@@ -49,7 +49,7 @@ const CustomEvent = ({ event }) => {
 const CustomTimeGutterHeader = () => {
   return (
     <div className="rbc-label rbc-time-header-gutter">
-      <span style={{fontSize: "14px"}}>Sessions à plusieurs jours</span>
+      <span style={{ fontSize: "14px" }}>Sessions à plusieurs jours</span>
     </div>
   );
 };
@@ -176,6 +176,7 @@ const EventModal = ({ show, onHide, event }) => {
             text: "Session est supprimée !",
             icon: "success",
           });
+          onHide()
         } catch (error) {
           if (error && error.response.status === 422) {
             Swal.fire({
@@ -259,6 +260,7 @@ const EventModal = ({ show, onHide, event }) => {
                       <Button
                         className="btn-sm btn-inverse-info mx-1"
                         onClick={() => handleShowEditModal(sessionAfterEdit)}
+                        disabled={new Date(sessionAfterEdit.endDate) < new Date()}
                       >
                         Modifier <BiSolidCalendarEdit size={25} />
                       </Button>
@@ -322,6 +324,7 @@ const EventModal = ({ show, onHide, event }) => {
                         <Button
                           className="btn-sm btn-inverse-info mx-1"
                           onClick={() => handleShowEditModal(event)}
+                          disabled={new Date(event.endDate) < new Date()}
                         >
                           Modifier <BiSolidCalendarEdit size={25} />
                         </Button>
@@ -374,7 +377,7 @@ const EventModal = ({ show, onHide, event }) => {
               </>
             )
           )}
-          {daySessions.length > 0 && (
+          {daySessions?.length > 0 && (
             <Card className="mb-3">
               <Card.Body>
                 <b>Jours :</b>
@@ -556,7 +559,7 @@ const AllSessions = () => {
     };
 
     u();
-  }, [showModal, modalShow]);
+  }, [showModal, modalShow, modalOpen]);
 
   // const onChangeEventTime = useCallback((start, end, eventId) => {
   //   setSessions((prevEvents) => {
@@ -603,7 +606,7 @@ const AllSessions = () => {
         cancelButtonColor: "#d33",
         confirmButtonText: "Oui, enregistrer !",
       });
-      console.log(fullEvent);
+
       if (result.isConfirmed) {
         try {
           const updatedEvent = {
@@ -611,7 +614,7 @@ const AllSessions = () => {
             start: new Date(start),
             end: new Date(end),
           };
-          console.log(updatedEvent);
+
           const formattedStartDate = toUTCDate(updatedEvent.start)
             .toISOString()
             .slice(0, 16);
@@ -799,9 +802,7 @@ const AllSessions = () => {
       console.error("Error fetching session by criteria:", error);
     }
   };
-  useEffect(() => {
-    console.log(sessions); // Log the sessions to see what data is being passed to the calendar
-  }, [sessions]);
+
   return (
     <div className="content-wrapper">
       <div className="row">

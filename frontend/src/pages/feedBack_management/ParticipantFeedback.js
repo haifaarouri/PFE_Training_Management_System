@@ -5,7 +5,6 @@ import { apiFetch } from "../../services/api";
 import { Link } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import { IoStatsChartSharp } from "react-icons/io5";
-import { RiSurveyFill } from "react-icons/ri";
 import { Bar, Doughnut, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -62,6 +61,21 @@ function ParticipantFeedback() {
   const [totalAverage, setTotalAverage] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [formationsAvgChart, setFormationsAvgChart] = useState(null);
+  const [participantIds, setParticipantIds] = useState([]);
+
+  const optionsFormationsAvg = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Score moyen par formation",
+      },
+    },
+  };
 
   const options = {
     scales: {
@@ -574,6 +588,75 @@ function ParticipantFeedback() {
     }
   };
 
+  const createFormationsAvgChart = (data) => {
+    const labels = data.map((item) => `${item.reference} - ${item.entitled}`);
+    const averages = data.map((item) => item.averageFeedback);
+
+    setFormationsAvgChart({
+      labels,
+      datasets: [
+        {
+          label: "Score moyen",
+          data: averages,
+          backgroundColor: averages.map((score) =>
+            score > 3 ? "rgba(0, 208, 130, 0.6)" : "rgba(34, 62, 156, 0.6)"
+          ),
+          borderColor: averages.map((score) =>
+            score > 3 ? "rgba(0, 208, 130, 1)" : "rgba(34, 62, 156, 1)"
+          ),
+          borderWidth: 1,
+        },
+      ],
+    });
+  };
+
+  const handleAvgFormations = async () => {
+    try {
+      if (!localStorage.getItem("token")) {
+        const response = await axios.get("/api/formation-averages");
+        createFormationsAvgChart(response.data);
+      } else {
+        const response = await apiFetch("formation-averages");
+        createFormationsAvgChart(response);
+      }
+    } catch (error) {
+      console.log("Error fetching formation-averages :", error);
+    }
+  };
+
+  const fetchParticipantsIds = async () => {
+    try {
+      if (!localStorage.getItem("token")) {
+        const response = await axios.get(`/api/participant-ids`);
+        setParticipantIds(response.data);
+      } else {
+        const response = await apiFetch(`participant-ids`);
+        setParticipantIds(response);
+      }
+    } catch (error) {
+      console.log("Error fetching formation-averages :", error);
+    }
+  };
+
+  const handleRecomendations = async () => {
+    await fetchParticipantsIds();
+    if (participantIds.length > 0) {
+      participantIds.forEach(async (id) => {
+        try {
+          if (!localStorage.getItem("token")) {
+            const response = await axios.get(`/api/get-recommendations/${id}`);
+            console.log(response.data);
+          } else {
+            const response = await apiFetch(`get-recommendations/${id}`);
+            console.log(response);
+          }
+        } catch (error) {
+          console.log("Error fetching recommendations :", error);
+        }
+      });
+    }
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -867,22 +950,43 @@ function ParticipantFeedback() {
                       </div>
                     )}
                   {totalAverage && (
-                    <p>
-                      La moyenne totale des scores de tous les participants est{" "}
-                      {totalAverage}
-                    </p>
+                    <div className="d-flex justify-content-center my-3">
+                      <p>
+                        La moyenne totale des scores de tous les participants
+                        pour cette formation est {totalAverage}
+                      </p>
+                    </div>
                   )}
                   <div className="d-flex justify-content-center">
-                    <Button className="mt-3 btn-block btn-inverse-success">
-                      Afficher les recommendations des formations pour tous les
-                      participants
-                    </Button>
-                    <Button className="mt-3 btn-block btn-inverse-success">
+                    <Button
+                      className="mt-3 btn-block btn-inverse-success"
+                      onClick={handleAvgFormations}
+                    >
                       Afficher le score moyen pour chaque formation
                     </Button>
                   </div>
+                  {formationsAvgChart && (
+                    <div
+                      className="col-4 chart-container m-3"
+                      style={{ width: "100%", height: "400px" }}
+                    >
+                      <Bar
+                        data={formationsAvgChart}
+                        options={optionsFormationsAvg}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
+              <div className="my-5 d-flex justify-content-center">
+                <Button
+                  className="mt-3 btn-block btn-inverse-success"
+                  onClick={handleRecomendations}
+                >
+                  Afficher les recommendations des formations pour tous les
+                  participants
+                </Button>
+              </div>
             </div>
           </div>
         </div>

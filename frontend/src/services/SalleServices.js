@@ -74,3 +74,20 @@ export const deleteSalle = async (id) => {
     console.log("Error deleting salle with this id :", error);
   }
 };
+
+export const getDaysSessionBySalleId = async (id) => {
+  try {
+    if (!localStorage.getItem("token")) {
+      const response = await axios.get(`/api/jours-session-salle/${id}`);
+      return response.data;
+    } else {
+      const response = await apiFetch(`jours-session-salle/${id}`);
+      return response;
+    }
+  } catch (error) {
+    console.log(
+      "Error fetching jours sessions for salle with this id :",
+      error
+    );
+  }
+};

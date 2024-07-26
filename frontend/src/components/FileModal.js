@@ -85,7 +85,7 @@ const FileModal = ({
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="row">
-        {!urlFile || urlFile === undefined ? (
+        {(!urlFile || urlFile === undefined) && selectedFile ? (
           <iframe
             src={`http://localhost:8000/${
               fileContent === "Template"
@@ -94,9 +94,9 @@ const FileModal = ({
                 ? "CoursesMaterials"
                 : fileContent === "documentGenerated"
                 ? "DocumentsGenerated"
-                : "CV"
+                : fileContent === "CV"
                 ? "TrainersCV"
-                : "MaterielDocs"
+                : fileContent === "MaterielDocs" && "MaterielDocs"
             }/${selectedFile}`}
             width="100%"
             height="600px"

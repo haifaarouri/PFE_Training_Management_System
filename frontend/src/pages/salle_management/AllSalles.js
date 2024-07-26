@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-// import moment from "moment";
 import { Card, Form, InputGroup, Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
-import { deleteSalle, fetchAllSalles } from "../../services/SalleServices";
+import {
+  deleteSalle,
+  fetchAllSalles,
+  getDaysSessionBySalleId,
+} from "../../services/SalleServices";
 import SalleModal from "../../components/SalleModal";
-// import { DateRange } from "react-date-range";
-import "react-date-range/dist/styles.css";
-import "react-date-range/dist/theme/default.css";
 import Carousel from "react-bootstrap/Carousel";
 import Swal from "sweetalert2";
-// import DisponibilityModal from "../../components/DisponibilityModal";
+import { BiCalendarCheck } from "react-icons/bi";
+import RoomsCalendarModal from "../../components/RoomsCalendarModal";
 require("moment/locale/fr");
 
 function AllSalles() {
   const [salles, setSalles] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  // const [showDispoModal, setShowDispoModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const sallesPerPage = 2;
   const lastIndex = currentPage * sallesPerPage;
@@ -33,8 +33,40 @@ function AllSalles() {
   const [columnName, setColumnName] = useState(null);
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
-  // const [modalDates, setModalDates] = useState(null);
-  // const [otherFilters, setOtherFilters] = useState(false);
+  const [daySession, setDaySession] = useState([]);
+  const [showRoomsCalendar, setShowRoomsCalendar] = useState(false);
+
+  const handleShowRoomsCalendar = () => {
+    setShowRoomsCalendar(true);
+  };
+
+  const handleCloseRoomsCalendar = () => {
+    setShowRoomsCalendar(false);
+  };
+
+  useEffect(() => {
+    salles.forEach((s) => {
+      getDaysSessionBySalleId(s.id)
+        .then((data) => {
+          if (data.length > 0) {
+            setDaySession((prev) => {
+              // Create a new array combining previous state and new data
+              const updatedSessions = [...prev];
+              // Check if the current data is already included in the state
+              data.forEach((newSession) => {
+                if (!prev.some((session) => session.id === newSession.id)) {
+                  updatedSessions.push(newSession);
+                }
+              });
+              return updatedSessions;
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching session data:", error);
+        });
+    });
+  }, [salles]);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -70,8 +102,6 @@ function AllSalles() {
 
   const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
-
-  // const handleCloseDispoModal = () => setShowDispoModal(false);
 
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -174,7 +204,7 @@ function AllSalles() {
     setShowCarousel(true);
     setShowList(false);
   };
-
+  console.log(daySession);
   // const handleCallback = (childData) => {
   //   setModalDates(childData);
   //   // Parse childData dates to moment for easier comparison
@@ -231,22 +261,34 @@ function AllSalles() {
                   Ajouter une Salle
                 </Button>
               </div>
-              <div className="d-flex justify-content-end px-3 py-3">
-                <div className="btn-group">
-                  <Button
-                    className="btn btn-lg btn-inverse-success btn-icon"
-                    onClick={handleListView}
-                  >
-                    <i className="icon-lg mdi mdi-view-list"></i>
-                  </Button>
-                  <Button
-                    className="btn btn-lg btn-inverse-success btn-icon"
-                    onClick={handleCarouselView}
-                  >
-                    <i className="icon-lg mdi mdi-view-carousel"></i>
-                  </Button>
+              <div className="d-flex justify-content-between">
+                <Button
+                  className="btn-md btn-inverse-primary my-3 mx-2"
+                  onClick={handleShowRoomsCalendar}
+                >
+                  Calendrier des Salles <BiCalendarCheck size={25} />
+                </Button>
+                <div className="d-flex justify-content-end px-3 py-3">
+                  <div className="btn-group">
+                    <Button
+                      className="btn btn-lg btn-inverse-success btn-icon"
+                      onClick={handleListView}
+                    >
+                      <i className="icon-lg mdi mdi-view-list"></i>
+                    </Button>
+                    <Button
+                      className="btn btn-lg btn-inverse-success btn-icon"
+                      onClick={handleCarouselView}
+                    >
+                      <i className="icon-lg mdi mdi-view-carousel"></i>
+                    </Button>
+                  </div>
                 </div>
               </div>
+              <RoomsCalendarModal
+                show={showRoomsCalendar}
+                onHide={handleCloseRoomsCalendar}
+              />
               <SalleModal show={showModal} handleClose={handleCloseAddModal} />
               {showList && (
                 <>
@@ -290,16 +332,16 @@ function AllSalles() {
                           <Form.Group>
                             <InputGroup>
                               {/* {!showDispoModal && ( */}
-                                <Form.Control
-                                  id="search"
-                                  type="text"
-                                  placeholder="Recherchez des salles ..."
-                                  size="lg"
-                                  name=""
-                                  value={wordEntered}
-                                  onChange={handleFilter}
-                                  required
-                                />
+                              <Form.Control
+                                id="search"
+                                type="text"
+                                placeholder="Recherchez des salles ..."
+                                size="lg"
+                                name=""
+                                value={wordEntered}
+                                onChange={handleFilter}
+                                required
+                              />
                               {/* )} */}
                             </InputGroup>
                           </Form.Group>
@@ -373,25 +415,18 @@ function AllSalles() {
                                 </td>
                                 <td>{u.capacity}</td>
                                 <td>
-                                  {u.disponibility}
-                                  {/* {Array.isArray(u.disponibility) &&
-                                    u.disponibility.map((d, i) => {
-                                      const startDate = moment(d.startDate.date)
-                                        .locale("fr")
-                                        .format("LL");
-                                      const endDate = moment(d.endDate.date)
-                                        .locale("fr")
-                                        .format("LL");
-                                      return (
-                                        <div
-                                          pill
-                                          className="badge badge-outline-success badge-pill mb-2"
-                                          key={i}
-                                        >
-                                          <p>{`${startDate} - ${endDate}`}</p>
-                                        </div>
-                                      );
-                                    })} */}
+                                  {daySession.length > 0 &&
+                                    daySession.map((d) => {
+                                      if (u.id === d.salle_id) {
+                                        return (
+                                          <div key={d.id}>
+                                            <h4>{`Jour réservé : ${d.day}`}</h4>
+                                            <p>{`Heure de début : ${d.startTime}`}</p>
+                                            <p>{`Heure de fin : ${d.endTime}`}</p>
+                                          </div>
+                                        );
+                                      }
+                                    })}
                                 </td>
                                 <td>{u.state}</td>
                                 <td>{u.disposition}</td>
@@ -441,25 +476,18 @@ function AllSalles() {
                                 </td>
                                 <td>{u.capacity}</td>
                                 <td>
-                                  {u.disponibility}
-                                  {/* {Array.isArray(u.disponibility) &&
-                                    u.disponibility.map((d, i) => {
-                                      const startDate = moment(d.startDate.date)
-                                        .locale("fr")
-                                        .format("LL");
-                                      const endDate = moment(d.endDate.date)
-                                        .locale("fr")
-                                        .format("LL");
-                                      return (
-                                        <div
-                                          pill
-                                          className="badge badge-outline-success badge-pill mb-2"
-                                          key={i}
-                                        >
-                                          <p>{`${startDate} - ${endDate}`}</p>
-                                        </div>
-                                      );
-                                    })} */}
+                                  {daySession.length > 0 &&
+                                    daySession.map((d) => {
+                                      if (u.id === d.salle_id) {
+                                        return (
+                                          <div key={d.id}>
+                                            <h4>{`Jour réservé : ${d.day}`}</h4>
+                                            <p>{`Heure de début : ${d.startTime}`}</p>
+                                            <p>{`Heure de fin : ${d.endTime}`}</p>
+                                          </div>
+                                        );
+                                      }
+                                    })}
                                 </td>
                                 <td>{u.state}</td>
                                 <td>{u.disposition}</td>
@@ -529,17 +557,6 @@ function AllSalles() {
                 >
                   {salles.length > 0 &&
                     salles.map((s, i) => {
-                      // let dispo = s.disponibility;
-
-                      // const object = {};
-                      // dispo.forEach((obj, i) => {
-                      //   const key = `selection${i + 1}`;
-                      //   object[key] = {
-                      //     startDate: new Date(obj.startDate.date),
-                      //     endDate: new Date(obj.endDate.date),
-                      //     key: key,
-                      //   };
-                      // });
                       return (
                         <Carousel.Item key={i}>
                           <div
@@ -565,11 +582,24 @@ function AllSalles() {
                                 <Card.Title>
                                   <h2>{s.name}</h2>
                                 </Card.Title>
-                                <Card.Text className="d-flex justify-content-evenly">
+                                <div className="d-flex justify-content-evenly">
                                   <div className="d-flex flex-column justify-content-center m-5">
                                     <h5>Capacité {s.capacity}</h5>
                                     <h5>Disposition {s.disposition}</h5>
                                     <h5>Etat {s.state}</h5>
+                                    <h5>Disponibilité</h5>
+                                    {daySession.length > 0 &&
+                                      daySession.map((d) => {
+                                        if (s.id === d.salle_id) {
+                                          return (
+                                            <div key={d.id}>
+                                              <h4>{`Jour réservé : ${d.day}`}</h4>
+                                              <p>{`Heure de début : ${d.startTime}`}</p>
+                                              <p>{`Heure de fin : ${d.endTime}`}</p>
+                                            </div>
+                                          );
+                                        }
+                                      })}
                                     <h5>Image</h5>
                                     <img
                                       src={`http://localhost:8000/sallePictures/${s.image}`}
@@ -581,29 +611,7 @@ function AllSalles() {
                                       }}
                                     />
                                   </div>
-                                  <div className="d-flex flex-column justify-content-center m-5">
-                                    <h5>Disponibilité</h5>
-                                    {/* <div style={{ position: "relative" }}>
-                                      <DateRange
-                                        ranges={Object.values(object)}
-                                        disabledDay={() => true}
-                                        editableDateInputs={true}
-                                        moveRangeOnFirstSelection={false}
-                                      />
-                                      <div
-                                        style={{
-                                          pointerEvents: "none",
-                                          opacity: 0.5,
-                                          position: "absolute",
-                                          top: 0,
-                                          right: 0,
-                                          bottom: 0,
-                                          left: 0,
-                                        }}
-                                      ></div>
-                                    </div> */}
-                                  </div>
-                                </Card.Text>
+                                </div>
                               </Card.Body>
                             </Card>
                           </div>

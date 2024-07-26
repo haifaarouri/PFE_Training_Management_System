@@ -43,6 +43,7 @@ function AllMateriels() {
   const [showList, setShowList] = useState(true);
   const [showCarousel, setShowCarousel] = useState(false);
   const [showFileModal, setShowFileModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -177,8 +178,15 @@ function AllMateriels() {
     setShowList(false);
   };
 
-  const handleShowFileModal = () => setShowFileModal(true);
-  const handleCloseFileModal = () => setShowFileModal(false);
+  const handleShowFileModal = (f) => {
+    setShowFileModal(true);
+    setSelectedFile(f);
+  };
+
+  const handleCloseFileModal = () => {
+    setShowFileModal(false);
+    setSelectedFile(null);
+  };
 
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -387,7 +395,11 @@ function AllMateriels() {
                                 <td style={{ width: "10%" }}>
                                   {u.technicalSpecifications && (
                                     <Button
-                                      onClick={handleShowFileModal}
+                                      onClick={() =>
+                                        handleShowFileModal(
+                                          u.technicalSpecifications
+                                        )
+                                      }
                                       className="btn btn-inverse-primary"
                                     >
                                       <span>Ouvrir</span>
@@ -425,11 +437,6 @@ function AllMateriels() {
                                     </Button>
                                   </div>
                                 </td>
-                                <FileModal
-                                  show={showFileModal}
-                                  handleClose={handleCloseFileModal}
-                                  selectedFile={u.technicalSpecifications}
-                                />
                               </tr>
                             );
                           })
@@ -482,7 +489,11 @@ function AllMateriels() {
                                 <td style={{ width: "10%" }}>
                                   {u.technicalSpecifications && (
                                     <Button
-                                      onClick={handleShowFileModal}
+                                      onClick={() =>
+                                        handleShowFileModal(
+                                          u.technicalSpecifications
+                                        )
+                                      }
                                       className="btn btn-inverse-primary"
                                     >
                                       <span>Ouvrir</span>
@@ -523,7 +534,8 @@ function AllMateriels() {
                                 <FileModal
                                   show={showFileModal}
                                   handleClose={handleCloseFileModal}
-                                  selectedFile={u.technicalSpecifications}
+                                  selectedFile={selectedFile}
+                                  fileContent="MaterielDocs"
                                 />
                               </tr>
                             );

@@ -52,6 +52,9 @@ const EventCreationModal = ({
   };
 
   useEffect(() => {
+    setStartDate(selectedStartDate);
+    setEndDate(selectedEndDate);
+
     const u = async () => {
       const d = await fetchData();
       setFormations(d);
@@ -116,8 +119,15 @@ const EventCreationModal = ({
     }
 
     // Validate each jour day is within the session start and end dates
-    const sessionStart = new Date(startDate ? startDate : selectedStartDate).setHours(0, 0, 0, 0);
-    const sessionEnd = new Date(endDate ? endDate : selectedEndDate).setHours(23, 59, 59, 999);
+    const sessionStart = new Date(
+      startDate ? startDate : selectedStartDate
+    ).setHours(0, 0, 0, 0);
+    const sessionEnd = new Date(endDate ? endDate : selectedEndDate).setHours(
+      23,
+      59,
+      59,
+      999
+    );
     for (let jour of jours) {
       const jourDate = new Date(jour.day).setHours(0, 0, 0, 0);
       if (jourDate < sessionStart || jourDate > sessionEnd) {
@@ -144,10 +154,14 @@ const EventCreationModal = ({
           end: slotInfo.end,
         });
 
-      const formattedStartDate = toUTCDate(startDate ? startDate : selectedStartDate)
+      const formattedStartDate = toUTCDate(
+        startDate ? startDate : selectedStartDate
+      )
         .toISOString()
         .slice(0, 16);
-      const formattedEndDate = toUTCDate(endDate ? endDate : selectedEndDate).toISOString().slice(0, 16);
+      const formattedEndDate = toUTCDate(endDate ? endDate : selectedEndDate)
+        .toISOString()
+        .slice(0, 16);
 
       // const formattedJours = jours.map((jour) => ({
       //   day: new Date(jour.day).toISOString().slice(0, 10),
@@ -177,7 +191,6 @@ const EventCreationModal = ({
       });
 
       if (!localStorage.getItem("token")) {
-        console.log("ffff");
         const res = await axios.post("/api/add-session", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -606,7 +619,8 @@ const EventCreationModal = ({
                 placeholder="Saisir la date et l'heure de début de participation"
                 value={registration_start}
                 onChange={(e) => setRegistrationStart(e.target.value)}
-                max={new Date(startDate).getDate() + 1}
+                min={new Date()}
+                max={new Date(startDate ? startDate : selectedStartDate)}
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
@@ -634,7 +648,7 @@ const EventCreationModal = ({
                 value={registration_end}
                 onChange={(e) => setRegistrationEnd(e.target.value)}
                 min={registration_start}
-                max={endDate}
+                max={endDate ? new Date(endDate) : new Date(selectedEndDate)}
               />
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">

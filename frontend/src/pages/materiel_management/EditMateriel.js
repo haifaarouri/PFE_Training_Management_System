@@ -23,7 +23,6 @@ const EditMateriel = () => {
     name: "",
     type: "",
     id: "",
-    // quantityAvailable: "",
     status: "",
     cost: "",
     supplier: "",
@@ -75,9 +74,14 @@ const EditMateriel = () => {
     await csrf();
     try {
       const form = formRef.current;
+
+      if (form.checkValidity() === false || isWhitespace(materiel.name)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
       if (
-        form.checkValidity() === false ||
-        isWhitespace(materiel.name) ||
+        typeof materiel.technicalSpecifications === "object" &&
         materiel.technicalSpecifications.size > 2000000
       ) {
         event.preventDefault();
@@ -88,48 +92,44 @@ const EditMateriel = () => {
         );
       }
 
-      if (materiel.technicalSpecifications.size <= 2000000) {
-        setValidated(true);
+      setValidated(true);
 
-        const formData = new FormData();
-        formData.append("_method", "PUT");
-        formData.append("name", materiel.name);
-        formData.append("type", materiel.type);
-        // formData.append("quantityAvailable", materiel.quantityAvailable);
-        formData.append("cost", materiel.cost);
-        formData.append("purchaseDate", materiel.purchaseDate);
-        formData.append("supplier", materiel.supplier);
-        formData.append("status", materiel.status);
-        formData.append("image", materiel.image);
-        formData.append(
-          "technicalSpecifications",
-          materiel.technicalSpecifications
-        );
+      const formData = new FormData();
+      formData.append("_method", "PUT");
+      formData.append("name", materiel.name);
+      formData.append("type", materiel.type);
+      formData.append("cost", materiel.cost);
+      formData.append("purchaseDate", materiel.purchaseDate);
+      formData.append("supplier", materiel.supplier);
+      formData.append("status", materiel.status);
+      formData.append("image", materiel.image);
+      formData.append(
+        "technicalSpecifications",
+        materiel.technicalSpecifications
+      );
 
-        const res = await editMateriel(id, formData);
+      const res = await editMateriel(id, formData);
 
-        if (res.status === 200) {
-          Swal.fire({
-            icon: "success",
-            title: "Materiel modifiée avec succès !",
-            showConfirmButton: false,
-            timer: 1500,
-          });
+      if (res) {
+        Swal.fire({
+          icon: "success",
+          title: "Materiel modifiée avec succès !",
+          showConfirmButton: false,
+          timer: 1500,
+        });
 
-          setMateriel({
-            name: "",
-            type: "",
-            id: "",
-            // quantityAvailable: "",
-            status: "",
-            cost: "",
-            supplier: "",
-            purchaseDate: "",
-            image: "",
-            technicalSpecifications: "",
-          });
-          navigate("/materiaux");
-        }
+        setMateriel({
+          name: "",
+          type: "",
+          id: "",
+          status: "",
+          cost: "",
+          supplier: "",
+          purchaseDate: "",
+          image: "",
+          technicalSpecifications: "",
+        });
+        navigate("/materiaux");
       }
     } catch (error) {
       if (error && error.response.status === 422) {
@@ -159,7 +159,7 @@ const EditMateriel = () => {
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
               <h4 className="card-title mb-5 mt-2">
-                Mettre à jour les informations du materiel {materiel.name}
+                Mettre à jour les informations du materiel {materiel?.name}
               </h4>
               <Form
                 ref={formRef}
@@ -255,40 +255,6 @@ const EditMateriel = () => {
                     </Form.Control.Feedback>
                   </InputGroup>
                 </Form.Group>
-                {/* <Form.Group className="mb-3">
-                  <Form.Label>Quantité Disponible</Form.Label>
-                  <InputGroup className="mb-3">
-                    <InputGroup.Text id="inputGroup-sizing-default">
-                      <div className="input-group-prepend bg-transparent">
-                        <span className="input-group-text bg-transparent border-right-0">
-                          <i
-                            className="mdi mdi-format-list-numbers text-primary"
-                            style={{ fontSize: "1.5em" }}
-                          />
-                        </span>
-                      </div>
-                    </InputGroup.Text>
-                    <Form.Control
-                      type="number"
-                      name="quantityAvailable"
-                      value={materiel.quantityAvailable}
-                      onChange={(e) =>
-                        setMateriel((prev) => ({
-                          ...prev,
-                          quantityAvailable: e.target.value,
-                        }))
-                      }
-                      placeholder="Saisir la quantité disponible"
-                      required
-                    />
-                    <Form.Control.Feedback>
-                      Cela semble bon !
-                    </Form.Control.Feedback>
-                    <Form.Control.Feedback type="invalid">
-                      Veuillez saisir la quantité disponible de ce matériel !
-                    </Form.Control.Feedback>
-                  </InputGroup>
-                </Form.Group> */}
                 <Form.Group className="mb-3">
                   <Form.Label>Etat du matériel</Form.Label>
                   <InputGroup className="mb-3">

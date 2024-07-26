@@ -71,6 +71,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/update-salle/{id}', [salleController::class, 'update']);
     Route::post('/add-salle', [salleController::class, 'store']);
     Route::delete('/delete-salle/{id}', [salleController::class, 'destroy']);
+    Route::get('/jours-session-salle/{id}', [salleController::class, 'getJourSessionBySalle']);
 });
 
 Route::get('/user-email/{email}', [UserController::class, 'getUserByEmail']);
@@ -230,7 +231,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/sentiment', [SentimentAnalysisController::class, 'getSentiment']);
 });
-Route::post('/get-recommendations/{participantId}', [SentimentAnalysisController::class, 'getRecommendations']);
+Route::get('/get-recommendations/{participantId}', [SentimentAnalysisController::class, 'getRecommendations']);
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/tasks', [TaskController::class, 'index']);
@@ -265,4 +266,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/save-avg-feedback', [ParticipantFeedbackController::class, 'saveAverages']);
     Route::get('/filter-feedbacks', [ParticipantFeedbackController::class, 'filterFeedbacks']);
+    Route::get('/formation-averages', [ParticipantFeedbackController::class, 'getFormationAverages']);
+    Route::get('/participant-ids', [ParticipantFeedbackController::class, 'getParticipantIds']);
 });

@@ -18,7 +18,7 @@ export const fetchAllMateriaux = async () => {
 export const fetchMaterielById = async (id) => {
   try {
     if (!localStorage.getItem("token")) {
-      const response = await axios.get(`materiel-id/${id}`);
+      const response = await axios.get(`/api/materiel-id/${id}`);
       return response.data;
     } else {
       const response = await apiFetch(`materiel-id/${id}`);

@@ -6,24 +6,21 @@ import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { useEffect, useState } from "react";
 import { Modal, Button, OverlayTrigger, Tooltip } from "react-bootstrap";
-import { fetchFormateurById } from "../services/FormateurServices";
-import { fetchBookedDaysForTrainer } from "../services/SessionServices";
 import "../pages/session_management/calendar.css";
+import {
+  fetchAllSalles,
+  getDaysSessionBySalleId,
+} from "../services/SalleServices";
 
 const CustomEvent = ({ event }) => {
   return event ? (
     <div className="custom-event">
-      <strong>
-        {event.title} - {event.reference}
-      </strong>{" "}
-      <div>
-        <span>{event.location}</span>
-      </div>
+      <strong>{event.title}</strong>
       <EventOverlay event={event} />
     </div>
   ) : (
     <div className="custom-event">
-      <strong>Formateur disponible</strong>
+      <strong>Jour session</strong>
       <EventOverlay event={event} />
     </div>
   );
@@ -49,80 +46,60 @@ const EventOverlay = ({ event }) => {
       placement="top"
       overlay={
         <Tooltip id={`tooltip-${event.id}`}>
-          Formateur disponible entre {formatDateToFrench(event.start)} et{" "}
+          Salle réservée dans ce jour entre {formatDateToFrench(event.start)} et{" "}
           {formatDateToFrench(event.end)}
         </Tooltip>
       }
     >
-      <div style={{ fontSize: "14px" }}>Formateur disponible</div>
+      <div style={{ fontSize: "14px" }}>Jour Session</div>
     </OverlayTrigger>
   );
 };
 
-const CustomTimeGutterHeader = () => {
-  return (
-    <div className="rbc-label rbc-time-header-gutter">
-      <span style={{ fontSize: "14px" }}>Evénement à plusieurs jours</span>
-    </div>
-  );
-};
-
-const TrainerCalendarModal = ({ show, onHide, calendarIdTrainer }) => {
+const RoomsCalendarModal = ({ show, onHide }) => {
   const localizer = momentLocalizer(moment);
   const DragAndDropCalendar = withDragAndDrop(Calendar);
-  const [formateur, setFormateur] = useState({});
-  const [trainerAvailabilities, setTrainerAvailabilities] = useState([]);
-  const [bookedDays, setBookedDays] = useState([]);
+  const [salles, setSalles] = useState([]);
+  const [daySession, setDaySession] = useState([]);
 
   useEffect(() => {
-    calendarIdTrainer &&
-      fetchFormateurById(calendarIdTrainer).then((d) => {
-        setFormateur(d);
-        let events = [];
-        events = d.disponibilities.map((dispo) => ({
-          id: dispo.id,
-          start: new Date(dispo.startDate),
-          end: new Date(dispo.endDate),
-          allDay:
-            new Date(dispo.startDate).getHours() === 0 &&
-            new Date(dispo.endDate).getHours() === 0 &&
-            new Date(dispo.startDate).getMinutes() === 0 &&
-            new Date(dispo.endDate).getMinutes() === 0,
-        }));
-        setTrainerAvailabilities(events);
+    fetchAllSalles().then(setSalles);
+  }, [show]);
 
-        fetchBookedDaysForTrainer(calendarIdTrainer).then(setBookedDays);
+  useEffect(() => {
+    salles.length > 0 &&
+      salles.forEach((s) => {
+        getDaysSessionBySalleId(s.id)
+          .then((data) => {
+            if (data.length > 0) {
+              setDaySession((prev) => {
+                const updatedSessions = [...prev];
+                data.length > 0 &&
+                  data.forEach((newSession) => {
+                    if (!prev.some((session) => session.id === newSession.id)) {
+                      const startString = `${newSession.day}T${newSession.startTime}`;
+                      const endString = `${newSession.day}T${newSession.endTime}`;
 
-        if (bookedDays.length > 0 && trainerAvailabilities.length > 0) {
-          let days = [];
-          bookedDays.forEach((d) => {
-            let startDateString = `${d.day}T${d.startTime}`;
-            let endDateString = `${d.day}T${d.endTime}`;
-            days.push({
-              id: d.id,
-              start: new Date(startDateString),
-              end: new Date(endDateString),
-              allDay:
-                new Date(startDateString).getHours() === 0 &&
-                new Date(endDateString).getHours() === 0 &&
-                new Date(startDateString).getMinutes() === 0 &&
-                new Date(endDateString).getMinutes() === 0,
-            });
+                      const startDateTime = new Date(startString);
+                      const endDateTime = new Date(endString);
+
+                      updatedSessions.push({
+                        id: newSession.id,
+                        title: `Salle avec l'ID ${newSession.salle_id} réservée pour le jour de la session avec l'ID ${newSession.session_id}`,
+                        start: startDateTime,
+                        end: endDateTime,
+                      });
+                    }
+                  });
+                return updatedSessions;
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching session data:", error);
           });
-
-          days.length > 0 &&
-            days.forEach((d) => {
-              setTrainerAvailabilities((prev) => [...prev, d]);
-            });
-        }
       });
-  }, [show, calendarIdTrainer]);
-
-  useEffect(() => {
-    setFormateur({});
-    setTrainerAvailabilities([]);
-    setBookedDays([]);
-  }, [onHide]);
+  }, [show, salles]);
 
   const eventStyleGetter = (event, start, end, isSelected) => {
     const backgroundColor = isSelected ? "#005a9e" : event.color || "#0078d4";
@@ -154,7 +131,7 @@ const TrainerCalendarModal = ({ show, onHide, calendarIdTrainer }) => {
           id="contained-modal-title-vcenter"
           style={{ color: "#223e9c" }}
         >
-          Calendrier du formateur : {formateur.firstName} {formateur.lastName}
+          Calendrier de réservation des salles
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="modal-body-custom">
@@ -165,9 +142,8 @@ const TrainerCalendarModal = ({ show, onHide, calendarIdTrainer }) => {
                 <div className="card-body">
                   <DragAndDropCalendar
                     defaultDate={new Date()}
-                    // defaultView={Views.MONTH}
-                    showMultiDayTimes={true}
-                    events={trainerAvailabilities}
+                    // showMultiDayTimes={true}
+                    events={daySession}
                     localizer={localizer}
                     step={15}
                     timeslots={4}
@@ -179,7 +155,6 @@ const TrainerCalendarModal = ({ show, onHide, calendarIdTrainer }) => {
                     eventPropGetter={eventStyleGetter}
                     components={{
                       event: CustomEvent,
-                      timeGutterHeader: CustomTimeGutterHeader,
                     }}
                   />
                 </div>
@@ -197,4 +172,4 @@ const TrainerCalendarModal = ({ show, onHide, calendarIdTrainer }) => {
   );
 };
 
-export default TrainerCalendarModal;
+export default RoomsCalendarModal;

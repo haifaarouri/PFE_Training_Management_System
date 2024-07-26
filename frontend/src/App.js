@@ -141,32 +141,8 @@ function App() {
     playNotificationSound();
   };
 
-  const csrf = () => axios.get("/sanctum/csrf-cookie");
-
-  const getAuthUser = async () => {
-    await csrf();
-
-    axios.get("/api/user").then((userResponse) => {
-      const user = userResponse.data;
-
-      //stock user in redux
-      dispatch(setUser(user));
-      dispatch(setNotifications(user.notifications));
-
-      if (user && user.email_verified_at) {
-        console.log(user);
-        if (user.role === "SuperAdministrateur") {
-          // navigate("/super-admin/users");
-        } else {
-          // navigate("/dashboard");
-        }
-      }
-    });
-  };
-
   useEffect(() => {
     const n = async () => {
-      await getAuthUser();
       const notif = await fetchAllUnreadNotifs();
       return notif;
     };
@@ -873,7 +849,7 @@ function App() {
           <Route element={<AuthLayout />}>
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
-            {token && storedUser ? (
+            {storedUser ? (
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
             ) : (
               <Route path="/" element={<Navigate to="/login" replace />} />
