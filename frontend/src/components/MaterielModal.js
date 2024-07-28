@@ -11,7 +11,6 @@ import FileModal from "./FileModal";
 const MaterielModal = ({ show, handleClose }) => {
   const [name, setName] = useState("");
   const [type, setType] = useState("");
-  // const [quantityAvailable, setQuantityAvailable] = useState("");
   const [cost, setCost] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -25,7 +24,6 @@ const MaterielModal = ({ show, handleClose }) => {
   const [showFileModal, setShowFileModal] = useState(false);
   const [urlFile, setURLfile] = useState(null);
   const [urlimg, setURLimg] = useState(null);
-  // const [csrfToken, setCsrfToken] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
   const handleShowFileModal = () => setShowFileModal(true);
@@ -59,53 +57,6 @@ const MaterielModal = ({ show, handleClose }) => {
     };
   };
 
-  // const handleFileUpload = async () => {
-  //   const t = await csrf();
-
-  //   var resumable = new Resumable({
-  //     target: `http://localhost:8000/upload-chunk`,
-  //     query: { _token: t },
-  //     fileType: ["pdf"],
-  //     maxFileSize: 10 * 1024 * 1024, // 10 MB
-  //     chunkSize: 3 * 1024 * 1024, // 2 MB
-  //     testChunks: false,
-  //     throttleProgressCallbacks: 1,
-  //     headers: {
-  //       Accept: "application/json",
-  //       "X-CSRF-TOKEN": t,
-  //     },
-  //   });
-
-  //   resumable.assignBrowse(
-  //     document.getElementsByClassName("input-technicalSpecifications")
-  //   );
-
-  //   resumable.on("fileAdded", function (file) {
-  //     // Show progress bar
-  //     document.querySelector(".progress").style.display = "block";
-  //     resumable.upload();
-  //   });
-
-  //   resumable.on("fileProgress", function (file) {
-  //     // Update progress bar
-  //     var progress = Math.floor(resumable.progress() * 100);
-  //     var progressBar = document.querySelector(".progress-bar");
-  //     progressBar.style.width = progress + "%";
-  //     progressBar.textContent = progress + "%";
-  //   });
-
-  //   resumable.on("fileSuccess", function (file, response) {
-  //     // Hide progress bar and show success message
-  //     document.querySelector(".progress").style.display = "none";
-  //     handleSuccess("Fichier télechargé avec succès !");
-  //   });
-
-  //   resumable.on("fileError", function (file, message) {
-  //     // Show error message
-  //     handleError("Error lors du téléchargement du Fichier !");
-  //   });
-  // };
-
   const handleAddMateriel = async (event) => {
     event.preventDefault();
     await csrf();
@@ -126,60 +77,15 @@ const MaterielModal = ({ show, handleClose }) => {
 
       setValidated(true);
 
-      // var resumable = new Resumable({
-      //   target: `http://localhost:8000/api/add-materiel`,
-      //   query: { _token: "csrfToken" },
-      //   fileType: ["pdf"],
-      //   maxFileSize: 10 * 1024 * 1024, // 10 MB
-      //   chunkSize: 2 * 1024 * 1024, // 2 MB
-      //   testChunks: false,
-      //   throttleProgressCallbacks: 1,
-      //   headers: {
-      //     Accept: "application/json",
-      //     // "X-CSRF-TOKEN": csrfToken,
-      //   },
-      // });
-
-      // resumable.assignBrowse(
-      //   document.getElementsByClassName("input-technicalSpecifications")
-      // );
-
-      // resumable.on("fileAdded", function (file) {
-      //   // Show progress bar
-      //   document.querySelector(".progress").style.display = "block";
-      //   resumable.upload();
-      // });
-
-      // resumable.on("fileProgress", function (file) {
-      //   // Update progress bar
-      //   var progress = Math.floor(resumable.progress() * 100);
-      //   var progressBar = document.querySelector(".progress-bar");
-      //   progressBar.style.width = progress + "%";
-      //   progressBar.textContent = progress + "%";
-      // });
-
-      // resumable.on("fileSuccess", function (file, response) {
-      //   // Hide progress bar and show success message
-      //   document.querySelector(".progress").style.display = "none";
-      //   handleSuccess("Fichier télechargé avec succès !");
-      // });
-
-      // resumable.on("fileError", function (file, message) {
-      //   // Show error message
-      //   handleError("Error lors du téléchargement du Fichier !");
-      // });
-
       const formData = new FormData();
       formData.append("name", name);
       formData.append("type", type);
-      // formData.append("quantityAvailable", quantityAvailable);
       formData.append("cost", cost);
       formData.append("purchaseDate", purchaseDate);
       formData.append("supplier", supplier);
       formData.append("image", image);
       formData.append("technicalSpecifications", technicalSpecifications);
       formData.append("status", status);
-      // formData.append("resumable", JSON.stringify(resumable));
 
       try {
         if (!localStorage.getItem("token")) {
@@ -199,7 +105,6 @@ const MaterielModal = ({ show, handleClose }) => {
 
             setName("");
             setType("");
-            // setQuantityAvailable("");
             setCost("");
             setPurchaseDate("");
             setSupplier("");
@@ -233,7 +138,6 @@ const MaterielModal = ({ show, handleClose }) => {
 
             setName("");
             setType("");
-            // setQuantityAvailable("");
             setCost("");
             setPurchaseDate("");
             setSupplier("");
@@ -354,33 +258,6 @@ const MaterielModal = ({ show, handleClose }) => {
               </Form.Control.Feedback>
             </InputGroup>
           </Form.Group>
-          {/* <Form.Group className="mb-3">
-            <Form.Label>Quantité Disponible</Form.Label>
-            <InputGroup className="mb-3">
-              <InputGroup.Text id="inputGroup-sizing-default">
-                <div className="input-group-prepend bg-transparent">
-                  <span className="input-group-text bg-transparent border-right-0">
-                    <i
-                      className="mdi mdi-format-list-numbers text-primary"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </span>
-                </div>
-              </InputGroup.Text>
-              <Form.Control
-                type="number"
-                name="quantityAvailable"
-                value={quantityAvailable}
-                onChange={(e) => setQuantityAvailable(e.target.value)}
-                placeholder="Saisir la quantité disponible"
-                required
-              />
-              <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
-              <Form.Control.Feedback type="invalid">
-                Veuillez saisir la quantité disponible de ce matériel !
-              </Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group> */}
           <Form.Group className="mb-3">
             <Form.Label>Etat du matériel</Form.Label>
             <InputGroup className="mb-3">
@@ -586,7 +463,6 @@ const MaterielModal = ({ show, handleClose }) => {
                   hidden
                   name="technicalSpecifications"
                   type="file"
-                  //   accept=".doc, .docx, .ppt, .pptx, .txt, .pdf"
                   accept=".pdf"
                   placeholder="Sélectionner l'technicalSpecifications"
                   onChange={(e) => {
@@ -597,7 +473,6 @@ const MaterielModal = ({ show, handleClose }) => {
                       convertToBase64(file, (base64) => {
                         setURLfile({ imgUpload: base64, fileType: file.type });
                       });
-                      // handleFileUpload();
                       if (file.size > 2000000) {
                         handleError("Fichier est trop volumineux !");
                       }

@@ -10,13 +10,14 @@ import axios from "../../services/axios";
 import Swal from "sweetalert2";
 import { PiFileDocDuotone, PiTableLight } from "react-icons/pi";
 import { toast, ToastContainer } from "react-toastify";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   editDocument,
   fetchDocumentById,
 } from "../../services/DocumentServices";
 import { BiUpload } from "react-icons/bi";
 import { fetchAllVariables } from "../../services/VariableServices";
+import VariableModal from "../../components/VariableModal";
 
 function DocumentTemplateEdit() {
   let editorObj = useRef(null);
@@ -33,10 +34,11 @@ function DocumentTemplateEdit() {
   const [otherTemplate, setOtherTemplate] = useState(false);
   const [variables, setVariables] = useState([]);
   const [variableTemplates, setVariableTemplates] = useState([]);
+  const [showVariableModal, setShowVariableModal] = useState(false);
 
   useEffect(() => {
     fetchAllVariables().then(setVariableTemplates);
-  }, []);
+  }, [showVariableModal]);
 
   const toggleOtherTemplate = () => {
     setOtherTemplate(!otherTemplate);
@@ -135,6 +137,14 @@ function DocumentTemplateEdit() {
         // });
       }
     }
+  };
+
+  const handleShowVariableModal = () => {
+    setShowVariableModal(true);
+  };
+
+  const handleCloseVariableModal = () => {
+    setShowVariableModal(false);
   };
 
   return (
@@ -277,11 +287,13 @@ function DocumentTemplateEdit() {
                             ))}
                         </Form.Select>
                       </InputGroup>
-                      <Link to="/templates-variables">
-                        <Button className="btn-inverse-primary">
-                          Ajouter nouvelle variable
-                        </Button>
-                      </Link>
+                      <Button
+                        type="button"
+                        className="btn-inverse-primary"
+                        onClick={handleShowVariableModal}
+                      >
+                        Ajouter nouvelle variable
+                      </Button>
                     </Form.Group>
                     <div className="d-flex justify-content-end">
                       <button
@@ -347,6 +359,10 @@ function DocumentTemplateEdit() {
                   </Button>
                 </div>
               </Form>
+              <VariableModal
+                show={showVariableModal}
+                handleClose={handleCloseVariableModal}
+              />
             </div>
           </div>
         </div>

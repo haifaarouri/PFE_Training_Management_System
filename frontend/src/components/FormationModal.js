@@ -99,7 +99,12 @@ const FormationModal = ({ show, handleClose }) => {
 
     try {
       const form = formRef.current;
-      if (form.checkValidity() === false || courseMaterial.size > 2000000) {
+      if (form.checkValidity() === false) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      if (typeof courseMaterial === "object" && courseMaterial.size > 2000000) {
         event.preventDefault();
         event.stopPropagation();
         handleError("Fichier est trop volumineux !");
@@ -109,30 +114,6 @@ const FormationModal = ({ show, handleClose }) => {
       }
 
       setValidated(true);
-
-      const formDataToSend = {
-        reference: formData.reference,
-        entitled: formData.name,
-        description: formData.description,
-        numberOfDays: formData.numberOfDays,
-        personnesCible: formData.personnesCible,
-        price: formData.price,
-        certificationOrganization: formData.certificationOrganization,
-        courseMaterial: courseMaterial,
-        categorie_name: newCategory ? newCategory : formData.categorie_name,
-        sous_categorie_name: newSousCategory
-          ? newSousCategory
-          : formData.sous_categorie_name,
-        programme: {
-          title: formData.programme.title,
-          jours: formData.programme.jours.map((jour) => ({
-            dayName: jour.dayName,
-            sousParties: jour.sousParties.map((sousPartie) => ({
-              description: sousPartie.description,
-            })),
-          })),
-        },
-      };
 
       const formDataToken = new FormData();
       formDataToken.append("reference", formData.reference);
@@ -171,9 +152,9 @@ const FormationModal = ({ show, handleClose }) => {
 
       try {
         if (!localStorage.getItem("token")) {
-          const res = await axios.post("/api/add-formation", formDataToSend, {
+          const res = await axios.post("/api/add-formation", formDataToken, {
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "multipart/form-data",
             },
           });
 
@@ -205,6 +186,7 @@ const FormationModal = ({ show, handleClose }) => {
             setNewCategory("");
             setNewSousCategory("");
             setRequirements([""]);
+            setCourseMaterial("");
 
             handleClose();
           }
@@ -225,7 +207,7 @@ const FormationModal = ({ show, handleClose }) => {
               headers: headers,
             }
           );
-          console.log(response);
+
           if (response.status === 201) {
             Swal.fire({
               icon: "success",
@@ -254,6 +236,7 @@ const FormationModal = ({ show, handleClose }) => {
             setNewCategory("");
             setNewSousCategory("");
             setRequirements([""]);
+            setCourseMaterial("");
 
             handleClose();
           }

@@ -13,7 +13,6 @@ import FileModal from "../../components/FileModal";
 import { GrPlan } from "react-icons/gr";
 import ProgrammeFormationModal from "../../components/ProgrammeFormationModal";
 import axios from "../../services/axios";
-import { apiFetch } from "../../services/api";
 require("moment/locale/fr");
 
 function AllFormations() {
@@ -208,8 +207,38 @@ function AllFormations() {
   const handleCatalog = async (type) => {
     try {
       if (!localStorage.getItem("token")) {
-        const response = await axios.get(`/api/training-catalog/${type}`);
-        return response.data;
+        const headers = {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          withCredentials: true,
+        };
+
+        const response = await axios.get(
+          `/api/training-catalog/${type}`
+          //   {
+          //   responseType: "blob",
+          //   headers: headers,
+          // }
+        );
+
+        if (response.status === 200) {
+          // Handle file download from response
+          const blob = new Blob([response.data], { type: "application/pdf" });
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = downloadUrl;
+          link.setAttribute("download", `${type}_Catalog.pdf`);
+          document.body.appendChild(link);
+          link.click();
+          link.parentNode.removeChild(link);
+
+          const data = await response.data;
+          handleSuccess(data.message);
+          Swal.fire({
+            icon: "success",
+            title: "Document généré avec succès !",
+          });
+        }
       } else {
         const token = localStorage.getItem("token");
         const headers = {
@@ -231,6 +260,17 @@ function AllFormations() {
           const errorData = await response.json();
           throw new Error(`API request failed: ${errorData.error}`);
         }
+
+        // Handle file download from response
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.setAttribute("download", `${type}_Catalog.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+
         const data = await response.json();
         handleSuccess(data.message);
         Swal.fire({
@@ -282,25 +322,33 @@ function AllFormations() {
                   <div className="btn-group">
                     <Button
                       className="btn btn-sm btn-inverse-success"
-                      onClick={() => handleCatalog("ParMois")}
+                      onClick={() =>
+                        handleCatalog("CatalogueDesFormationParMois")
+                      }
                     >
                       Par mois
                     </Button>
                     <Button
                       className="btn btn-sm btn-inverse-success"
-                      onClick={() => handleCatalog("ParTrimestre")}
+                      onClick={() =>
+                        handleCatalog("CatalogueDesFormationParTrimestre")
+                      }
                     >
                       Par trimestre
                     </Button>
                     <Button
                       className="btn btn-sm btn-inverse-success"
-                      onClick={() => handleCatalog("ParSemestre")}
+                      onClick={() =>
+                        handleCatalog("CatalogueDesFormationParSemestre")
+                      }
                     >
                       Par semestre
                     </Button>
                     <Button
                       className="btn btn-sm btn-inverse-success"
-                      onClick={() => handleCatalog("ParAn")}
+                      onClick={() =>
+                        handleCatalog("CatalogueDesFormationParAn")
+                      }
                     >
                       Par an
                     </Button>

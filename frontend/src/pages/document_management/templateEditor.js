@@ -10,8 +10,9 @@ import axios from "../../services/axios";
 import Swal from "sweetalert2";
 import { PiFileDocDuotone, PiTableLight } from "react-icons/pi";
 import { toast, ToastContainer } from "react-toastify";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { fetchAllVariables } from "../../services/VariableServices";
+import VariableModal from "../../components/VariableModal";
 
 function TemplateEditor() {
   let editorObj = useRef(null);
@@ -22,10 +23,11 @@ function TemplateEditor() {
   const navigate = useNavigate();
   const [variables, setVariables] = useState([]);
   const [variableTemplates, setVariableTemplates] = useState([]);
+  const [showVariableModal, setShowVariableModal] = useState(false);
 
   useEffect(() => {
     fetchAllVariables().then(setVariableTemplates);
-  }, []);
+  }, [showVariableModal]);
 
   const csrf = () => axios.get("/sanctum/csrf-cookie");
 
@@ -169,6 +171,14 @@ function TemplateEditor() {
   //   }
   // };
 
+  const handleShowVariableModal = () => {
+    setShowVariableModal(true);
+  };
+
+  const handleCloseVariableModal = () => {
+    setShowVariableModal(false);
+  };
+
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -265,12 +275,6 @@ function TemplateEditor() {
                       multiple
                       name="variables"
                       value={variables}
-                      // onChange={(e) =>
-                      //   setVariables((prev) => [
-                      //     ...prev,
-                      //     e.target.selectedOptions,
-                      //   ])
-                      // }
                       onChange={(e) =>
                         setVariables(
                           [...e.target.selectedOptions].map((o) => o.value)
@@ -289,11 +293,13 @@ function TemplateEditor() {
                         ))}
                     </Form.Select>
                   </InputGroup>
-                  <Link to="/templates-variables">
-                    <Button className="btn-inverse-primary">
-                      Ajouter nouvelle variable
-                    </Button>
-                  </Link>
+                  <Button
+                    type="button"
+                    className="btn-inverse-primary"
+                    onClick={handleShowVariableModal}
+                  >
+                    Ajouter nouvelle variable
+                  </Button>
                 </Form.Group>
                 {docName === "" ? (
                   <>
@@ -364,6 +370,10 @@ function TemplateEditor() {
                   </Button>
                 </div>
               </Form>
+              <VariableModal
+                show={showVariableModal}
+                handleClose={handleCloseVariableModal}
+              />
             </div>
           </div>
         </div>

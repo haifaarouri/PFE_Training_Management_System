@@ -6,6 +6,7 @@ use App\Models\Categorie;
 use App\Models\Formation;
 use App\Models\SousCategorie;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 
 class FormationController extends Controller
@@ -51,8 +52,7 @@ class FormationController extends Controller
             $programme = json_decode($request->input('programme'), true);
             $request->merge(['programme' => $programme]);
         }
-\Log::info($request->all());
-\Log::info($request->hasFile('courseMaterial'));
+
         $validator = Validator::make($request->all(), [
             'reference' => 'required|string|max:255',
             'entitled' => 'required|string|max:255',
@@ -203,24 +203,26 @@ class FormationController extends Controller
 
             $requirementsStr = implode(',', $requirements);
 
-            $formation->update([
-                'reference' => $request->input('reference'),
-                'entitled' => $request->input('entitled'),
-                'numberOfDays' => $request->input('numberOfDays'),
-                'description' => $request->input('description'),
-                'personnesCible' => $request->input('personnesCible'),
-                'price' => $request->input('price'),
-                'requirements' => $requirementsStr,
-                'certificationOrganization' => $request->input('certificationOrganization'),
-                'courseMaterial' => $request->input('courseMaterial'),
-            ]);
-
             if ($request->hasFile('courseMaterial')) {
+                $oldImagePath = public_path('CoursesMaterials/' . $formation->image);
+                if (File::exists($oldImagePath)) {
+                    File::delete($oldImagePath);
+                }
+
                 $fileName = time() . $request->file('courseMaterial')->getClientOriginalName();
                 $request->file('courseMaterial')->move(public_path('CoursesMaterials'), $fileName);
                 $formation->courseMaterial = $fileName;
                 $formation->save();
             }
+
+            $formation->reference = $request->input('reference');
+            $formation->entitled = $request->input('entitled');
+            $formation->numberOfDays = $request->input('numberOfDays');
+            $formation->description = $request->input('description');
+            $formation->personnesCible = $request->input('personnesCible');
+            $formation->price = $request->input('price');
+            $formation->requirements = $requirementsStr;
+            $formation->certificationOrganization = $request->input('certificationOrganization');
 
             // Update Programme
             $programmeData = $request->input('programme');

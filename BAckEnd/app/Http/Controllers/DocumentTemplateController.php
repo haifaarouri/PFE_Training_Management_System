@@ -148,26 +148,112 @@ class DocumentTemplateController extends Controller
         }
     }
 
-    public function generateTrainingCatalog(Request $request, $type)
+    public function generateTrainingCatalog($type)
     {
         if (!$this->list_roles->contains(auth()->user()->role)) {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);
         }
 
-        $template = DocumentTemplate::where('type', 'LIKE', '%' . $type . '%')->first();
-
+        $template = DocumentTemplate::where('type', 'LIKE', '%' . $type . '%')->with('variableTemplates')->first();
         if (!$template) {
             return response()->json(['error' => 'Modèle du document non trouvé !'], 404);
         }
 
-        $pathToFile = public_path('documentTemplates/' . $template->docName);
+        $originalTemplatePath = public_path('documentTemplates/' . $template->docName);
+        $tempTemplatePath = public_path('temp/' . time() . '_' . $template->docName);
+        if (!copy($originalTemplatePath, $tempTemplatePath)) {
+            \Log::error('Failed to copy template file.');
+            throw new \Exception("Failed to copy template file for processing.");
+        }
 
-        $catalogContent = $this->fillTemplateWithData($pathToFile, $template, $type);
+        $templateProcessor = new TemplateProcessor($tempTemplatePath);
 
-        // return Response::download($catalogContent, 'TrainingCatalog.pdf', [
-        //     'Content-Type' => 'application/pdf'
-        // ]);
-        return response()->json($pathToFile);
+        // Fetch formations with their sessions
+        $formations = Formation::with('sessions')->get();
+        // foreach ($formations as $formation) {
+        //     $formationKey = 'formation ' . ($formation->id);
+        //     $templateProcessor->setValue('titleFormation', $formation->entitled);
+        //     $templateProcessor->setValue('formationRef', $formation->reference);
+        //     $templateProcessor->setValue('descriptionFormation', $formation->description);
+        //     $templateProcessor->setValue('nombreJourFormation', $formation->numberOfDays);
+        
+        //     foreach ($formation->sessions as $session) {
+        //         $sessionKey = 'session ' . ($session->id);
+        //         $templateProcessor->setValue('sessionTitle', $session->title);
+        //         $templateProcessor->setValue('dateDébutSession', $session->startDate);
+        //         $templateProcessor->setValue('dateFinSession', $session->endDate);
+        //     }
+        // }
+        $formationData = [];
+        foreach ($formations as $index => $formation) {
+            $formationKey = 'formation ' . ($index + 1);
+            $formationData[$formationKey] = [];
+
+            // Dynamically fetch and map data based on variable templates
+            foreach ($template->variableTemplates as $variable) {
+                $modelClass = 'App\\Models\\' . ucfirst($variable->source_model);
+                $modelClass = substr($modelClass, 0, -1);  // Assuming you need to remove the last character
+
+                // Check if the value contains '_' and remove it
+                if (strpos($modelClass, '_') !== false) {
+                    $modelClass = str_replace('_', '', $modelClass);
+                }
+
+                if (!class_exists($modelClass)) {
+                    throw new \Exception("Model {$modelClass} does not exist.");
+                }
+
+                $modelInstance = new $modelClass();
+                $records = $modelInstance->all();
+
+                foreach ($records as $record) {
+                    $formationData[$formationKey][$variable->variable_name] = $record->{$variable->source_field};
+                    $templateProcessor->setValue($formationKey . '_' . $variable->variable_name, $record->{$variable->source_field});
+                }
+            }
+
+            // Add sessions for this formation
+            foreach ($formation->sessions as $sessionIndex => $session) {
+                $sessionKey = 'session ' . ($sessionIndex + 1);
+                $formationData[$formationKey][$sessionKey] = [
+                    'sessionTitle' => $session->title,
+                    'dateDébutSession' => $session->startDate,
+                    'dateFinSession' => $session->endDate,
+                ];
+
+                // Set session values in the template
+                foreach ($formationData[$formationKey][$sessionKey] as $sessionField => $sessionValue) {
+                    $templateProcessor->setValue($formationKey . '_' . $sessionKey . '_' . $sessionField, $sessionValue);
+                }
+            }
+        }
+
+        $templateProcessor->saveAs($tempTemplatePath);  // Save the modified document
+
+        // Convert DOCX to PDF
+        \PhpOffice\PhpWord\Settings::setPdfRendererPath(base_path('vendor/dompdf/dompdf'));
+        \PhpOffice\PhpWord\Settings::setPdfRendererName('DomPDF');
+        $phpWord = \PhpOffice\PhpWord\IOFactory::load($tempTemplatePath);
+        $pdfWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'PDF');
+        $pdfPath = public_path('DocumentsGenerated/' . str_replace(".docx", ".pdf", $template->docName));
+        $pdfWriter->save($pdfPath);
+
+        unlink($tempTemplatePath);
+
+        // Log the document generation
+        DocumentLog::create([
+            'participant_id' => null,
+            'session_id' => null, // Assuming no specific session
+            'formation_id' => null,
+            'document_type' => "CatalogueDesFormations{$type}",
+            'document_generated' => $template->docName,
+            'generated_at' => Carbon::now()
+        ]);
+
+        // Return downloadable file response
+        return response()->download($originalTemplatePath, $template->docName, [
+            'Content-Type' => 'application/pdf'
+        ]);
     }
 
     private function fillTemplateWithData($pathToFile, $template, $type)

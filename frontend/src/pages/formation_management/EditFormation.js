@@ -64,7 +64,6 @@ const EditFormation = () => {
   const [showFileModal, setShowFileModal] = useState(false);
   const [urlFile, setURLfile] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [courseMaterial, setCourseMaterial] = useState("");
 
   const handleShowFileModal = () => setShowFileModal(true);
   const handleCloseFileModal = () => setShowFileModal(false);
@@ -111,14 +110,20 @@ const EditFormation = () => {
       theme: "light",
     });
 
-  const handleUpdateformation = async (event) => {
+    const handleUpdateformation = async (event) => {
     event.preventDefault();
     await csrf();
     try {
       const form = formRef.current;
+      if (form.checkValidity() === false) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      console.log(formData);
+
       if (
-        form.checkValidity() === false ||
-        (typeof courseMaterial === "object" && courseMaterial.size > 2000000)
+        typeof formData.courseMaterial === "object" &&
+        formData.courseMaterial.size > 2000000
       ) {
         event.preventDefault();
         event.stopPropagation();
@@ -126,6 +131,7 @@ const EditFormation = () => {
         setErrorMsg(
           "Fichier est trop volumineux ! La taille maximale est 2MB !"
         );
+        return;
       }
 
       setValidated(true);
@@ -142,10 +148,7 @@ const EditFormation = () => {
         "certificationOrganization",
         formData.certificationOrganization
       );
-      formDatatoSend.append(
-        "courseMaterial",
-        courseMaterial || formData.courseMaterial
-      );
+      formDatatoSend.append("courseMaterial", formData.courseMaterial);
       formDatatoSend.append(
         "categorie_name",
         newCategory ? newCategory : formData.categorie_name
@@ -171,7 +174,7 @@ const EditFormation = () => {
 
       const res = await editFormation(id, formDatatoSend);
 
-      if (res.status === 200) {
+      if (res) {
         Swal.fire({
           icon: "success",
           title: "Formation modifiée avec succès !",
@@ -195,6 +198,7 @@ const EditFormation = () => {
             title: "",
             jour_formations: [],
           },
+          courseMaterial: "",
         });
         setNewCategory("");
         setNewSousCategory("");
@@ -589,7 +593,10 @@ const EditFormation = () => {
                           const file = e.target.files[0];
                           if (file) {
                             setFileName(file.name);
-                            setCourseMaterial(file);
+                            setFormData((prevState) => ({
+                              ...prevState,
+                              courseMaterial: file,
+                            }));
                             convertToBase64(file, (base64) => {
                               setURLfile({
                                 imgUpload: base64,
@@ -629,7 +636,10 @@ const EditFormation = () => {
                           style={{ fontSize: "1.2em" }}
                           onClick={() => {
                             setFileName("Aucun fichier sélectionné");
-                            setCourseMaterial(null);
+                            setFormData((prevState) => ({
+                              ...prevState,
+                              courseMaterial: null,
+                            }));
                           }}
                         />
                       </span>
