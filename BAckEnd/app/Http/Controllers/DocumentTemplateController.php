@@ -148,6 +148,38 @@ class DocumentTemplateController extends Controller
         }
     }
 
+    private function setTemplateValues($templateProcessor, $model, $variableTemplates, $formationIndex, $sessionIndex = null)
+    {
+        foreach ($variableTemplates as $variable) {
+            if ($variable->source_model[-1] === 's') {
+                $variable->source_model = substr($variable->source_model, 0, -1);
+            }
+
+            if (strpos($variable->source_model, '_') !== false) {
+                $variable->source_model = str_replace('_', '', $variable->source_model);
+            }
+
+            $modelClass = 'App\\Models\\' . ucfirst($variable->source_model); //upper case first caracter of a string
+
+            if (!class_exists($modelClass)) {
+                throw new \Exception("Model {$modelClass} does not exist.");
+            }
+
+            $modelInstance = new $modelClass();
+            $keyFieldValue = $model->{$variable->key_field};
+            $record = $modelInstance->where($variable->key_field, $keyFieldValue)->first();
+
+            if ($record) {
+                $value = $record->{$variable->source_field};
+                $placeholder = "{$variable->variable_name}#{$formationIndex}";
+                if ($sessionIndex) {
+                    $placeholder .= "#{$sessionIndex}";
+                }
+                $templateProcessor->setValue($placeholder, $value);
+            }
+        }
+    }
+
     public function generateTrainingCatalog($type)
     {
         if (!$this->list_roles->contains(auth()->user()->role)) {
@@ -168,64 +200,62 @@ class DocumentTemplateController extends Controller
 
         $templateProcessor = new TemplateProcessor($tempTemplatePath);
 
-        // Fetch formations with their sessions
-        $formations = Formation::with('sessions')->get();
-        // foreach ($formations as $formation) {
-        //     $formationKey = 'formation ' . ($formation->id);
-        //     $templateProcessor->setValue('titleFormation', $formation->entitled);
-        //     $templateProcessor->setValue('formationRef', $formation->reference);
-        //     $templateProcessor->setValue('descriptionFormation', $formation->description);
-        //     $templateProcessor->setValue('nombreJourFormation', $formation->numberOfDays);
-        
-        //     foreach ($formation->sessions as $session) {
-        //         $sessionKey = 'session ' . ($session->id);
-        //         $templateProcessor->setValue('sessionTitle', $session->title);
-        //         $templateProcessor->setValue('dateDébutSession', $session->startDate);
-        //         $templateProcessor->setValue('dateFinSession', $session->endDate);
-        //     }
-        // }
-        $formationData = [];
-        foreach ($formations as $index => $formation) {
-            $formationKey = 'formation ' . ($index + 1);
-            $formationData[$formationKey] = [];
+        // Determine the date range based on the catalog type
+        $date = Carbon::now();
 
-            // Dynamically fetch and map data based on variable templates
-            foreach ($template->variableTemplates as $variable) {
-                $modelClass = 'App\\Models\\' . ucfirst($variable->source_model);
-                $modelClass = substr($modelClass, 0, -1);  // Assuming you need to remove the last character
-
-                // Check if the value contains '_' and remove it
-                if (strpos($modelClass, '_') !== false) {
-                    $modelClass = str_replace('_', '', $modelClass);
+        switch ($type) {
+            case 'CatalogueDesFormationParMois':
+                $startDate = $date->copy()->startOfMonth();
+                $endDate = $date->copy()->endOfMonth()->endOfDay();
+                break;
+            case 'CatalogueDesFormationParTrimestre':
+                $startDate = $date->copy()->firstOfQuarter();
+                $endDate = $date->copy()->lastOfQuarter()->endOfDay();
+                break;
+            case 'CatalogueDesFormationParSemestre':
+                if ($date->month <= 6) {
+                    $startDate = $date->copy()->startOfYear();
+                    $endDate = $date->copy()->startOfYear()->addMonths(6)->subDay()->endOfDay();
+                } else {
+                    $startDate = $date->copy()->startOfYear()->addMonths(6);
+                    $endDate = $date->copy()->endOfYear()->endOfDay();
                 }
+                break;
+            case 'CatalogueDesFormationParAn':
+                $startDate = $date->copy()->startOfYear();
+                $endDate = $date->copy()->endOfYear()->endOfDay();
+                break;
+            default:
+                return response()->json(['error' => 'Type de catalogue non supporté !'], 400);
+        }
 
-                if (!class_exists($modelClass)) {
-                    throw new \Exception("Model {$modelClass} does not exist.");
-                }
+        // Fetch formations within the determined date range
+        $formations = Formation::with([
+            'sessions' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('startDate', [$startDate, $endDate]);
+            }
+        ])
+            // ->whereHas('sessions', function ($query) use ($startDate, $endDate) {
+            //     $query->whereBetween('startDate', [$startDate, $endDate]);
+            // })
+            ->get();
 
-                $modelInstance = new $modelClass();
-                $records = $modelInstance->all();
+        $templateProcessor->cloneRow('formationRow', count($formations));
 
-                foreach ($records as $record) {
-                    $formationData[$formationKey][$variable->variable_name] = $record->{$variable->source_field};
-                    $templateProcessor->setValue($formationKey . '_' . $variable->variable_name, $record->{$variable->source_field});
-                }
+        $formationIndex = 1;
+        foreach ($formations as $formation) {
+            $this->setTemplateValues($templateProcessor, $formation, $template->variableTemplates, $formationIndex);
+
+            $sessions = $formation->sessions;
+            $templateProcessor->cloneRow("sessionRow#{$formationIndex}", count($sessions));
+            $sessionIndex = 1;
+
+            foreach ($sessions as $session) {
+                $this->setTemplateValues($templateProcessor, $session, $template->variableTemplates, $formationIndex, $sessionIndex);
+                $sessionIndex++;
             }
 
-            // Add sessions for this formation
-            foreach ($formation->sessions as $sessionIndex => $session) {
-                $sessionKey = 'session ' . ($sessionIndex + 1);
-                $formationData[$formationKey][$sessionKey] = [
-                    'sessionTitle' => $session->title,
-                    'dateDébutSession' => $session->startDate,
-                    'dateFinSession' => $session->endDate,
-                ];
-
-                // Set session values in the template
-                foreach ($formationData[$formationKey][$sessionKey] as $sessionField => $sessionValue) {
-                    $templateProcessor->setValue($formationKey . '_' . $sessionKey . '_' . $sessionField, $sessionValue);
-                }
-            }
+            $formationIndex++;
         }
 
         $templateProcessor->saveAs($tempTemplatePath);  // Save the modified document
@@ -235,7 +265,7 @@ class DocumentTemplateController extends Controller
         \PhpOffice\PhpWord\Settings::setPdfRendererName('DomPDF');
         $phpWord = \PhpOffice\PhpWord\IOFactory::load($tempTemplatePath);
         $pdfWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'PDF');
-        $pdfPath = public_path('DocumentsGenerated/' . str_replace(".docx", ".pdf", $template->docName));
+        $pdfPath = public_path('DocumentsGenerated/' . time() . '_' . $type . str_replace(".docx", ".pdf", $template->docName));
         $pdfWriter->save($pdfPath);
 
         unlink($tempTemplatePath);
@@ -243,10 +273,10 @@ class DocumentTemplateController extends Controller
         // Log the document generation
         DocumentLog::create([
             'participant_id' => null,
-            'session_id' => null, // Assuming no specific session
+            'session_id' => null,
             'formation_id' => null,
-            'document_type' => "CatalogueDesFormations{$type}",
-            'document_generated' => $template->docName,
+            'document_type' => $type,
+            'document_generated' => time() . '_' . $type,
             'generated_at' => Carbon::now()
         ]);
 

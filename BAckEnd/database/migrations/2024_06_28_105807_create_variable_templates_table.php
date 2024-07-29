@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->string('description');
             $table->string('source_model');
             $table->string('source_field');
+            $table->string('key_field')->default('id');
             $table->timestamps();
         });
     }

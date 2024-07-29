@@ -213,13 +213,10 @@ function AllFormations() {
           withCredentials: true,
         };
 
-        const response = await axios.get(
-          `/api/training-catalog/${type}`
-          //   {
-          //   responseType: "blob",
-          //   headers: headers,
-          // }
-        );
+        const response = await axios.get(`/api/training-catalog/${type}`, {
+          responseType: "blob",
+          headers: headers,
+        });
 
         if (response.status === 200) {
           // Handle file download from response

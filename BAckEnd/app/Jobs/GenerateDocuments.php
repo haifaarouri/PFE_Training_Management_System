@@ -4,13 +4,11 @@ namespace App\Jobs;
 
 use App\Models\DocumentLog;
 use App\Models\DocumentTemplate;
-use App\Models\EmailTemplate;
 use App\Models\Formation;
 use App\Models\Participant;
 use App\Models\Session;
-use Dompdf\Dompdf;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -32,46 +30,6 @@ class GenerateDocuments implements ShouldQueue
         $this->context = $context;
     }
 
-    // public function buildContextForTemplate($templateId, $session, $type)
-    // {
-    //     $template = $type == "Email" ? EmailTemplate::with('variableTemplates')->find($templateId) : DocumentTemplate::with('variableTemplates')->find($templateId);
-    //     if (!$template) {
-    //         throw new \Exception("Template not found.");
-    //     }
-
-    //     $variables = $template->variableTemplates;
-    //     $context = [];
-    //     $additionalParams = [];
-
-    //     foreach ($variables as $variable) {
-    //         $modelClass = '\\App\\Models\\' . $variable->source_model;
-    //         if (!class_exists($modelClass)) {
-    //             throw new \Exception("Model {$modelClass} does not exist.");
-    //         }
-
-    //         $modelInstance = new $modelClass();
-    //         $recordIdKey = strtolower($variable->source_model) . '_id';
-
-    //         // Dynamically determine the ID needed for each model
-    //         if (isset($session->{$recordIdKey})) {
-    //             $record = $modelInstance->find($session->{$recordIdKey});
-    //         } else {
-    //             // Log or handle the case where the expected ID is not available
-    //             \Log::error("Expected ID `{$recordIdKey}` not found in session data.");
-    //             continue;
-    //         }
-
-    //         if (!$record) {
-    //             throw new \Exception("Record not found for model {$modelClass} with ID {$session->{$recordIdKey} }.");
-    //         }
-
-    //         $context[$variable->variable_name] = $record->{$variable->source_field};
-    //         $additionalParams[$recordIdKey] = $session->{$recordIdKey}; // Collecting all used IDs
-    //     }
-
-    //     return $context;
-    // }
-
     /**
      * Execute the job.
      *
@@ -84,9 +42,6 @@ class GenerateDocuments implements ShouldQueue
             \Log::error("session not found with ID: " . $this->context['session_id']);
             return;
         }
-
-        // $contextAttestation = $this->buildContextForTemplate($attestationTemplateId, $session, "Document");
-        // $contextFeuille = $this->buildContextForTemplate($feuillePresenceTemplateId, $session, "Document");
 
         $participant = Participant::find($this->context['participant_id']);
         if (!$participant) {
@@ -101,7 +56,7 @@ class GenerateDocuments implements ShouldQueue
         }
 
         //Attestation de Présence
-        $template = DocumentTemplate::where('type', 'AttestationDePrésence')->first();
+        $template = DocumentTemplate::where('type', 'AttestationDePrésence')->with('variableTemplates')->first();
         if (!$template) {
             return response()->json(['error' => 'Modèle du document de type Attestation De Présence non trouvé !'], 404);
         }
@@ -114,10 +69,13 @@ class GenerateDocuments implements ShouldQueue
         }
 
         $templateProcessor = new TemplateProcessor($tempTemplatePath);
-        $templateProcessor->setValue('firstName', $participant->firstName);
-        $templateProcessor->setValue('lastName', $participant->lastName);
+        $templateProcessor->setValue('nomParticipant', $participant->firstName);
+        $templateProcessor->setValue('prénomParticipant', $participant->lastName);
+        $templateProcessor->setValue('entreprise', $participant->companyName);
         $templateProcessor->setValue('sessionTitle', $session->title);
         $templateProcessor->setValue('formationRef', $session->reference);
+        $templateProcessor->setValue('dateDébutSession', $session->startDate);
+        $templateProcessor->setValue('dateFinSession', $session->endDate);
         $templateProcessor->saveAs($tempTemplatePath);  // Save the modified document
 
         // Convert DOCX to PDF
@@ -133,8 +91,10 @@ class GenerateDocuments implements ShouldQueue
         DocumentLog::create([
             'participant_id' => $participant->id,
             'session_id' => $session->id,
+            'formation_id' => $session->formation_id,
             'document_type' => 'AttestationDePrésence',
             'document_generated' => $participant->id . $session->title . str_replace(".docx", ".pdf", $template->docName),
+            'generated_at' => Carbon::now()
         ]);
 
         //Feuille de Présence
