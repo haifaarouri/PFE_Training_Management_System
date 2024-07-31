@@ -212,17 +212,18 @@ class FormationController extends Controller
                 $fileName = time() . $request->file('courseMaterial')->getClientOriginalName();
                 $request->file('courseMaterial')->move(public_path('CoursesMaterials'), $fileName);
                 $formation->courseMaterial = $fileName;
-                $formation->save();
             }
 
-            $formation->reference = $request->input('reference');
-            $formation->entitled = $request->input('entitled');
-            $formation->numberOfDays = $request->input('numberOfDays');
-            $formation->description = $request->input('description');
-            $formation->personnesCible = $request->input('personnesCible');
-            $formation->price = $request->input('price');
+            $formation->reference = $request->reference;
+            $formation->entitled = $request->entitled;
+            $formation->numberOfDays = $request->numberOfDays;
+            $formation->description = $request->description;
+            $formation->personnesCible = $request->personnesCible;
+            $formation->price = $request->price;
             $formation->requirements = $requirementsStr;
-            $formation->certificationOrganization = $request->input('certificationOrganization');
+            $formation->certificationOrganization = $request->certificationOrganization;
+
+            $formation->save();
 
             // Update Programme
             $programmeData = $request->input('programme');

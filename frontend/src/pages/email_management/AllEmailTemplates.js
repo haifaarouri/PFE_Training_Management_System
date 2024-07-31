@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Card, Modal, Pagination, Tab, Tabs } from "react-bootstrap";
+import { Card, Modal, Tab, Tabs } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
@@ -12,6 +12,7 @@ import {
 import { AiFillDelete } from "react-icons/ai";
 import { BiSolidCalendarEdit } from "react-icons/bi";
 import "react-toastify/dist/ReactToastify.css";
+import ReactPaginate from "react-paginate";
 require("moment/locale/fr");
 
 const handleSuccess = (msg) =>
@@ -137,30 +138,30 @@ const EmailTemplateModal = ({ show, onHide, emailTemplate }) => {
 function AllEmailTemplates() {
   const [emailTemplates, setEmailTemplates] = useState([]);
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(1);
-  const emailTemplatesPerPage = 2;
-  const lastIndex = currentPage * emailTemplatesPerPage;
-  const firstIndex = lastIndex - emailTemplatesPerPage;
-  const emailTemplatesPage =
-    emailTemplates.length > 0 && emailTemplates.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    emailTemplates.length > 0 && emailTemplates.length / emailTemplatesPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [showEmailTemplateModal, setShowEmailTemplateModal] = useState(false);
   const [emailTemplate, setEmailTemplate] = useState(null);
   const [emailLogs, setEmailLogs] = useState([]);
-  const [currentPageEmailLogs, setcurrentPageEmailLogs] = useState(1);
-  const emailLogsPerPage = 5;
-  const lastIndexEmailLog = currentPageEmailLogs * emailLogsPerPage;
-  const firstIndexEmailLog = lastIndexEmailLog - emailLogsPerPage;
-  const emailLogsPage =
-    emailLogs.length > 0 &&
-    emailLogs.slice(firstIndexEmailLog, lastIndexEmailLog);
-  const nbrPages = Math.ceil(
-    emailLogs.length > 0 && emailLogs.length / emailLogsPerPage
-  );
-  const nbrs = [...Array(nbrPages + 1).keys()].slice(1);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = emailTemplates?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(emailTemplates?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % emailTemplates.length;
+    setItemOffset(newOffset);
+  };
+
+  const [itemOffset2, setItemOffset2] = useState(0);
+  const itemsPerPage2 = 5;
+  const endOffset2 = itemOffset2 + itemsPerPage2;
+  const currentItems2 = emailLogs?.slice(itemOffset2, endOffset2);
+  const pageCount2 = Math.ceil(emailLogs?.length / itemsPerPage2);
+
+  const handlePageClick2 = (event) => {
+    const newOffset = (event.selected * itemsPerPage2) % emailLogs.length;
+    setItemOffset2(newOffset);
+  };
 
   const handleShowEmailTemplateModal = (t) => {
     setShowEmailTemplateModal(true);
@@ -230,38 +231,6 @@ function AllEmailTemplates() {
     });
   };
 
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const prevLogsPage = () => {
-    if (currentPageEmailLogs !== 1) {
-      setcurrentPageEmailLogs(currentPageEmailLogs - 1);
-    }
-  };
-
-  const changeCurrentLogsPage = (n) => {
-    setcurrentPageEmailLogs(n);
-  };
-
-  const nextLogsPage = () => {
-    if (currentPageEmailLogs !== numberPages) {
-      setcurrentPageEmailLogs(currentPageEmailLogs + 1);
-    }
-  };
-
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -310,7 +279,7 @@ function AllEmailTemplates() {
                       </thead>
                       <tbody>
                         {emailTemplates.length > 0 &&
-                          emailTemplatesPage.map((emailTemplate, index) => {
+                          currentItems?.map((emailTemplate, index) => {
                             const imageAttachementString =
                               emailTemplate.imageAttachement;
                             const imageAttachement = JSON.parse(
@@ -389,36 +358,26 @@ function AllEmailTemplates() {
                           })}
                       </tbody>
                     </table>
-                    <Pagination className="d-flex justify-content-center mt-5">
-                      <Pagination.Prev
-                        onClick={prevPage}
-                        disabled={currentPage === 1}
-                      >
-                        <i
-                          className="mdi mdi-arrow-left-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Prev>
-                      {numbers.map((n, i) => (
-                        <Pagination.Item
-                          className={`${currentPage === n ? "active" : ""}`}
-                          key={i}
-                          style={{ fontSize: "1.5em" }}
-                          onClick={() => changeCurrentPage(n)}
-                        >
-                          {n}
-                        </Pagination.Item>
-                      ))}
-                      <Pagination.Next
-                        onClick={nextPage}
-                        disabled={currentPage === numberPages}
-                      >
-                        <i
-                          className="mdi mdi-arrow-right-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Next>
-                    </Pagination>
+                    <ReactPaginate
+                      breakLabel="..."
+                      nextLabel="->"
+                      onPageChange={handlePageClick}
+                      pageRangeDisplayed={3}
+                      marginPagesDisplayed={2}
+                      pageCount={pageCount}
+                      previousLabel="<-"
+                      renderOnZeroPageCount={null}
+                      containerClassName="pagination justify-content-center mt-4"
+                      pageClassName="page-item"
+                      pageLinkClassName="page-link"
+                      previousClassName="page-item"
+                      previousLinkClassName="page-link"
+                      nextClassName="page-item"
+                      nextLinkClassName="page-link"
+                      breakClassName="page-item"
+                      breakLinkClassName="page-link"
+                      activeClassName="active"
+                    />
                   </div>
                 </Tab>
                 <Tab eventKey="listLogs" title="Liste des e-mails envoyés">
@@ -434,7 +393,7 @@ function AllEmailTemplates() {
                       </thead>
                       <tbody>
                         {emailLogs.length > 0 &&
-                          emailLogsPage.map((emailLog, index) => {
+                          currentItems2?.map((emailLog, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -448,38 +407,26 @@ function AllEmailTemplates() {
                           })}
                       </tbody>
                     </table>
-                    <Pagination className="d-flex justify-content-center mt-5">
-                      <Pagination.Prev
-                        onClick={prevLogsPage}
-                        disabled={currentPageEmailLogs === 1}
-                      >
-                        <i
-                          className="mdi mdi-arrow-left-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Prev>
-                      {nbrs.map((n, i) => (
-                        <Pagination.Item
-                          className={`${
-                            currentPageEmailLogs === n ? "active" : ""
-                          }`}
-                          key={i}
-                          style={{ fontSize: "1.5em" }}
-                          onClick={() => changeCurrentLogsPage(n)}
-                        >
-                          {n}
-                        </Pagination.Item>
-                      ))}
-                      <Pagination.Next
-                        onClick={nextLogsPage}
-                        disabled={currentPageEmailLogs === nbrPages}
-                      >
-                        <i
-                          className="mdi mdi-arrow-right-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Next>
-                    </Pagination>
+                    <ReactPaginate
+                      breakLabel="..."
+                      nextLabel="->"
+                      onPageChange={handlePageClick2}
+                      pageRangeDisplayed={3}
+                      marginPagesDisplayed={2}
+                      pageCount={pageCount2}
+                      previousLabel="<-"
+                      renderOnZeroPageCount={null}
+                      containerClassName="pagination justify-content-center mt-4"
+                      pageClassName="page-item"
+                      pageLinkClassName="page-link"
+                      previousClassName="page-item"
+                      previousLinkClassName="page-link"
+                      nextClassName="page-item"
+                      nextLinkClassName="page-link"
+                      breakClassName="page-item"
+                      breakLinkClassName="page-link"
+                      activeClassName="active"
+                    />
                   </div>
                 </Tab>
               </Tabs>

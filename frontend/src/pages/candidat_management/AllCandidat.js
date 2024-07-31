@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import {
-  Badge,
-  Card,
-  Carousel,
-  Form,
-  InputGroup,
-  Pagination,
-} from "react-bootstrap";
+import { Badge, Card, Carousel, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
@@ -22,21 +15,12 @@ import CandidatFormationModal from "../../components/CandidatFormationModal";
 import { MdEdit } from "react-icons/md";
 import EditStatusModal from "../../components/EditStatusModal";
 import { TbTransformFilled } from "react-icons/tb";
+import ReactPaginate from "react-paginate";
 
 function AllCandidats() {
   const [candidats, setCandidats] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const candidatsPerPage = 2;
-  const lastIndex = currentPage * candidatsPerPage;
-  const firstIndex = lastIndex - candidatsPerPage;
-  const candidatsPage =
-    candidats.length > 0 && candidats.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    candidats.length > 0 && candidats.length / candidatsPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
@@ -47,6 +31,16 @@ function AllCandidats() {
   const [showEditStatus, setShowEditStatus] = useState(false);
   const [candidatIdToEditStatus, setCandidatIdToEditStatus] = useState("");
   const [formatioIdToEdit, setFormatioIdToEdit] = useState("");
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = candidats?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(candidats?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % candidats.length;
+    setItemOffset(newOffset);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -158,22 +152,6 @@ function AllCandidats() {
         }
       }
     });
-  };
-
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   const handleListView = () => {
@@ -463,7 +441,7 @@ function AllCandidats() {
                           <></>
                         ) : (
                           candidats.length > 0 &&
-                          candidatsPage.map((f, index) => {
+                          currentItems?.map((f, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -569,36 +547,26 @@ function AllCandidats() {
                       </tbody>
                     </table>
                   </div>
-                  <Pagination className="d-flex justify-content-center mt-5">
-                    <Pagination.Prev
-                      onClick={prevPage}
-                      disabled={currentPage === 1}
-                    >
-                      <i
-                        className="mdi mdi-arrow-left-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Prev>
-                    {numbers.map((n, i) => (
-                      <Pagination.Item
-                        className={`${currentPage === n ? "active" : ""}`}
-                        key={i}
-                        style={{ fontSize: "1.5em" }}
-                        onClick={() => changeCurrentPage(n)}
-                      >
-                        {n}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      onClick={nextPage}
-                      disabled={currentPage === numberPages}
-                    >
-                      <i
-                        className="mdi mdi-arrow-right-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Next>
-                  </Pagination>
+                  <ReactPaginate
+                    breakLabel="..."
+                    nextLabel="->"
+                    onPageChange={handlePageClick}
+                    pageRangeDisplayed={3}
+                    marginPagesDisplayed={2}
+                    pageCount={pageCount}
+                    previousLabel="<-"
+                    renderOnZeroPageCount={null}
+                    containerClassName="pagination justify-content-center mt-4"
+                    pageClassName="page-item"
+                    pageLinkClassName="page-link"
+                    previousClassName="page-item"
+                    previousLinkClassName="page-link"
+                    nextClassName="page-item"
+                    nextLinkClassName="page-link"
+                    breakClassName="page-item"
+                    breakLinkClassName="page-link"
+                    activeClassName="active"
+                  />
                 </>
               )}
               {showCarousel && (

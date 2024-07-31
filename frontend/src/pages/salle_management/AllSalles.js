@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Card, Form, InputGroup, Pagination } from "react-bootstrap";
+import { Card, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import {
   deleteSalle,
@@ -13,21 +13,13 @@ import Carousel from "react-bootstrap/Carousel";
 import Swal from "sweetalert2";
 import { BiCalendarCheck } from "react-icons/bi";
 import RoomsCalendarModal from "../../components/RoomsCalendarModal";
+import ReactPaginate from "react-paginate";
 require("moment/locale/fr");
 
 function AllSalles() {
   const [salles, setSalles] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const sallesPerPage = 2;
-  const lastIndex = currentPage * sallesPerPage;
-  const firstIndex = lastIndex - sallesPerPage;
-  const sallesPage = salles.length > 0 && salles.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    salles.length > 0 && salles.length / sallesPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState("");
   const [columnName, setColumnName] = useState(null);
@@ -35,6 +27,16 @@ function AllSalles() {
   const [showCarousel, setShowCarousel] = useState(false);
   const [daySession, setDaySession] = useState([]);
   const [showRoomsCalendar, setShowRoomsCalendar] = useState(false);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = salles?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(salles?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % salles.length;
+    setItemOffset(newOffset);
+  };
 
   const handleShowRoomsCalendar = () => {
     setShowRoomsCalendar(true);
@@ -179,22 +181,6 @@ function AllSalles() {
     });
   };
 
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
   const handleListView = () => {
     setShowList(true);
     setShowCarousel(false);
@@ -204,43 +190,6 @@ function AllSalles() {
     setShowCarousel(true);
     setShowList(false);
   };
-  console.log(daySession);
-  // const handleCallback = (childData) => {
-  //   setModalDates(childData);
-  //   // Parse childData dates to moment for easier comparison
-  //   const modalRanges = childData.map((range) => ({
-  //     startDate: moment(range.startDate),
-  //     endDate: moment(range.endDate),
-  //   }));
-
-  //   // Function to check if two date ranges overlap (range 2 inculs dans range1)
-  //   const rangesOverlap = (range1, range2) => {
-  //     return (
-  //       range2.startDate.isBefore(range1.endDate) &&
-  //       range2.endDate.isBefore(range1.endDate) &&
-  //       range2.endDate.isAfter(range1.startDate) &&
-  //       range2.startDate.isAfter(range1.startDate)
-  //     );
-  //   };
-
-  //   // Compare each modal range with each salle's disponibility range
-  //   const overlappingSalles = salles.filter((salle) => {
-  //     return salle.disponibility.some((dispo) => {
-  //       const salleRange = {
-  //         startDate: moment(dispo.startDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
-  //         endDate: moment(dispo.endDate.date, "YYYY-MM-DD HH:mm:ss.SSSSSS"),
-  //       };
-  //       return modalRanges.some((modalRange) =>
-  //         rangesOverlap(salleRange, modalRange)
-  //       );
-  //     });
-  //   });
-
-  //   overlappingSalles.length > 0
-  //     ? handleSuccess("Voici les salles disponibles !")
-  //     : handleError("Pas de salles disponibles !");
-  //   setFilteredData(overlappingSalles);
-  // };
 
   return (
     <div className="content-wrapper">
@@ -457,7 +406,7 @@ function AllSalles() {
                           <></>
                         ) : (
                           salles.length > 0 &&
-                          sallesPage.map((u, index) => {
+                          currentItems?.map((u, index) => {
                             return (
                               <tr key={index}>
                                 <td style={{ width: "25%" }}>
@@ -518,36 +467,26 @@ function AllSalles() {
                       </tbody>
                     </table>
                   </div>
-                  <Pagination className="d-flex justify-content-center mt-5">
-                    <Pagination.Prev
-                      onClick={prevPage}
-                      disabled={currentPage === 1}
-                    >
-                      <i
-                        className="mdi mdi-arrow-left-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Prev>
-                    {numbers.map((n, i) => (
-                      <Pagination.Item
-                        className={`${currentPage === n ? "active" : ""}`}
-                        key={i}
-                        style={{ fontSize: "1.5em" }}
-                        onClick={() => changeCurrentPage(n)}
-                      >
-                        {n}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      onClick={nextPage}
-                      disabled={currentPage === numberPages}
-                    >
-                      <i
-                        className="mdi mdi-arrow-right-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Next>
-                  </Pagination>
+                  <ReactPaginate
+                    breakLabel="..."
+                    nextLabel="->"
+                    onPageChange={handlePageClick}
+                    pageRangeDisplayed={3}
+                    marginPagesDisplayed={2}
+                    pageCount={pageCount}
+                    previousLabel="<-"
+                    renderOnZeroPageCount={null}
+                    containerClassName="pagination justify-content-center mt-4"
+                    pageClassName="page-item"
+                    pageLinkClassName="page-link"
+                    previousClassName="page-item"
+                    previousLinkClassName="page-link"
+                    nextClassName="page-item"
+                    nextLinkClassName="page-link"
+                    breakClassName="page-item"
+                    breakLinkClassName="page-link"
+                    activeClassName="active"
+                  />
                 </>
               )}
               {showCarousel && (

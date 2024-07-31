@@ -280,10 +280,7 @@ class DocumentTemplateController extends Controller
             'generated_at' => Carbon::now()
         ]);
 
-        // Return downloadable file response
-        return response()->download($originalTemplatePath, $template->docName, [
-            'Content-Type' => 'application/pdf'
-        ]);
+        return response()->json(['url' => url('/DocumentsGenerated/' . basename($pdfPath))]);
     }
 
     private function fillTemplateWithData($pathToFile, $template, $type)

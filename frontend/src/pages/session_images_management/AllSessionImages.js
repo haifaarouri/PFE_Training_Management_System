@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Form, InputGroup, Pagination } from "react-bootstrap";
+import { Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import ShareImageOnLinkedIn from "../../components/ShareImageOnLinkedIn";
@@ -12,26 +12,27 @@ import {
 } from "../../services/ImageSessionServices";
 import { PiShareFat } from "react-icons/pi";
 import ImageSessionShareModal from "../../components/ImageSessionShareModal";
+import ReactPaginate from "react-paginate";
 
 function AllimagesSessions() {
   const [imagesSessions, setImagesSessions] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const imagesSessionsPerPage = 2;
-  const lastIndex = currentPage * imagesSessionsPerPage;
-  const firstIndex = lastIndex - imagesSessionsPerPage;
-  const imagesSessionsPage =
-    imagesSessions.length > 0 && imagesSessions.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    imagesSessions.length > 0 && imagesSessions.length / imagesSessionsPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState("");
   const [columnName, setColumnName] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [imageToShare, setImageToShare] = useState(null);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = imagesSessions?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(imagesSessions?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % imagesSessions.length;
+    setItemOffset(newOffset);
+  };
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -128,22 +129,6 @@ function AllimagesSessions() {
         }
       }
     });
-  };
-
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   const handleShowShareModal = (i) => {
@@ -307,7 +292,7 @@ function AllimagesSessions() {
                       <></>
                     ) : (
                       imagesSessions.length > 0 &&
-                      imagesSessionsPage.map((u, index) => {
+                      currentItems?.map((u, index) => {
                         return (
                           <tr key={index}>
                             <td style={{ width: "25%" }}>
@@ -358,36 +343,26 @@ function AllimagesSessions() {
                   </tbody>
                 </table>
               </div>
-              <Pagination className="d-flex justify-content-center mt-5">
-                <Pagination.Prev
-                  onClick={prevPage}
-                  disabled={currentPage === 1}
-                >
-                  <i
-                    className="mdi mdi-arrow-left-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Prev>
-                {numbers.map((n, i) => (
-                  <Pagination.Item
-                    className={`${currentPage === n ? "active" : ""}`}
-                    key={i}
-                    style={{ fontSize: "1.5em" }}
-                    onClick={() => changeCurrentPage(n)}
-                  >
-                    {n}
-                  </Pagination.Item>
-                ))}
-                <Pagination.Next
-                  onClick={nextPage}
-                  disabled={currentPage === numberPages}
-                >
-                  <i
-                    className="mdi mdi-arrow-right-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Next>
-              </Pagination>
+              <ReactPaginate
+                breakLabel="..."
+                nextLabel="->"
+                onPageChange={handlePageClick}
+                pageRangeDisplayed={3}
+                marginPagesDisplayed={2}
+                pageCount={pageCount}
+                previousLabel="<-"
+                renderOnZeroPageCount={null}
+                containerClassName="pagination justify-content-center mt-4"
+                pageClassName="page-item"
+                pageLinkClassName="page-link"
+                previousClassName="page-item"
+                previousLinkClassName="page-link"
+                nextClassName="page-item"
+                nextLinkClassName="page-link"
+                breakClassName="page-item"
+                breakLinkClassName="page-link"
+                activeClassName="active"
+              />
             </div>
           </div>
         </div>

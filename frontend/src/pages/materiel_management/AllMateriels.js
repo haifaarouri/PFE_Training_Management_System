@@ -8,35 +8,24 @@ import {
   Carousel,
   Form,
   InputGroup,
-  Pagination,
 } from "react-bootstrap";
 import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import MaterielModal from "../../components/MaterielModal";
 import {
   duplicateMaterial,
-  // deleteMateriel,
   fetchAllMateriaux,
 } from "../../services/MaterielServices";
 import FileModal from "../../components/FileModal";
 import { LuCopyPlus } from "react-icons/lu";
 import { toast } from "sonner";
+import ReactPaginate from "react-paginate";
 require("moment/locale/fr");
 
 function AllMateriels() {
   const [materiaux, setMateriaux] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const materiauxPerPage = 2;
-  const lastIndex = currentPage * materiauxPerPage;
-  const firstIndex = lastIndex - materiauxPerPage;
-  const materiauxPage =
-    materiaux.length > 0 && materiaux.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    materiaux.length > 0 && materiaux.length / materiauxPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
@@ -44,6 +33,16 @@ function AllMateriels() {
   const [showCarousel, setShowCarousel] = useState(false);
   const [showFileModal, setShowFileModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = materiaux?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(materiaux?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % materiaux.length;
+    setItemOffset(newOffset);
+  };
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -121,52 +120,6 @@ function AllMateriels() {
 
     u();
   }, [showModal]);
-
-  // const handleDeleteMateriel = async (id) => {
-  //   Swal.fire({
-  //     title: "Êtes-vous sûr?",
-  //     text: "Vous ne pourrez pas revenir en arrière !",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#3085d6",
-  //     cancelButtonColor: "#d33",
-  //     confirmButtonText: "Oui, supprimer!",
-  //   }).then(async (result) => {
-  //     if (result.isConfirmed) {
-  //       try {
-  //         const res = await deleteMateriel(id);
-  //         Swal.fire({
-  //           title: "Supprimé avec succès!",
-  //           text: "Matériel est supprimé !",
-  //           icon: "success",
-  //         });
-  //         const d = await fetchData();
-  //         setMateriaux(d);
-  //         handleSuccess(res.message);
-  //       } catch (error) {
-  //         if (error && error.response.status === 422) {
-  //           handleError(error.response.data.message);
-  //         }
-  //       }
-  //     }
-  //   });
-  // };
-
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
 
   const handleListView = () => {
     setShowList(true);
@@ -352,7 +305,6 @@ function AllMateriels() {
                           <th>Image</th>
                           <th>Nom</th>
                           <th>Type</th>
-                          {/* <th>Quatité disponible</th> */}
                           <th>Etat</th>
                           <th>Cout</th>
                           <th>Date d'achat</th>
@@ -381,7 +333,6 @@ function AllMateriels() {
                                   <h6>{u.name}</h6>
                                 </td>
                                 <td>{u.type}</td>
-                                {/* <td>{u.quantityAvailable}</td> */}
                                 <td>
                                   {u.status === "HorsService" ? (
                                     <Badge bg="danger">{u.status}</Badge>
@@ -420,14 +371,6 @@ function AllMateriels() {
                                       Modifier{" "}
                                       <i className="mdi mdi-tooltip-edit"></i>
                                     </Button>
-                                    {/* <Button
-                                      onClick={() => handleDeleteMateriel(u.id)}
-                                      variant="outline-danger"
-                                      className="btn btn-sm"
-                                    >
-                                      Supprimer{" "}
-                                      <i className="mdi mdi-delete"></i>
-                                    </Button> */}
                                     <Button
                                       onClick={() => handleDuplicate(u.id)}
                                       variant="outline-warning"
@@ -445,7 +388,7 @@ function AllMateriels() {
                           <></>
                         ) : (
                           materiaux.length > 0 &&
-                          materiauxPage.map((u, index) => {
+                          currentItems?.map((u, index) => {
                             return (
                               <tr key={index}>
                                 <td style={{ width: "25%" }}>
@@ -544,36 +487,26 @@ function AllMateriels() {
                       </tbody>
                     </table>
                   </div>
-                  <Pagination className="d-flex justify-content-center mt-5">
-                    <Pagination.Prev
-                      onClick={prevPage}
-                      disabled={currentPage === 1}
-                    >
-                      <i
-                        className="mdi mdi-arrow-left-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Prev>
-                    {numbers.map((n, i) => (
-                      <Pagination.Item
-                        className={`${currentPage === n ? "active" : ""}`}
-                        key={i}
-                        style={{ fontSize: "1.5em" }}
-                        onClick={() => changeCurrentPage(n)}
-                      >
-                        {n}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      onClick={nextPage}
-                      disabled={currentPage === numberPages}
-                    >
-                      <i
-                        className="mdi mdi-arrow-right-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Next>
-                  </Pagination>
+                  <ReactPaginate
+                    breakLabel="..."
+                    nextLabel="->"
+                    onPageChange={handlePageClick}
+                    pageRangeDisplayed={3}
+                    marginPagesDisplayed={2}
+                    pageCount={pageCount}
+                    previousLabel="<-"
+                    renderOnZeroPageCount={null}
+                    containerClassName="pagination justify-content-center mt-4"
+                    pageClassName="page-item"
+                    pageLinkClassName="page-link"
+                    previousClassName="page-item"
+                    previousLinkClassName="page-link"
+                    nextClassName="page-item"
+                    nextLinkClassName="page-link"
+                    breakClassName="page-item"
+                    breakLinkClassName="page-link"
+                    activeClassName="active"
+                  />
                 </>
               )}
               {showCarousel && (
@@ -594,12 +527,6 @@ function AllMateriels() {
                           >
                             Modifier <i className="mdi mdi-tooltip-edit"></i>
                           </Button>
-                          {/* <Button
-                            onClick={() => handleDeleteMateriel(m.id)}
-                            className="btn btn-sm m-1 btn-rounded"
-                          >
-                            Supprimer <i className="mdi mdi-delete"></i>
-                          </Button> */}
                         </div>
                         <div className="m-5">
                           <Card className="shadow-lg p-3 rounded">
@@ -641,12 +568,6 @@ function AllMateriels() {
                                     </span>{" "}
                                     {m.supplier}
                                   </p>
-                                  {/* <p>
-                                    <span className="text-primary fw-bold">
-                                      Quantité disponible :
-                                    </span>{" "}
-                                    {m.quantityAvailable}
-                                  </p> */}
                                   <p>
                                     <span className="text-primary fw-bold">
                                       Etat :

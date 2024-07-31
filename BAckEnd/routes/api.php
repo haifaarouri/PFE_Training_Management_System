@@ -232,6 +232,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/sentiment', [SentimentAnalysisController::class, 'getSentiment']);
 });
 Route::get('/get-recommendations/{participantId}', [SentimentAnalysisController::class, 'getRecommendations']);
+Route::get('/recommendations-svd/{participantId}', [SentimentAnalysisController::class, 'getRecommendationsSvd']);
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/tasks', [TaskController::class, 'index']);

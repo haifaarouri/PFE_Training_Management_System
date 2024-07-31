@@ -7,7 +7,6 @@ import {
   Carousel,
   Form,
   InputGroup,
-  Pagination,
   Row,
 } from "react-bootstrap";
 import { ToastContainer } from "react-toastify";
@@ -22,6 +21,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import ReactPaginate from "react-paginate";
 require("moment/locale/fr");
 
 function AllCommandes() {
@@ -29,22 +29,6 @@ function AllCommandes() {
   const [commandesDraft, setCommandesDraft] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const commandesPerPage = 2;
-  const lastIndex = currentPage * commandesPerPage;
-  const firstIndex = lastIndex - commandesPerPage;
-  const commandesPage =
-    commandes.length > 0 && commandes.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    commandes.length > 0 && commandes.length / commandesPerPage
-  );
-  const commandesDraftPage =
-    commandesDraft.length > 0 && commandesDraft.slice(firstIndex, lastIndex);
-  const numberPagesDraft = Math.ceil(
-    commandesDraft.length > 0 && commandesDraft.length / commandesPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
-  const numbersDraft = [...Array(numberPagesDraft + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
@@ -52,6 +36,27 @@ function AllCommandes() {
   const [showCarousel, setShowCarousel] = useState(false);
   const [userAuth, setUserAuth] = useState(null);
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = commandes?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(commandes?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % commandes.length;
+    setItemOffset(newOffset);
+  };
+
+  const [itemOffset2, setItemOffset2] = useState(0);
+  const itemsPerPage2 = 5;
+  const endOffset2 = itemOffset2 + itemsPerPage2;
+  const currentItems2 = commandesDraft?.slice(itemOffset2, endOffset2);
+  const pageCount2 = Math.ceil(commandesDraft?.length / itemsPerPage2);
+
+  const handlePageClick2 = (event) => {
+    const newOffset = (event.selected * itemsPerPage2) % commandesDraft.length;
+    setItemOffset2(newOffset);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -151,22 +156,6 @@ function AllCommandes() {
 
     u();
   }, [showModal]);
-
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
 
   const handleListView = () => {
     setShowList(true);
@@ -508,7 +497,7 @@ function AllCommandes() {
                         ) : commandes.length > 0 &&
                           userAuth &&
                           userAuth.role !== "PiloteDuProcessus" ? (
-                          commandesPage.map((c, index) => {
+                          currentItems?.map((c, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -590,7 +579,7 @@ function AllCommandes() {
                           })
                         ) : (
                           commandesDraft.length > 0 &&
-                          commandesDraftPage.map((c, index) => {
+                          currentItems2?.map((c, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -673,67 +662,47 @@ function AllCommandes() {
                     </table>
                   </div>
                   {userAuth && userAuth.role !== "PiloteDuProcessus" ? (
-                    <Pagination className="d-flex justify-content-center mt-5">
-                      <Pagination.Prev
-                        onClick={prevPage}
-                        disabled={currentPage === 1}
-                      >
-                        <i
-                          className="mdi mdi-arrow-left-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Prev>
-                      {numbers.map((n, i) => (
-                        <Pagination.Item
-                          className={`${currentPage === n ? "active" : ""}`}
-                          key={i}
-                          style={{ fontSize: "1.5em" }}
-                          onClick={() => changeCurrentPage(n)}
-                        >
-                          {n}
-                        </Pagination.Item>
-                      ))}
-                      <Pagination.Next
-                        onClick={nextPage}
-                        disabled={currentPage === numberPages}
-                      >
-                        <i
-                          className="mdi mdi-arrow-right-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Next>
-                    </Pagination>
+                    <ReactPaginate
+                      breakLabel="..."
+                      nextLabel="->"
+                      onPageChange={handlePageClick}
+                      pageRangeDisplayed={3}
+                      marginPagesDisplayed={2}
+                      pageCount={pageCount}
+                      previousLabel="<-"
+                      renderOnZeroPageCount={null}
+                      containerClassName="pagination justify-content-center mt-4"
+                      pageClassName="page-item"
+                      pageLinkClassName="page-link"
+                      previousClassName="page-item"
+                      previousLinkClassName="page-link"
+                      nextClassName="page-item"
+                      nextLinkClassName="page-link"
+                      breakClassName="page-item"
+                      breakLinkClassName="page-link"
+                      activeClassName="active"
+                    />
                   ) : (
-                    <Pagination className="d-flex justify-content-center mt-5">
-                      <Pagination.Prev
-                        onClick={prevPage}
-                        disabled={currentPage === 1}
-                      >
-                        <i
-                          className="mdi mdi-arrow-left-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Prev>
-                      {numbersDraft.map((n, i) => (
-                        <Pagination.Item
-                          className={`${currentPage === n ? "active" : ""}`}
-                          key={i}
-                          style={{ fontSize: "1.5em" }}
-                          onClick={() => changeCurrentPage(n)}
-                        >
-                          {n}
-                        </Pagination.Item>
-                      ))}
-                      <Pagination.Next
-                        onClick={nextPage}
-                        disabled={currentPage === numberPagesDraft}
-                      >
-                        <i
-                          className="mdi mdi-arrow-right-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Next>
-                    </Pagination>
+                    <ReactPaginate
+                      breakLabel="..."
+                      nextLabel="->"
+                      onPageChange={handlePageClick2}
+                      pageRangeDisplayed={3}
+                      marginPagesDisplayed={2}
+                      pageCount={pageCount2}
+                      previousLabel="<-"
+                      renderOnZeroPageCount={null}
+                      containerClassName="pagination justify-content-center mt-4"
+                      pageClassName="page-item"
+                      pageLinkClassName="page-link"
+                      previousClassName="page-item"
+                      previousLinkClassName="page-link"
+                      nextClassName="page-item"
+                      nextLinkClassName="page-link"
+                      breakClassName="page-item"
+                      breakLinkClassName="page-link"
+                      activeClassName="active"
+                    />
                   )}
                 </>
               )}
@@ -786,7 +755,7 @@ function AllCommandes() {
                                     <h3>Date de création : {c.date}</h3>
                                     <h3>
                                       {" "}
-                                      Date de livaraison maximale :{" "}
+                                      Date de livraison maximale :{" "}
                                       {c.deliveryDate}
                                     </h3>
                                   </Card.Title>
@@ -968,7 +937,7 @@ function AllCommandes() {
                                     <h3>Date de création : {c.date}</h3>
                                     <h3>
                                       {" "}
-                                      Date de livaraison maximale :{" "}
+                                      Date de livraisonmaximale :{" "}
                                       {c.deliveryDate}
                                     </h3>
                                   </Card.Title>

@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Modal, Button, Form, InputGroup } from "react-bootstrap";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import axios from "../services/axios";
 import Swal from "sweetalert2";
 import { FaBuilding, FaChalkboardTeacher, FaPhoneAlt } from "react-icons/fa";
@@ -358,7 +358,6 @@ const CandidatModal = ({ show, handleClose }) => {
             </Button>
           </div>
         </Form>
-        <ToastContainer />
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose}>

@@ -1,4 +1,4 @@
-import { Button, Form, InputGroup, Pagination } from "react-bootstrap";
+import { Button, Form, InputGroup } from "react-bootstrap";
 import React, { useEffect, useState } from "react";
 import axios from "../../services/axios";
 import { apiFetch } from "../../services/api";
@@ -19,6 +19,7 @@ import {
 } from "chart.js";
 import Swal from "sweetalert2";
 import { fetchAllSessions } from "../../services/SessionServices";
+import ReactPaginate from "react-paginate";
 
 ChartJS.register(
   CategoryScale,
@@ -40,19 +41,6 @@ defaults.plugins.title.color = "black";
 
 function ParticipantFeedback() {
   const [feedbacks, setFeedbacks] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const feedbacksPerPage = 2;
-  const lastIndex = currentPage * feedbacksPerPage;
-  const firstIndex = lastIndex - feedbacksPerPage;
-  const feedbacksPage =
-    feedbacks?.length > 0 && feedbacks?.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    feedbacks?.length > 0 && feedbacks?.length / feedbacksPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
-  // const [filteredData, setFilteredData] = useState(null);
-  // const [wordEntered, setWordEntered] = useState(null);
-  // const [columnName, setColumnName] = useState(null);
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState(null);
   const [sentiments, setSentiments] = useState(null);
@@ -62,7 +50,16 @@ function ParticipantFeedback() {
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [formationsAvgChart, setFormationsAvgChart] = useState(null);
-  const [participantIds, setParticipantIds] = useState([]);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = feedbacks?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(feedbacks?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % feedbacks.length;
+    setItemOffset(newOffset);
+  };
 
   const optionsFormationsAvg = {
     responsive: true,
@@ -129,43 +126,6 @@ function ParticipantFeedback() {
     if (selectedSession) u();
   }, [selectedSession]);
 
-  // const handleFilterChange = (e) => {
-  //   const searchWord = e.target.value.toLowerCase();
-  //   setWordEntered(searchWord);
-  // };
-
-  // const fetchFeedbacks = async () => {
-  //   if (columnName && columnName !== "Colonne") {
-  //     const filter = { [columnName]: wordEntered };
-  //     const queryParams = new URLSearchParams(filter).toString();
-
-  //     if (!localStorage.getItem("token")) {
-  //       const response = await axios.get(
-  //         `/api/filter-feedbacks?${queryParams}`
-  //       );
-  //       const data = await response.data;
-  //       if (data?.length > 0) {
-  //         setFilteredData(data);
-  //       }
-  //     } else {
-  //       const response = await apiFetch(`/api/filter-feedbacks?${queryParams}`);
-  //       const data = await response.json();
-  //       setFilteredData(data);
-  //     }
-  //   } else if (wordEntered && !columnName) {
-  //     Swal.fire({
-  //       icon: "warning",
-  //       title: "Veilliez séléctionner une colonne pour filtrer les feedbacks !",
-  //       showConfirmButton: false,
-  //       timer: 3000,
-  //     });
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchFeedbacks();
-  // }, [columnName, wordEntered]);
-
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -183,7 +143,6 @@ function ParticipantFeedback() {
           }
 
           if (ids.includes(selectedSession)) {
-            // for (let index = 0; index < ids.length; index++) {
             try {
               const response = await axios.post(
                 `http://localhost:8000/api/get-form-responses`,
@@ -199,7 +158,6 @@ function ParticipantFeedback() {
             } catch (error) {
               console.error(`Error fetching responses : `, error);
             }
-            // }
 
             setLoading(false);
             return responsesNotToken;
@@ -261,22 +219,6 @@ function ParticipantFeedback() {
     } catch (error) {
       setLoading(false);
       console.log("Error fetching feedbacks :", error);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -589,7 +531,7 @@ function ParticipantFeedback() {
   };
 
   const createFormationsAvgChart = (data) => {
-    const labels = data.map((item) => `${item.reference} - ${item.entitled}`);
+    const labels = data.map((item) => `${item.reference}`);
     const averages = data.map((item) => item.averageFeedback);
 
     setFormationsAvgChart({
@@ -628,10 +570,10 @@ function ParticipantFeedback() {
     try {
       if (!localStorage.getItem("token")) {
         const response = await axios.get(`/api/participant-ids`);
-        setParticipantIds(response.data);
+        return response.data;
       } else {
         const response = await apiFetch(`participant-ids`);
-        setParticipantIds(response);
+        return response;
       }
     } catch (error) {
       console.log("Error fetching formation-averages :", error);
@@ -639,18 +581,28 @@ function ParticipantFeedback() {
   };
 
   const handleRecomendations = async () => {
-    await fetchParticipantsIds();
+    setLoading(true);
+
+    const participantIds = await fetchParticipantsIds();
+
     if (participantIds.length > 0) {
       participantIds.forEach(async (id) => {
         try {
           if (!localStorage.getItem("token")) {
             const response = await axios.get(`/api/get-recommendations/${id}`);
             console.log(response.data);
+            if (response) {
+              setLoading(false);
+            }
           } else {
             const response = await apiFetch(`get-recommendations/${id}`);
             console.log(response);
+            if (response) {
+              setLoading(false);
+            }
           }
         } catch (error) {
+          setLoading(false);
           console.log("Error fetching recommendations :", error);
         }
       });
@@ -677,88 +629,7 @@ function ParticipantFeedback() {
                 </Link>
               </div>
               {loading && <Spinner />}
-              {/* <div className="d-flex justify-content-center mt-3 mb-5">
-                <Form style={{ width: "50%" }}>
-                  <div className="inner-form">
-                    <div className="input-select">
-                      <Form.Group>
-                        <InputGroup>
-                          <Form.Select
-                            style={{ border: "none" }}
-                            value={columnName}
-                            onChange={(e) => setColumnName(e.target.value)}
-                            required
-                          >
-                            <option value="">Colonne</option>
-                            <option value="sessionTitle">
-                              Titre de session
-                            </option>
-                            <option value="formationRef">
-                              Réference de la formation
-                            </option>
-                            <option value="formationEntitled">
-                              Titre de la formation
-                            </option>
-                            <option value="firstNameParticipant">
-                              Prénom du participant
-                            </option>
-                            <option value="lastNameParticipant">
-                              Nom du participant
-                            </option>
-                            <option value="emailParticipant">
-                              E-mail du participant
-                            </option>
-                          </Form.Select>
-                        </InputGroup>
-                      </Form.Group>
-                    </div>
-                    <div className="input-field second-wrap">
-                      <Form.Group>
-                        <InputGroup>
-                          <Form.Control
-                            id="search"
-                            type="text"
-                            placeholder="Recherchez des feedbacks ..."
-                            size="lg"
-                            name=""
-                            value={wordEntered}
-                            onChange={handleFilterChange}
-                            required
-                          />
-                        </InputGroup>
-                      </Form.Group>
-                    </div>
-                    <div className="input-field third-wrap">
-                      <button className="btn-search" type="button">
-                        <svg
-                          className="svg-inline--fa fa-search fa-w-16"
-                          aria-hidden="true"
-                          data-prefix="fas"
-                          data-icon="search"
-                          role="img"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 512 512"
-                        >
-                          <path
-                            fill="currentColor"
-                            d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </Form>
-              </div>
-              <div className="d-flex justify-content-evenly">
-                <p>
-                  Cliquez sur ce bouton pour voir les réponses du formulaire
-                  d'évaluation de la session
-                </p>
-                <Button onClick={fetchData}>
-                  Réponses <RiSurveyFill size={20} />
-                </Button>
-              </div> */}
-              <div className="d-flex justify-content-center mt-3 mb-5">
+              <div className="d-flex justify-content-center mt-3">
                 <Form>
                   <div>
                     <div>
@@ -785,13 +656,12 @@ function ParticipantFeedback() {
                   </div>
                 </Form>
               </div>
-              {/* {!filteredData && ( */}
               <div className="table-responsive">
                 <table className="table table-striped table-hover">
                   <thead>
                     {feedbacks?.length > 0 &&
-                      feedbacksPage?.length > 0 &&
-                      feedbacksPage.map((f, i) => (
+                      currentItems?.length > 0 &&
+                      currentItems.map((f, i) => (
                         <tr key={i}>
                           {f.data[0].length > 0 &&
                             f.data[0].map((q, ind) => (
@@ -804,7 +674,7 @@ function ParticipantFeedback() {
                   </thead>
                   <tbody>
                     {feedbacks?.length > 0 &&
-                      feedbacksPage.map((f) =>
+                      currentItems.map((f) =>
                         f.data.map(
                           (response, i) =>
                             i !== 0 && (
@@ -819,71 +689,30 @@ function ParticipantFeedback() {
                   </tbody>
                 </table>
               </div>
-              {/* )} */}
-              {/* {filteredData?.length > 0 && (
-                <div className="table-responsive">
-                  <table className="table table-striped table-hover">
-                    <thead>
-                      <tr>
-                        <th>Participant ID</th>
-                        <th>Formation ID</th>
-                        <th>Score moyen de feedback du participant</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredData.map(
-                        (f, index) =>
-                          f.formations.length > 0 &&
-                          f.formations.map((formation, ind) => (
-                            <tr key={index} className="text-center">
-                              <td key={ind}>
-                                {formation.pivot.participant_id}
-                              </td>
-                              <td key={ind}>{formation.pivot.formation_id}</td>
-                              <td key={ind}>
-                                {formation.pivot.averageFeedback}
-                              </td>
-                            </tr>
-                          ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )} */}
-              {feedbacks?.length > 0 && feedbacksPage?.length > 0 && (
-                <Pagination className="d-flex justify-content-center mt-5">
-                  <Pagination.Prev
-                    onClick={prevPage}
-                    disabled={currentPage === 1}
-                  >
-                    <i
-                      className="mdi mdi-arrow-left-bold-circle-outline"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </Pagination.Prev>
-                  {numbers.map((n, i) => (
-                    <Pagination.Item
-                      className={`${currentPage === n ? "active" : ""}`}
-                      key={i}
-                      style={{ fontSize: "1.5em" }}
-                      onClick={() => changeCurrentPage(n)}
-                    >
-                      {n}
-                    </Pagination.Item>
-                  ))}
-                  <Pagination.Next
-                    onClick={nextPage}
-                    disabled={currentPage === numberPages}
-                  >
-                    <i
-                      className="mdi mdi-arrow-right-bold-circle-outline"
-                      style={{ fontSize: "1.5em" }}
-                    />
-                  </Pagination.Next>
-                </Pagination>
+              {feedbacks?.length > 0 && currentItems?.length > 0 && (
+                <ReactPaginate
+                  breakLabel="..."
+                  nextLabel="->"
+                  onPageChange={handlePageClick}
+                  pageRangeDisplayed={3}
+                  marginPagesDisplayed={2}
+                  pageCount={pageCount}
+                  previousLabel="<-"
+                  renderOnZeroPageCount={null}
+                  containerClassName="pagination justify-content-center mt-4"
+                  pageClassName="page-item"
+                  pageLinkClassName="page-link"
+                  previousClassName="page-item"
+                  previousLinkClassName="page-link"
+                  nextClassName="page-item"
+                  nextLinkClassName="page-link"
+                  breakClassName="page-item"
+                  breakLinkClassName="page-link"
+                  activeClassName="active"
+                />
               )}
               <div className="my-5 d-flex justify-content-center">
-                {feedbacks?.length > 0 && (
+                {feedbacks?.length > 0 && selectedSession && (
                   <Button
                     className="btn-block btn-inverse-success"
                     onClick={() => handleAnalyse(feedbacks)}
@@ -978,15 +807,17 @@ function ParticipantFeedback() {
                   )}
                 </div>
               )}
-              <div className="my-5 d-flex justify-content-center">
-                <Button
-                  className="mt-3 btn-block btn-inverse-success"
-                  onClick={handleRecomendations}
-                >
-                  Afficher les recommendations des formations pour tous les
-                  participants
-                </Button>
-              </div>
+              {averagePerParticipant && (
+                <div className="my-5 d-flex justify-content-center">
+                  <Button
+                    className="mt-3 btn-block btn-inverse-success"
+                    onClick={handleRecomendations}
+                  >
+                    Afficher les recommendations des formations pour tous les
+                    participants
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

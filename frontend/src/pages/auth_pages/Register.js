@@ -139,8 +139,12 @@ function Register() {
         setProfileImage("");
       }
     } catch (error) {
+      setLoading(false);
       if (error.response.status === 422) {
-        handleError(error.response.data.message);
+        // handleError(error.response.data.message);
+        Object.values(error.response.data.errors).forEach((e) => {
+          handleError(e[0]);
+        });
       }
     }
   };

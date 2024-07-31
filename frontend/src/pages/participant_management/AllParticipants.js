@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import {
-  Badge,
-  Card,
-  Carousel,
-  Form,
-  InputGroup,
-  Pagination,
-} from "react-bootstrap";
+import { Badge, Card, Carousel, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
@@ -22,6 +15,7 @@ import { MdEdit } from "react-icons/md";
 import EditStatusModal from "../../components/EditStatusModal";
 import WaitingListModal from "../../components/WaitingListModal";
 import MarkPresenceModal from "../../components/MakPresenceModal";
+import ReactPaginate from "react-paginate";
 
 function AllParticipants() {
   const [Participants, setParticipants] = useState([]);
@@ -50,6 +44,16 @@ function AllParticipants() {
   const [showEditStatus, setShowEditStatus] = useState(false);
   const [showWaitingList, setShowWaitingList] = useState(false);
   const [showMarkPresence, setShowMarkPresence] = useState(false);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = Participants?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(Participants?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % Participants.length;
+    setItemOffset(newOffset);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -83,7 +87,6 @@ function AllParticipants() {
     }
   };
 
-  // const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
 
   const handleSuccess = (msg) =>
@@ -164,22 +167,6 @@ function AllParticipants() {
     });
   };
 
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
   const handleListView = () => {
     setShowList(true);
     setShowCarousel(false);
@@ -239,13 +226,6 @@ function AllParticipants() {
                 <h4 className="card-title mb-5 mt-2">
                   Liste de tous les Participants
                 </h4>
-                {/* <Button
-                  variant="outline-success"
-                  className="btn btn-sm m-3 mt-1"
-                  onClick={handleShowAddModal}
-                >
-                  Ajouter un Participant
-                </Button> */}
               </div>
               <div className="d-flex justify-content-end px-3 py-3">
                 <div className="btn-group">
@@ -437,7 +417,7 @@ function AllParticipants() {
                           <></>
                         ) : (
                           Participants.length > 0 &&
-                          ParticipantsPage.map((f, index) => {
+                          currentItems?.map((f, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -542,36 +522,26 @@ function AllParticipants() {
                       </tbody>
                     </table>
                   </div>
-                  <Pagination className="d-flex justify-content-center mt-5">
-                    <Pagination.Prev
-                      onClick={prevPage}
-                      disabled={currentPage === 1}
-                    >
-                      <i
-                        className="mdi mdi-arrow-left-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Prev>
-                    {numbers.map((n, i) => (
-                      <Pagination.Item
-                        className={`${currentPage === n ? "active" : ""}`}
-                        key={i}
-                        style={{ fontSize: "1.5em" }}
-                        onClick={() => changeCurrentPage(n)}
-                      >
-                        {n}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      onClick={nextPage}
-                      disabled={currentPage === numberPages}
-                    >
-                      <i
-                        className="mdi mdi-arrow-right-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Next>
-                  </Pagination>
+                  <ReactPaginate
+                    breakLabel="..."
+                    nextLabel="->"
+                    onPageChange={handlePageClick}
+                    pageRangeDisplayed={3}
+                    marginPagesDisplayed={2}
+                    pageCount={pageCount}
+                    previousLabel="<-"
+                    renderOnZeroPageCount={null}
+                    containerClassName="pagination justify-content-center mt-4"
+                    pageClassName="page-item"
+                    pageLinkClassName="page-link"
+                    previousClassName="page-item"
+                    previousLinkClassName="page-link"
+                    nextClassName="page-item"
+                    nextLinkClassName="page-link"
+                    breakClassName="page-item"
+                    breakLinkClassName="page-link"
+                    activeClassName="active"
+                  />
                 </>
               )}
               {showCarousel && (

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Pagination } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import {
   deleteVariable,
@@ -9,21 +8,22 @@ import {
 } from "../../services/VariableServices";
 import VariableModal from "../../components/VariableModal";
 import Swal from "sweetalert2";
+import ReactPaginate from "react-paginate";
 
 function Allvariables() {
   const [variables, setVariables] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const variablesPerPage = 5;
-  const lastIndex = currentPage * variablesPerPage;
-  const firstIndex = lastIndex - variablesPerPage;
-  const variablesPage =
-    variables.length > 0 && variables.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    variables.length > 0 && variables.length / variablesPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = variables?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(variables?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % variables.length;
+    setItemOffset(newOffset);
+  };
 
   const handleShowAddModal = () => setShowModal(true);
   const handleCloseAddModal = () => setShowModal(false);
@@ -104,22 +104,6 @@ function Allvariables() {
     });
   };
 
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -156,7 +140,7 @@ function Allvariables() {
                   </thead>
                   <tbody>
                     {variables.length > 0 &&
-                      variablesPage.map((u, index) => {
+                      currentItems?.map((u, index) => {
                         return (
                           <tr key={index}>
                             <td>
@@ -190,36 +174,26 @@ function Allvariables() {
                   </tbody>
                 </table>
               </div>
-              <Pagination className="d-flex justify-content-center mt-5">
-                <Pagination.Prev
-                  onClick={prevPage}
-                  disabled={currentPage === 1}
-                >
-                  <i
-                    className="mdi mdi-arrow-left-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Prev>
-                {numbers.map((n, i) => (
-                  <Pagination.Item
-                    className={`${currentPage === n ? "active" : ""}`}
-                    key={i}
-                    style={{ fontSize: "1.5em" }}
-                    onClick={() => changeCurrentPage(n)}
-                  >
-                    {n}
-                  </Pagination.Item>
-                ))}
-                <Pagination.Next
-                  onClick={nextPage}
-                  disabled={currentPage === numberPages}
-                >
-                  <i
-                    className="mdi mdi-arrow-right-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Next>
-              </Pagination>
+              <ReactPaginate
+                breakLabel="..."
+                nextLabel="->"
+                onPageChange={handlePageClick}
+                pageRangeDisplayed={3}
+                marginPagesDisplayed={2}
+                pageCount={pageCount}
+                previousLabel="<-"
+                renderOnZeroPageCount={null}
+                containerClassName="pagination justify-content-center mt-4"
+                pageClassName="page-item"
+                pageLinkClassName="page-link"
+                previousClassName="page-item"
+                previousLinkClassName="page-link"
+                nextClassName="page-item"
+                nextLinkClassName="page-link"
+                breakClassName="page-item"
+                breakLinkClassName="page-link"
+                activeClassName="active"
+              />
             </div>
           </div>
         </div>

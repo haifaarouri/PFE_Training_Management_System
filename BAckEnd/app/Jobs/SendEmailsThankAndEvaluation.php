@@ -82,10 +82,9 @@ class SendEmailsThankAndEvaluation implements ShouldQueue
         //Remerciement Email
         $data = [
             'sessionTitle' => $this->session->title,
-            'firstName' => $this->participant->firstName,
-            'lastName' => $this->participant->lastName,
+            'nomParticipant' => $this->participant->firstName,
+            'prénomParticipant' => $this->participant->lastName,
             'formationRef' => $this->session->reference,
-            // 'link' => $survey->surveyLink
             'link' => $this->prefilledUrl
         ];
 

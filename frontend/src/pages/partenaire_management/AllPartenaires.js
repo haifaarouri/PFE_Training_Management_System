@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Form, InputGroup, Pagination } from "react-bootstrap";
+import { Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
@@ -11,27 +11,28 @@ import {
 import PartenaireModal from "../../components/PartenaireModal";
 import { FaLink } from "react-icons/fa";
 import AssignFormationModal from "../../components/AssignFormationModal";
+import ReactPaginate from "react-paginate";
 
 function Allparteniares() {
   const [parteniares, setParteniares] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const parteniaresPerPage = 2;
-  const lastIndex = currentPage * parteniaresPerPage;
-  const firstIndex = lastIndex - parteniaresPerPage;
-  const parteniaresPage =
-    parteniares.length > 0 && parteniares.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    parteniares.length > 0 && parteniares.length / parteniaresPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
   const [showAssignFormationModal, setShowAssignFormationModal] =
     useState(false);
   const [partenaireId, setpartenaireId] = useState(null);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = parteniares?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(parteniares?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % parteniares.length;
+    setItemOffset(newOffset);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -150,22 +151,6 @@ function Allparteniares() {
         }
       }
     });
-  };
-
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   return (
@@ -338,7 +323,7 @@ function Allparteniares() {
                       <></>
                     ) : (
                       parteniares.length > 0 &&
-                      parteniaresPage.map((p, index) => {
+                      currentItems?.map((p, index) => {
                         return (
                           <tr key={index} className="text-center">
                             <td>
@@ -406,36 +391,26 @@ function Allparteniares() {
                   </tbody>
                 </table>
               </div>
-              <Pagination className="d-flex justify-content-center mt-5">
-                <Pagination.Prev
-                  onClick={prevPage}
-                  disabled={currentPage === 1}
-                >
-                  <i
-                    className="mdi mdi-arrow-left-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Prev>
-                {numbers.map((n, i) => (
-                  <Pagination.Item
-                    className={`${currentPage === n ? "active" : ""}`}
-                    key={i}
-                    style={{ fontSize: "1.5em" }}
-                    onClick={() => changeCurrentPage(n)}
-                  >
-                    {n}
-                  </Pagination.Item>
-                ))}
-                <Pagination.Next
-                  onClick={nextPage}
-                  disabled={currentPage === numberPages}
-                >
-                  <i
-                    className="mdi mdi-arrow-right-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Next>
-              </Pagination>
+              <ReactPaginate
+                breakLabel="..."
+                nextLabel="->"
+                onPageChange={handlePageClick}
+                pageRangeDisplayed={3}
+                marginPagesDisplayed={2}
+                pageCount={pageCount}
+                previousLabel="<-"
+                renderOnZeroPageCount={null}
+                containerClassName="pagination justify-content-center mt-4"
+                pageClassName="page-item"
+                pageLinkClassName="page-link"
+                previousClassName="page-item"
+                previousLinkClassName="page-link"
+                nextClassName="page-item"
+                nextLinkClassName="page-link"
+                breakClassName="page-item"
+                breakLinkClassName="page-link"
+                activeClassName="active"
+              />
             </div>
           </div>
         </div>

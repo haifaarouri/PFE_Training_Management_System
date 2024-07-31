@@ -161,9 +161,13 @@ const EditFormateur = () => {
         isWhitespace(formateur.firstName) ||
         isWhitespace(formateur.lastName) ||
         isWhitespace(formateur.phoneNumber) ||
-        isWhitespace(formateur.email) ||
-        cv.size > 2000000
+        isWhitespace(formateur.email)
       ) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      if (typeof cv === "object" && cv.size > 2000000) {
         event.preventDefault();
         event.stopPropagation();
         handleError("Fichier est trop volumineux !");

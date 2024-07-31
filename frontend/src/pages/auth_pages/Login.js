@@ -77,7 +77,7 @@ function Login() {
 
     try {
       const form = formRef.current;
-      if (form.checkValidity() === false) {
+      if (form.checkValidity() === false || password.length < 8) {
         event.preventDefault();
         event.stopPropagation();
       }

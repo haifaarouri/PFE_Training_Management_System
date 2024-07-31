@@ -2,31 +2,33 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import moment from "moment";
-import { Badge, Form, InputGroup, Pagination } from "react-bootstrap";
+import { Badge, Form, InputGroup } from "react-bootstrap";
 import CustomModal from "../../components/CustomModal";
 import { ToastContainer, toast } from "react-toastify";
 import { editIsActive, fetchAllUsers } from "../../services/UserServices";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
+import ReactPaginate from "react-paginate";
 require("moment/locale/fr");
 
 function AllUsers() {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 4;
-  const lastIndex = currentPage * usersPerPage;
-  const firstIndex = lastIndex - usersPerPage;
-  const usersPage = users.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    users.length > 0 && users.length / usersPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [userAuth, setUserAuth] = useState(null);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState("");
   const [columnName, setColumnName] = useState(null);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = users?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(users?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % users.length;
+    setItemOffset(newOffset);
+  };
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -137,22 +139,6 @@ function AllUsers() {
         }
       }
     });
-  };
-
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   return (
@@ -377,7 +363,7 @@ function AllUsers() {
                       <></>
                     ) : (
                       users.length > 0 &&
-                      usersPage.map((u, index) => {
+                      currentItems?.map((u, index) => {
                         const dateCreated = moment(u.created_at);
                         dateCreated.locale("fr");
 
@@ -503,36 +489,26 @@ function AllUsers() {
                   </tbody>
                 </table>
               </div>
-              <Pagination className="d-flex justify-content-center mt-5">
-                <Pagination.Prev
-                  onClick={prevPage}
-                  disabled={currentPage === 1}
-                >
-                  <i
-                    className="mdi mdi-arrow-left-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Prev>
-                {numbers.map((n, i) => (
-                  <Pagination.Item
-                    className={`${currentPage === n ? "active" : ""}`}
-                    key={i}
-                    style={{ fontSize: "1.5em" }}
-                    onClick={() => changeCurrentPage(n)}
-                  >
-                    {n}
-                  </Pagination.Item>
-                ))}
-                <Pagination.Next
-                  onClick={nextPage}
-                  disabled={currentPage === numberPages}
-                >
-                  <i
-                    className="mdi mdi-arrow-right-bold-circle-outline"
-                    style={{ fontSize: "1.5em" }}
-                  />
-                </Pagination.Next>
-              </Pagination>
+              <ReactPaginate
+                breakLabel="..."
+                nextLabel="->"
+                onPageChange={handlePageClick}
+                pageRangeDisplayed={3}
+                marginPagesDisplayed={2}
+                pageCount={pageCount}
+                previousLabel="<-"
+                renderOnZeroPageCount={null}
+                containerClassName="pagination justify-content-center mt-4"
+                pageClassName="page-item"
+                pageLinkClassName="page-link"
+                previousClassName="page-item"
+                previousLinkClassName="page-link"
+                nextClassName="page-item"
+                nextLinkClassName="page-link"
+                breakClassName="page-item"
+                breakLinkClassName="page-link"
+                activeClassName="active"
+              />
             </div>
           </div>
         </div>

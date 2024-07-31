@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
-import { Card, Carousel, Form, InputGroup, Pagination } from "react-bootstrap";
+import { Card, Carousel, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
@@ -20,22 +20,13 @@ import DisponibilityModal from "../../components/DisponibilityModal";
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
 import TrainerCalendarModal from "../../components/TrainerCalendarModal";
+import ReactPaginate from "react-paginate";
 require("moment/locale/fr");
 
 function AllFormateurs() {
   const [formateurs, setFormateurs] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const formateursPerPage = 2;
-  const lastIndex = currentPage * formateursPerPage;
-  const firstIndex = lastIndex - formateursPerPage;
-  const formateursPage =
-    formateurs.length > 0 && formateurs.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    formateurs.length > 0 && formateurs.length / formateursPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
@@ -50,6 +41,16 @@ function AllFormateurs() {
   const [otherFilters, setOtherFilters] = useState(false);
   const [showTrainerCalendrier, setShowTrainerCalendrier] = useState(false);
   const [calendarIdTrainer, setCalendarIdTrainer] = useState(null);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = formateurs?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(formateurs?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % formateurs.length;
+    setItemOffset(newOffset);
+  };
 
   const handleCloseDispoModal = () => setShowDispoModal(false);
 
@@ -200,22 +201,6 @@ function AllFormateurs() {
         }
       }
     });
-  };
-
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   const handleListView = () => {
@@ -512,7 +497,7 @@ function AllFormateurs() {
                           <></>
                         ) : (
                           formateurs.length > 0 &&
-                          formateursPage.map((f, index) => {
+                          currentItems?.map((f, index) => {
                             return (
                               <tr key={index} className="text-center">
                                 <td>
@@ -623,36 +608,26 @@ function AllFormateurs() {
                       </tbody>
                     </table>
                   </div>
-                  <Pagination className="d-flex justify-content-center mt-5">
-                    <Pagination.Prev
-                      onClick={prevPage}
-                      disabled={currentPage === 1}
-                    >
-                      <i
-                        className="mdi mdi-arrow-left-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Prev>
-                    {numbers.map((n, i) => (
-                      <Pagination.Item
-                        className={`${currentPage === n ? "active" : ""}`}
-                        key={i}
-                        style={{ fontSize: "1.5em" }}
-                        onClick={() => changeCurrentPage(n)}
-                      >
-                        {n}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      onClick={nextPage}
-                      disabled={currentPage === numberPages}
-                    >
-                      <i
-                        className="mdi mdi-arrow-right-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Next>
-                  </Pagination>
+                  <ReactPaginate
+                    breakLabel="..."
+                    nextLabel="->"
+                    onPageChange={handlePageClick}
+                    pageRangeDisplayed={3}
+                    marginPagesDisplayed={2}
+                    pageCount={pageCount}
+                    previousLabel="<-"
+                    renderOnZeroPageCount={null}
+                    containerClassName="pagination justify-content-center mt-4"
+                    pageClassName="page-item"
+                    pageLinkClassName="page-link"
+                    previousClassName="page-item"
+                    previousLinkClassName="page-link"
+                    nextClassName="page-item"
+                    nextLinkClassName="page-link"
+                    breakClassName="page-item"
+                    breakLinkClassName="page-link"
+                    activeClassName="active"
+                  />
                   <CertifModal
                     show={showCertificat}
                     handleClose={handleCloseCertifModal}

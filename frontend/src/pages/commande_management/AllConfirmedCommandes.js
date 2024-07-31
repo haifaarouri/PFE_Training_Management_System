@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Button from "react-bootstrap/Button";
-import { Badge, Card, Carousel, Pagination, Row } from "react-bootstrap";
+import { Badge, Card, Carousel, Row } from "react-bootstrap";
 import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import {
@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { TbTruckDelivery } from "react-icons/tb";
 import { MdRemoveShoppingCart } from "react-icons/md";
+import ReactPaginate from "react-paginate";
 require("moment/locale/fr");
 
 function AllConfirmedCommandes() {
@@ -29,6 +30,16 @@ function AllConfirmedCommandes() {
   const [showCarousel, setShowCarousel] = useState(false);
   const [userAuth, setUserAuth] = useState(null);
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = commandes?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(commandes?.length / itemsPerPage);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % commandes.length;
+    setItemOffset(newOffset);
+  };
 
   useEffect(() => {
     const u = async () => {
@@ -293,36 +304,26 @@ function AllConfirmedCommandes() {
                       </tbody>
                     </table>
                   </div>
-                  <Pagination className="d-flex justify-content-center mt-5">
-                    <Pagination.Prev
-                      onClick={prevPage}
-                      disabled={currentPage === 1}
-                    >
-                      <i
-                        className="mdi mdi-arrow-left-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Prev>
-                    {numbers.map((n, i) => (
-                      <Pagination.Item
-                        className={`${currentPage === n ? "active" : ""}`}
-                        key={i}
-                        style={{ fontSize: "1.5em" }}
-                        onClick={() => changeCurrentPage(n)}
-                      >
-                        {n}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      onClick={nextPage}
-                      disabled={currentPage === numberPages}
-                    >
-                      <i
-                        className="mdi mdi-arrow-right-bold-circle-outline"
-                        style={{ fontSize: "1.5em" }}
-                      />
-                    </Pagination.Next>
-                  </Pagination>
+                  <ReactPaginate
+                    breakLabel="..."
+                    nextLabel="->"
+                    onPageChange={handlePageClick}
+                    pageRangeDisplayed={3}
+                    marginPagesDisplayed={2}
+                    pageCount={pageCount}
+                    previousLabel="<-"
+                    renderOnZeroPageCount={null}
+                    containerClassName="pagination justify-content-center mt-4"
+                    pageClassName="page-item"
+                    pageLinkClassName="page-link"
+                    previousClassName="page-item"
+                    previousLinkClassName="page-link"
+                    nextClassName="page-item"
+                    nextLinkClassName="page-link"
+                    breakClassName="page-item"
+                    breakLinkClassName="page-link"
+                    activeClassName="active"
+                  />
                 </>
               )}
               {showCarousel && (
@@ -363,8 +364,7 @@ function AllConfirmedCommandes() {
                                   <h3>Date de création : {c.date}</h3>
                                   <h3>
                                     {" "}
-                                    Date de livaraison maximale :{" "}
-                                    {c.deliveryDate}
+                                    Date de livraisonmaximale : {c.deliveryDate}
                                   </h3>
                                 </Card.Title>
                                 <Card.Text className="d-flex justify-content-evenly row">

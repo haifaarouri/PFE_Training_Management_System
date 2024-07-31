@@ -10,7 +10,8 @@ import FileModal from "../../components/FileModal";
 import { HiDocumentPlus } from "react-icons/hi2";
 import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
-import { Pagination, Tab, Tabs } from "react-bootstrap";
+import { Tab, Tabs } from "react-bootstrap";
+import ReactPaginate from "react-paginate";
 
 function Alldocuments() {
   const [documents, setDocuments] = useState([]);
@@ -20,32 +21,27 @@ function Alldocuments() {
   const [docLogs, setDocLogs] = useState([]);
   const [showDoc, setShowDoc] = useState(false);
   const [doc, setDoc] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const documentsPerPage = 5;
-  const lastIndex = currentPage * documentsPerPage;
-  const firstIndex = lastIndex - documentsPerPage;
-  const documentsPage =
-    documents.length > 0 && documents.slice(firstIndex, lastIndex);
-  const numberPages = Math.ceil(
-    documents.length > 0 && documents.length / documentsPerPage
-  );
-  const numbers = [...Array(numberPages + 1).keys()].slice(1);
-  const [currentPagedocLogs, setcurrentPagedocLogs] = useState(1);
-  const docLogsPerPage = 5;
-  const lastIndexEmailLog = currentPagedocLogs * docLogsPerPage;
-  const firstIndexEmailLog = lastIndexEmailLog - docLogsPerPage;
-  const docLogsPage =
-    docLogs.length > 0 &&
-    docLogs.slice(firstIndexEmailLog, lastIndexEmailLog);
-  const nbrPages = Math.ceil(
-    docLogs.length > 0 && docLogs.length / docLogsPerPage
-  );
-  const nbrs = [...Array(nbrPages + 1).keys()].slice(1);
+  const [itemOffset, setItemOffset] = useState(0);
+  const itemsPerPage = 2;
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = documents?.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(documents?.length / itemsPerPage);
 
-  // const handleShowFileModal = (doc) => {
-  //   setShowFileModal(true);
-  //   setFile(doc);
-  // };
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % documents.length;
+    setItemOffset(newOffset);
+  };
+
+  const [itemOffset2, setItemOffset2] = useState(0);
+  const itemsPerPage2 = 5;
+  const endOffset2 = itemOffset2 + itemsPerPage2;
+  const currentItems2 = docLogs?.slice(itemOffset2, endOffset2);
+  const pageCount2 = Math.ceil(docLogs?.length / itemsPerPage2);
+
+  const handlePageClick2 = (event) => {
+    const newOffset = (event.selected * itemsPerPage2) % docLogs.length;
+    setItemOffset2(newOffset);
+  };
 
   const handleCloseFileModal = () => setShowFileModal(false);
 
@@ -141,38 +137,6 @@ function Alldocuments() {
     setDoc(null);
   };
 
-  const prevPage = () => {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const changeCurrentPage = (n) => {
-    setCurrentPage(n);
-  };
-
-  const nextPage = () => {
-    if (currentPage !== numberPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const prevLogsPage = () => {
-    if (currentPagedocLogs !== 1) {
-      setcurrentPagedocLogs(currentPagedocLogs - 1);
-    }
-  };
-
-  const changeCurrentLogsPage = (n) => {
-    setcurrentPagedocLogs(n);
-  };
-
-  const nextLogsPage = () => {
-    if (currentPagedocLogs !== numberPages) {
-      setcurrentPagedocLogs(currentPagedocLogs + 1);
-    }
-  };
-
   return (
     <div className="content-wrapper">
       <div className="row">
@@ -186,7 +150,7 @@ function Alldocuments() {
                 </h4>
                 <ToastContainer />
                 <Link
-                  className="btn btn-outline-success btn-sm m-3 mt-1"
+                  className="btn btn-outline-success btn-sm mb-5"
                   to="/add-document"
                 >
                   Ajouter un document
@@ -214,7 +178,7 @@ function Alldocuments() {
                       </thead>
                       <tbody>
                         {documents.length > 0 &&
-                          documentsPage.map((d, index) => {
+                          currentItems?.map((d, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -262,36 +226,26 @@ function Alldocuments() {
                         />
                       </tbody>
                     </table>
-                    <Pagination className="d-flex justify-content-center mt-5">
-                      <Pagination.Prev
-                        onClick={prevPage}
-                        disabled={currentPage === 1}
-                      >
-                        <i
-                          className="mdi mdi-arrow-left-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Prev>
-                      {numbers.map((n, i) => (
-                        <Pagination.Item
-                          className={`${currentPage === n ? "active" : ""}`}
-                          key={i}
-                          style={{ fontSize: "1.5em" }}
-                          onClick={() => changeCurrentPage(n)}
-                        >
-                          {n}
-                        </Pagination.Item>
-                      ))}
-                      <Pagination.Next
-                        onClick={nextPage}
-                        disabled={currentPage === numberPages}
-                      >
-                        <i
-                          className="mdi mdi-arrow-right-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Next>
-                    </Pagination>
+                    <ReactPaginate
+                      breakLabel="..."
+                      nextLabel="->"
+                      onPageChange={handlePageClick}
+                      pageRangeDisplayed={3}
+                      marginPagesDisplayed={2}
+                      pageCount={pageCount}
+                      previousLabel="<-"
+                      renderOnZeroPageCount={null}
+                      containerClassName="pagination justify-content-center mt-4"
+                      pageClassName="page-item"
+                      pageLinkClassName="page-link"
+                      previousClassName="page-item"
+                      previousLinkClassName="page-link"
+                      nextClassName="page-item"
+                      nextLinkClassName="page-link"
+                      breakClassName="page-item"
+                      breakLinkClassName="page-link"
+                      activeClassName="active"
+                    />
                   </div>
                 </Tab>
                 <Tab eventKey="listLogs" title="Liste des documents générés">
@@ -309,7 +263,7 @@ function Alldocuments() {
                       </thead>
                       <tbody>
                         {docLogs.length > 0 &&
-                          docLogsPage.map((docLog, index) => {
+                          currentItems2.map((docLog, index) => {
                             return (
                               <tr key={index}>
                                 <td>
@@ -338,38 +292,26 @@ function Alldocuments() {
                           })}
                       </tbody>
                     </table>
-                    <Pagination className="d-flex justify-content-center mt-5">
-                      <Pagination.Prev
-                        onClick={prevLogsPage}
-                        disabled={currentPagedocLogs === 1}
-                      >
-                        <i
-                          className="mdi mdi-arrow-left-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Prev>
-                      {nbrs.map((n, i) => (
-                        <Pagination.Item
-                          className={`${
-                            currentPagedocLogs === n ? "active" : ""
-                          }`}
-                          key={i}
-                          style={{ fontSize: "1.5em" }}
-                          onClick={() => changeCurrentLogsPage(n)}
-                        >
-                          {n}
-                        </Pagination.Item>
-                      ))}
-                      <Pagination.Next
-                        onClick={nextLogsPage}
-                        disabled={currentPagedocLogs === nbrPages}
-                      >
-                        <i
-                          className="mdi mdi-arrow-right-bold-circle-outline"
-                          style={{ fontSize: "1.5em" }}
-                        />
-                      </Pagination.Next>
-                    </Pagination>
+                    <ReactPaginate
+                      breakLabel="..."
+                      nextLabel="->"
+                      onPageChange={handlePageClick2}
+                      pageRangeDisplayed={3}
+                      marginPagesDisplayed={2}
+                      pageCount={pageCount2}
+                      previousLabel="<-"
+                      renderOnZeroPageCount={null}
+                      containerClassName="pagination justify-content-center mt-4"
+                      pageClassName="page-item"
+                      pageLinkClassName="page-link"
+                      previousClassName="page-item"
+                      previousLinkClassName="page-link"
+                      nextClassName="page-item"
+                      nextLinkClassName="page-link"
+                      breakClassName="page-item"
+                      breakLinkClassName="page-link"
+                      activeClassName="active"
+                    />
                     <FileModal
                       show={showDoc}
                       handleClose={handleCloseDoc}
