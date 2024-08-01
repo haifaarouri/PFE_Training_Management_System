@@ -324,10 +324,12 @@ const TaskList = () => {
             >
               <div>
                 <h3 className="task-title">{task.title}</h3>
-                <p className="task-description">{task.description}</p>
-                <p className="task-details">Due: {task.due_date}</p>
+                <p className="task-description">
+                  Description : {task.description}
+                </p>
+                <p className="task-details">Date : {task.due_date}</p>
                 <p className="task-details">
-                  Session:{" "}
+                  Session :{" "}
                   {task.session_id
                     ? sessions.find((s) => s.id === task.session_id)?.title
                     : "None"}
@@ -340,6 +342,7 @@ const TaskList = () => {
                 <Button
                   onClick={() => handleDeleteTask(task.id)}
                   className="btn btn-info btn-rounded btn-inverse-danger mx-2 p-2"
+                  disabled={task.completed}
                 >
                   <FaTrash size={22} />
                 </Button>

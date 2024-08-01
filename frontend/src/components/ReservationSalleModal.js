@@ -36,9 +36,12 @@ function ReservationSalleModal({ show, onHide, session }) {
   useEffect(() => {
     if (selectedDaySessionId) {
       checkBookedRoom(session.id, selectedDaySessionId).then((r) => {
-        if (r.salleBooked) {
+        if (r?.salleBooked?.id) {
           setMessageAlert(r.message);
           setSalleBooked(r.salleBooked);
+        } else {
+          setMessageAlert(r.message);
+          setSalleBooked("");
         }
       });
 
@@ -180,14 +183,13 @@ function ReservationSalleModal({ show, onHide, session }) {
                 required
               >
                 <option value="">Choisir une salle</option>
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {available.length > 0 &&
-                      (available.find((a) => a.id === room.id)
-                        ? room.name + "(disponible)"
-                        : room.name + "(réservée)")}
-                  </option>
-                ))}
+                {rooms.length > 0 &&
+                  available.length > 0 &&
+                  available.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name}
+                    </option>
+                  ))}
               </Form.Select>
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">
@@ -198,10 +200,10 @@ function ReservationSalleModal({ show, onHide, session }) {
               <MdAddHomeWork size={18} />
             </Button>
           </Form>
-          {messageAlert && salleBooked && (
+          {messageAlert && (
             <Alert variant="danger" className="mt-4">
-              {messageAlert} : <br />
-              <b>{salleBooked.name}</b>
+              {messageAlert} <br />
+              <b>{salleBooked?.name}</b>
             </Alert>
           )}
         </Modal.Body>

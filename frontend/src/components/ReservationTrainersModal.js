@@ -72,7 +72,7 @@ function ReservationTrainersModal({ show, onHide, session }) {
       });
     }
   }, [selectedDayId, session.id, show]);
-
+console.log(available);
   const handleError = (err) =>
     toast.error(err, {
       position: "top-center",

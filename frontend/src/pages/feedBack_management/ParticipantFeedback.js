@@ -55,6 +55,7 @@ function ParticipantFeedback() {
   const endOffset = itemOffset + itemsPerPage;
   const currentItems = feedbacks?.slice(itemOffset, endOffset);
   const pageCount = Math.ceil(feedbacks?.length / itemsPerPage);
+  const [recommendations, setRecommendations] = useState(null);
 
   const handlePageClick = (event) => {
     const newOffset = (event.selected * itemsPerPage) % feedbacks.length;
@@ -591,12 +592,14 @@ function ParticipantFeedback() {
           if (!localStorage.getItem("token")) {
             const response = await axios.get(`/api/get-recommendations/${id}`);
             console.log(response.data);
+            setRecommendations(response.data);
             if (response) {
               setLoading(false);
             }
           } else {
             const response = await apiFetch(`get-recommendations/${id}`);
             console.log(response);
+            setRecommendations(response);
             if (response) {
               setLoading(false);
             }
@@ -816,6 +819,39 @@ function ParticipantFeedback() {
                     Afficher les recommendations des formations pour tous les
                     participants
                   </Button>
+                  {/* <div className="table-responsive">
+                    <table className="table table-striped table-hover">
+                      <thead>
+                        {feedbacks?.length > 0 &&
+                          currentItems?.length > 0 &&
+                          currentItems.map((f, i) => (
+                            <tr key={i}>
+                              {f.data[0].length > 0 &&
+                                f.data[0].map((q, ind) => (
+                                  <th key={ind} style={{ color: "black" }}>
+                                    {q}
+                                  </th>
+                                ))}
+                            </tr>
+                          ))}
+                      </thead>
+                      <tbody>
+                        {feedbacks?.length > 0 &&
+                          currentItems.map((f) =>
+                            f.data.map(
+                              (response, i) =>
+                                i !== 0 && (
+                                  <tr key={i}>
+                                    {Object.keys(response).map((key, j) => (
+                                      <td key={j}>{response[key]}</td>
+                                    ))}
+                                  </tr>
+                                )
+                            )
+                          )}
+                      </tbody>
+                    </table>
+                  </div> */}
                 </div>
               )}
             </div>

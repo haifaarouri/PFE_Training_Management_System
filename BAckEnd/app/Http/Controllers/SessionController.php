@@ -17,6 +17,7 @@ use App\Models\Salle;
 use App\Models\Session;
 use App\Rules\SessionModeRule;
 use App\Rules\SessionStatusRule;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -548,6 +549,19 @@ class SessionController extends Controller
         return response()->json(['message' => 'Formateur réservé avec succès pour le jour de la session !']);
     }
 
+    public function getSynonyms($word, $terms)
+    {
+        \Log::info($word);
+        $client = new Client();
+        $response = $client->post('http://localhost:5000/find_synonyms', [
+            'json' => ['word' => $word, 'terms' => $terms]
+        ]);
+
+        $responseBody = json_decode($response->getBody(), true);
+        \Log::info($responseBody);
+        return response()->json($responseBody);
+    }
+
     private function isFormateurAvailable($formateurId, $dayId, $day, $startTime, $endTime, $sessionId)
     {
         // Convert day to Carbon instance for comparison
@@ -578,7 +592,7 @@ class SessionController extends Controller
 
         // Check if formateur's specialty matches the session's formation requirement
         $session = Session::with('formation')->find($sessionId);
-        if (!$session || !$session->formation) {
+        if (!$session) {
             return ['success' => false, 'message' => 'Session non trouvée !'];
         }
 
@@ -599,6 +613,10 @@ class SessionController extends Controller
         $formationSpecialties = array_merge($formationRequirements, [$formationCategory], [$formationSubCategorie]);
         $formationSpecialties = array_filter($formationSpecialties);
         $matches = array_intersect($formateurSpecialities, $formationSpecialties);
+
+        foreach ($formateurSpecialities as $speciality) {
+            $this->getSynonyms($speciality, $formationSpecialties);
+        }
 
         foreach ($formateurSpecialities as $speciality) {
             foreach ($formationSpecialties as $requirement) {

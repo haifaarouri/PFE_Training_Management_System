@@ -126,7 +126,7 @@ class SentimentAnalysisController extends Controller
             $response = $this->client->request('POST', 'http://localhost:5000/recommend', [
                 'json' => [
                     'course_name' => $lastCourse->entitled,
-                    'n_recommendations' => 5
+                    'n_recommendations' => 10
                 ]
             ]);
 
