@@ -101,6 +101,7 @@ const EventModal = ({ show, onHide, event }) => {
   useEffect(() => {
     if (event && event.id) {
       fetchSessionDays(event.id).then((days) => {
+        setDaySessions(days)
         Promise.all(
           days.map(async (day) => {
             const [salle, trainer] = await Promise.all([
@@ -176,7 +177,7 @@ const EventModal = ({ show, onHide, event }) => {
             text: "Session est supprimée !",
             icon: "success",
           });
-          onHide()
+          onHide();
         } catch (error) {
           if (error && error.response.status === 422) {
             Swal.fire({
@@ -260,7 +261,9 @@ const EventModal = ({ show, onHide, event }) => {
                       <Button
                         className="btn-sm btn-inverse-info mx-1"
                         onClick={() => handleShowEditModal(sessionAfterEdit)}
-                        disabled={new Date(sessionAfterEdit.endDate) < new Date()}
+                        disabled={
+                          new Date(sessionAfterEdit.endDate) < new Date()
+                        }
                       >
                         Modifier <BiSolidCalendarEdit size={25} />
                       </Button>
@@ -384,12 +387,11 @@ const EventModal = ({ show, onHide, event }) => {
                 {daySessions.map((d) => (
                   <div className="d-flex justify-content-between">
                     <p key={d.id}>
-                      <i className="fas fa-calendar-day"></i>{" "}
                       <b>Date du jour : </b>
-                      {d.day} <br /> <i className="fas fa-clock"></i>{" "}
-                      <b>Heure de début : </b> {d.startTime} -
-                      <i className="fas fa-clock"></i> <b> Heure de fin : </b>{" "}
-                      {d.endTime}
+                      {d.day} <br />
+                      <b>Heure de début : </b> {d.startTime}
+                      <br />
+                      <b> Heure de fin : </b> {d.endTime}
                     </p>
                     <p key={d.id}>
                       <b>Salle réservée : </b>

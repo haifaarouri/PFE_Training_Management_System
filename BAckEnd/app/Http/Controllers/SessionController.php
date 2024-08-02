@@ -549,17 +549,40 @@ class SessionController extends Controller
         return response()->json(['message' => 'Formateur réservé avec succès pour le jour de la session !']);
     }
 
-    public function getSynonyms($word, $terms)
+    public function findMatches(array $specialties, array $requirements)
     {
-        \Log::info($word);
         $client = new Client();
-        $response = $client->post('http://localhost:5000/find_synonyms', [
-            'json' => ['word' => $word, 'terms' => $terms]
+        $response = $client->post('http://localhost:5000/find_matches', [
+            'json' => [
+                'specialties' => $specialties,
+                'requirements' => $requirements
+            ]
         ]);
 
-        $responseBody = json_decode($response->getBody(), true);
-        \Log::info($responseBody);
-        return response()->json($responseBody);
+        $scores = json_decode($response->getBody()->getContents(), true);
+        $matches = [];
+        $averageScores = [];
+
+        foreach ($scores as $specialtyIndex => $scoreSet) {
+            $totalScore = 0;
+            $count = 0;
+            foreach ($scoreSet as $requirementIndex => $score) {
+                if ($score > 0.4) {
+                    $matches[] = [
+                        'specialty' => $specialties[$specialtyIndex],
+                        'requirement' => $requirements[$requirementIndex],
+                        'score' => $score
+                    ];
+                    $totalScore += $score;
+                    $count++;
+                }
+            }
+            if ($count > 0) {
+                $averageScores[$specialties[$specialtyIndex]] = $totalScore / $count;
+            }
+        }
+
+        return ['matches' => $matches, 'averages' => $averageScores];
     }
 
     private function isFormateurAvailable($formateurId, $dayId, $day, $startTime, $endTime, $sessionId)
@@ -568,17 +591,17 @@ class SessionController extends Controller
         $dayCarbon = Carbon::parse($day)->startOfDay();
 
         // Check for any overlapping sessions
-        $conflicts = JourSession::where('formateur_id', $formateurId)
-            ->where('day', $day)
-            ->where(function ($query) use ($startTime, $endTime) {
-                $query->where('startTime', '<', $endTime)
-                    ->where('endTime', '>', $startTime);
-            })
-            ->exists();
+        // $conflicts = JourSession::where('formateur_id', $formateurId)
+        //     ->where('day', $day)
+        //     ->where(function ($query) use ($startTime, $endTime) {
+        //         $query->where('startTime', '<', $endTime)
+        //             ->where('endTime', '>', $startTime);
+        //     })
+        //     ->exists();
 
-        if ($conflicts) {
-            return ['success' => false, 'message' => 'Le formateur a déjà une session à ces heures !'];
-        }
+        // if ($conflicts) {
+        //     return ['success' => false, 'message' => 'Le formateur a déjà une session à ces heures !'];
+        // }
 
         // Check formateur availability using startDate and endDate
         $available = Disponibility::where('formateur_id', $formateurId)
@@ -612,22 +635,24 @@ class SessionController extends Controller
         $formationSubCategorie = $session->formation->sousCategorie->sous_categorie_name ?? null;
         $formationSpecialties = array_merge($formationRequirements, [$formationCategory], [$formationSubCategorie]);
         $formationSpecialties = array_filter($formationSpecialties);
-        $matches = array_intersect($formateurSpecialities, $formationSpecialties);
 
-        foreach ($formateurSpecialities as $speciality) {
-            $this->getSynonyms($speciality, $formationSpecialties);
-        }
-
-        foreach ($formateurSpecialities as $speciality) {
-            foreach ($formationSpecialties as $requirement) {
-                if (str_contains(strtolower($requirement), strtolower($speciality))) {
-                    array_push($matches, $speciality);
-                }
-            }
-        }
+        $matches = $this->findMatches($formateurSpecialities, $formationSpecialties);
 
         if (empty($matches)) {
             return ['success' => false, 'message' => 'La spécialité du formateur ne correspond pas aux exigences de la formation !'];
+        }
+
+        // Check if at least one specialty has an average score higher than 0.5
+        $hasHighScore = false;
+        foreach ($matches['averages'] as $specialty => $averageScore) {
+            if ($averageScore > 0.5) {
+                $hasHighScore = true;
+                break;
+            }
+        }
+
+        if (!$hasHighScore) {
+            return ['success' => false, 'message' => 'Les spécialités du formateur ne correspond pas suffisamment aux exigences de la formation !'];
         }
 
         $template = EmailTemplate::where('type', 'TrainerConfirmation')->first();
@@ -645,8 +670,6 @@ class SessionController extends Controller
             'jourSessionId' => $dayId,
             'trainerEmail' => $formateur->email
         ];
-
-        // $htmlContent = json_decode($template->content)->body->rows[0]->columns[0]->contents[0]->values->html;
 
         $subject = $template->subject;
         $content = $this->replacePlaceholders($template->htmlContent, $data);

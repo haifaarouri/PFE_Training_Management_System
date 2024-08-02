@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Modal, Button, Form, InputGroup } from "react-bootstrap";
+import { Modal, Button, Form, InputGroup, Alert } from "react-bootstrap";
 import {
   availableTrainers,
   fetchSessionDays,
@@ -10,6 +10,7 @@ import { toast, ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import axios from "../services/axios";
 import { GiTeacher } from "react-icons/gi";
+import Spinner from "./Spinner";
 
 function ReservationTrainersModal({ show, onHide, session }) {
   const [formateurs, setFormateurs] = useState([]);
@@ -22,6 +23,7 @@ function ReservationTrainersModal({ show, onHide, session }) {
   const [filteredData, setFilteredData] = useState([]);
   const [wordEntered, setWordEntered] = useState(null);
   const [columnName, setColumnName] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
@@ -72,7 +74,7 @@ function ReservationTrainersModal({ show, onHide, session }) {
       });
     }
   }, [selectedDayId, session.id, show]);
-console.log(available);
+
   const handleError = (err) =>
     toast.error(err, {
       position: "top-center",
@@ -101,6 +103,8 @@ console.log(available);
 
   const handleReserve = async (event) => {
     event.preventDefault();
+
+    setLoading(true);
     await csrf();
 
     Swal.fire({
@@ -131,19 +135,35 @@ console.log(available);
           formData.append("formateurId", selectedFormateurId);
           formData.append("dayId", selectedDayId);
 
-          const response = await reserveTrainerForDay(session.id, formData);
+          reserveTrainerForDay(session.id, formData)
+            .then((response) => {
+              Swal.fire({
+                title:
+                  "La réservation du formateur pour ce jour de la session est en cours...",
+                html: "Vérification de la disponibilité du formateur et de ses spécialités si elles correspondent aux spécifications du cours à l’aide d’un modèle d’apprentissage automatique !",
+                timer: 5000,
+                timerProgressBar: true,
+              }).then((result) => {
+                if (result.dismiss === Swal.DismissReason.timer) {
+                  console.log("I was closed by the timer");
+                }
+              });
 
-          if (response) {
-            handleSuccess("Le formateur a été réservé avec succès !");
-            Swal.fire({
-              icon: "success",
-              title: "Le formateur a été réservé avec succès !",
-              showConfirmButton: false,
-              timer: 2000,
-            });
-            onHide();
-          }
+              setLoading(false);
+
+              handleSuccess("Le formateur a été réservé avec succès !");
+              Swal.fire({
+                icon: "success",
+                title: "Le formateur a été réservé avec succès !",
+                showConfirmButton: false,
+                timer: 2000,
+              });
+              onHide();
+            })
+            .catch((e) => console.log(e));
         } catch (error) {
+          setLoading(false);
+
           if (error) {
             if (error.response.data.error) {
               Object.values(error.response.data.error).forEach((element) => {
@@ -183,6 +203,7 @@ console.log(available);
           <Modal.Title>Réserver un Formateur</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {loading ? <Spinner /> : null}
           <div className="d-flex justify-content-center my-3">
             <Form style={{ width: "70%" }}>
               <div className="inner-form">
@@ -281,30 +302,18 @@ console.log(available);
                 <option value="">Choisir un formateur</option>
                 {formateurs.length > 0 &&
                   filteredData.length < 0 &&
-                  formateurs.map((formateur) => (
+                  available.length === 0 &&
+                  available.map((formateur) => (
                     <option key={formateur.id} value={formateur.id}>
-                      {available.length > 0 &&
-                        (available.find((a) => a.id === formateur.id)
-                          ? `${formateur.firstName} ${" "}
-                            ${formateur.lastName} ${" "}
-                            (disponible)`
-                          : `${formateur.firstName} ${" "}
-                          ${formateur.lastName} ${" "}
-                          (non disponible)`)}
+                      {formateur.firstName} {formateur.lastName}
                     </option>
                   ))}
                 {formateurs.length > 0 &&
                   filteredData.length > 0 &&
+                  available.length > 0 &&
                   filteredData.map((formateur) => (
                     <option key={formateur.id} value={formateur.id}>
-                      {available.length > 0 &&
-                        (available.find((a) => a.id === formateur.id)
-                          ? `${formateur.firstName} ${" "}
-                            ${formateur.lastName} ${" "}
-                            (disponible)`
-                          : `${formateur.firstName} ${" "}
-                          ${formateur.lastName} ${" "}
-                          (non disponible)`)}
+                      {formateur.firstName} {formateur.lastName}
                     </option>
                   ))}
               </Form.Select>
@@ -313,6 +322,13 @@ console.log(available);
                 Veuillez Séléctionner un formateur !
               </Form.Control.Feedback>
             </Form.Group>
+            {selectedDayId && columnName && available.length === 0 && (
+              <div className="d-flex justify-content-center mt-4">
+                <Alert variant="danger" style={{ width: "50%" }}>
+                  Pas de formateurs disponibles pour cette date !
+                </Alert>
+              </div>
+            )}
             <div className="d-flex justify-content-center mt-5">
               <Button type="submit">
                 Réserver
