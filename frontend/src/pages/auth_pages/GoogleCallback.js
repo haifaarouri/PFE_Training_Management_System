@@ -48,7 +48,7 @@ function GoogleCallback() {
           dispatch(setNotifications(user.notifications));
 
           if (user) {
-            if (user.role === "SuperAdministrateur") {
+            if (user.role === "SuperAdmin") {
               navigate("/super-admin/users");
             } else {
               navigate("/dashboard");

@@ -591,17 +591,17 @@ class SessionController extends Controller
         $dayCarbon = Carbon::parse($day)->startOfDay();
 
         // Check for any overlapping sessions
-        // $conflicts = JourSession::where('formateur_id', $formateurId)
-        //     ->where('day', $day)
-        //     ->where(function ($query) use ($startTime, $endTime) {
-        //         $query->where('startTime', '<', $endTime)
-        //             ->where('endTime', '>', $startTime);
-        //     })
-        //     ->exists();
+        $conflicts = JourSession::where('formateur_id', $formateurId)
+            ->where('day', $day)
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->where('startTime', '<', $endTime)
+                    ->where('endTime', '>', $startTime);
+            })
+            ->exists();
 
-        // if ($conflicts) {
-        //     return ['success' => false, 'message' => 'Le formateur a déjà une session à ces heures !'];
-        // }
+        if ($conflicts) {
+            return ['success' => false, 'message' => 'Le formateur a déjà une session à ces heures !'];
+        }
 
         // Check formateur availability using startDate and endDate
         $available = Disponibility::where('formateur_id', $formateurId)

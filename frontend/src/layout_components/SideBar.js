@@ -121,19 +121,25 @@ function SideBar({ isSidebarVisible }) {
               alt="logo"
               width="100%"
             />
-            {/* <p
-              className="text-center align-self-center"
-              style={{ color: "white" }}
-            >
-              Gestion des Formations
-            </p> */}
           </div>
           <span />
         </li>
-        <li className="nav-item sidebar-category">
-          <p>Pages</p>
-          <span />
-        </li>
+        {userAuth && userAuth.role !== "Admin" ? (
+          <li className="nav-item sidebar-category">
+            <p>Pages</p>
+            <span />
+          </li>
+        ) : (
+          <li className="nav-item sidebar-category">
+            <p>
+              Votre rôle par défaut est "Administrateur", vous devez atteindre
+              que le Superadministrateur vous assigne un autre rôle pour que
+              vous puissiez naviguer dans notre application et effectuer vos
+              tâches !
+            </p>
+            <span />
+          </li>
+        )}
         {userAuth && userAuth.role === "SuperAdmin" && (
           <li
             className={`nav-item ${
@@ -177,116 +183,28 @@ function SideBar({ isSidebarVisible }) {
             </div>
           </li>
         )}
-        {menuItems.map((item) => (
-          <li
-            key={item.path}
-            className={`nav-item ${
-              hoveredItem === item.title ? "hover-open" : ""
-            }`}
-            onMouseEnter={() => handleMouseEnter(item.title)}
-            onMouseLeave={handleMouseLeave}
-          >
-            <Link className="nav-link" to={item.path}>
-              {typeof item.icon === "string" ? (
-                <i className={`mdi ${item.icon} menu-icon`} />
-              ) : (
-                <i className="menu-icon">{item.icon}</i>
-              )}
-              <span className="menu-title">{item.title}</span>
-            </Link>
-          </li>
-        ))}
-        {/* <li
-          className={`nav-item ${
-            hoveredItem === "Gestions des Commandes" ? "hover-open" : ""
-          }`}
-          onMouseEnter={() => handleMouseEnter("Gestions des Commandes")}
-          onMouseLeave={handleMouseLeave}
-        >
-          <Link
-            className="nav-link"
-            to={
-              userAuth && userAuth.role === "ServiceFinancier"
-                ? "/confirmed-commandes"
-                : "/commandes"
-            }
-          >
-            <i className="mdi mdi-cart menu-icon" />
-            <span className="menu-title">Gestions des Commandes</span>
-          </Link>
-        </li> */}
-        {/* <li className="nav-item">
-          <Link
-            className="nav-link"
-            data-bs-toggle="collapse"
-            to="#auth"
-            aria-expanded="false"
-            aria-controls="auth"
-          >
-            <i className="mdi mdi-account menu-icon" />
-            <span className="menu-title">User Pages</span>
-            <i className="menu-arrow" />
-          </Link>
-          <div className="collapse" id="auth">
-            <ul className="nav flex-column sub-menu">
-              <li className="nav-item">
-                {" "}
-                <Link className="nav-link" to="pages/samples/login.html">
-                  {" "}
-                  Login{" "}
-                </Link>
-              </li>
-              <li className="nav-item">
-                {" "}
-                <Link className="nav-link" to="pages/samples/login-2.html">
-                  {" "}
-                  Login 2{" "}
-                </Link>
-              </li>
-              <li className="nav-item">
-                {" "}
-                <Link className="nav-link" to="pages/samples/register.html">
-                  {" "}
-                  Register{" "}
-                </Link>
-              </li>
-              <li className="nav-item">
-                {" "}
-                <Link className="nav-link" to="pages/samples/register-2.html">
-                  {" "}
-                  Register 2{" "}
-                </Link>
-              </li>
-              <li className="nav-item">
-                {" "}
-                <Link className="nav-link" to="pages/samples/lock-screen.html">
-                  {" "}
-                  Lockscreen{" "}
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </li> */}
-        {/* <li className="nav-item sidebar-category">
-          <p>Apps</p>
-          <span />
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="docs/documentation.html">
-            <i className="mdi mdi-file-document-box-outline menu-icon" />
-            <span className="menu-title">Documentation</span>
-          </Link>
-        </li>
-        <li className="nav-item">
-          <Link
-            className="nav-link"
-            to="https://www.bootstrapdash.com/product/spica-admin/"
-          >
-            <button className="btn bg-danger btn-sm menu-title">
-              Upgrade to pro
-            </button>
-          </Link>
-        </li> */}
+        {userAuth &&
+          userAuth.role !== "SuperAdmin" &&
+          userAuth.role !== "Admin" &&
+          menuItems.map((item) => (
+            <li
+              key={item.path}
+              className={`nav-item ${
+                hoveredItem === item.title ? "hover-open" : ""
+              }`}
+              onMouseEnter={() => handleMouseEnter(item.title)}
+              onMouseLeave={handleMouseLeave}
+            >
+              <Link className="nav-link" to={item.path}>
+                {typeof item.icon === "string" ? (
+                  <i className={`mdi ${item.icon} menu-icon`} />
+                ) : (
+                  <i className="menu-icon">{item.icon}</i>
+                )}
+                <span className="menu-title">{item.title}</span>
+              </Link>
+            </li>
+          ))}
       </ul>
     </nav>
   );

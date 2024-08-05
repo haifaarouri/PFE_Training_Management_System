@@ -349,6 +349,7 @@ const TaskList = () => {
                 <Button
                   onClick={() => handleEditTask(task)}
                   className="btn btn-info btn-rounded btn-inverse-info mx-2 p-2"
+                  disabled={task.completed}
                 >
                   <FaEdit size={22} />
                 </Button>

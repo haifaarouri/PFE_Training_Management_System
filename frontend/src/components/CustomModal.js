@@ -136,6 +136,8 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
 
   const handleSendEmail = async (event) => {
     event.preventDefault();
+
+    setLoading(true);
     await csrf();
     try {
       const form = formRef.current;
@@ -169,7 +171,6 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
                   console.log("I was closed by the timer");
                 }
               });
-              setLoading(true);
 
               if (res && res.data.status) {
                 setLoading(false);
@@ -188,12 +189,14 @@ const CustomModal = ({ show, handleClose, typeModal }) => {
             }
           })
           .catch((e) => {
+            setLoading(false);
             if (e.response.status === 404) {
               handleError(e.response.data.error);
             }
           });
       }
     } catch (error) {
+      setLoading(false);
       if (error && error.response.status === 422) {
         handleError(error.response.data.message);
       } else {

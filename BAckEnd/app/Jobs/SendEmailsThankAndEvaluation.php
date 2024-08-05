@@ -7,8 +7,8 @@ use App\Mail\RemerciementEmail;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Formulaire;
+use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -34,23 +34,6 @@ class SendEmailsThankAndEvaluation implements ShouldQueue
         $this->participant = $participant;
         $this->prefilledUrl = $prefilledUrl;
     }
-
-    // public function replaceVariables($templateContent, $context) {
-    //     $variables = TemplateVariable::where('document_type_id', $context['document_type_id'])->get();
-
-    //     foreach ($variables as $variable) {
-    //         $modelClass = 'App\\Models\\' . $variable->source_model;
-    //         $modelInstance = new $modelClass();
-
-    //         // Assuming you have a way to determine the specific record, e.g., through a context ID
-    //         $record = $modelInstance->find($context[$variable->source_model . '_id']);
-
-    //         $value = $record->{$variable->source_field};
-    //         $templateContent = str_replace("{" . $variable->variable_name . "}", $value, $templateContent);
-    //     }
-
-    //     return $templateContent;
-    // }
 
     private function replacePlaceholders($text, $data)
     {
@@ -79,17 +62,44 @@ class SendEmailsThankAndEvaluation implements ShouldQueue
 
         $survey = Formulaire::firstOrFail();
 
+        $lastCourse = $this->participant->formations->last();
+        $recommendations = [];
+        $client = new Client();
+
+        try {
+            $response = $client->request('POST', 'http://localhost:5000/recommend', [
+                'json' => [
+                    'course_name' => $lastCourse->entitled,
+                    'n_recommendations' => 10
+                ]
+            ]);
+
+            if ($response->getStatusCode() == 200) {
+                $recommendations = json_decode($response->getBody(), true);
+            }
+        } catch (\Exception $e) {
+            \Log::error("Failed to fetch recommendations: " . $e->getMessage());
+        }
+
+        if (!$recommendations) {
+            \Log::error("No recommendations fetched for the participant with ID: " . $this->participant->id);
+            return;
+        }
+
+        $courseList = implode("<br>", array_column($recommendations, 'course'));
+
         //Remerciement Email
         $data = [
             'sessionTitle' => $this->session->title,
             'nomParticipant' => $this->participant->firstName,
             'prénomParticipant' => $this->participant->lastName,
             'formationRef' => $this->session->reference,
-            'link' => $this->prefilledUrl
+            'link' => $this->prefilledUrl,
+            'recommendations' => $courseList
         ];
 
         $subject = $this->replacePlaceholders($template->subject, $data);
-        $content = $this->replacePlaceholders($template->content, $data);
+        $content = $this->replacePlaceholders($template->htmlContent, $data);
 
         $imageAttachments = json_decode($template->imageAttachement, true) ?? [];
 
@@ -103,7 +113,7 @@ class SendEmailsThankAndEvaluation implements ShouldQueue
 
         //Evaluation Email
         $subjectLink = $this->replacePlaceholders($templateEmailLink->subject, $data);
-        $contentLink = $this->replacePlaceholders($templateEmailLink->content, $data);
+        $contentLink = $this->replacePlaceholders($templateEmailLink->htmlContent, $data);
 
         $imageAttachmentsLink = json_decode($templateEmailLink->imageAttachement, true) ?? [];
 

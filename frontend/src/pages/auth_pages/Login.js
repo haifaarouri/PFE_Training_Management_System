@@ -101,7 +101,7 @@ function Login() {
             dispatch(setNotifications(user.notifications));
 
             if (user && user.email_verified_at) {
-              if (user.role === "SuperAdministrateur") {
+              if (user.role === "SuperAdmin") {
                 navigate("/super-admin/users");
               } else {
                 navigate("/dashboard");

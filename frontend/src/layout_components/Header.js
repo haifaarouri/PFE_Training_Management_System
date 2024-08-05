@@ -9,6 +9,7 @@ import { apiFetch } from "../services/api";
 import { IoIosNotifications } from "react-icons/io";
 import { toast } from "sonner";
 import { readNotification } from "../services/CommandeServices";
+require("moment/locale/fr");
 
 function Header({ onToggleSidebar }) {
   const [today, setToday] = useState(null);
@@ -135,7 +136,7 @@ function Header({ onToggleSidebar }) {
           <li className="nav-item">
             <h4 className="mb-0 font-weight-bold d-none d-xl-block">{today}</h4>
           </li>
-          <li className="nav-item dropdown me-1">
+          {/* <li className="nav-item dropdown me-1">
             <Link
               className="nav-link count-indicator dropdown-toggle d-flex justify-content-center align-items-center"
               id="messageDropdown"
@@ -205,7 +206,7 @@ function Header({ onToggleSidebar }) {
                 </div>
               </Link>
             </div>
-          </li>
+          </li> */}
           <li className="nav-item dropdown me-2">
             <Link
               className="nav-link count-indicator dropdown-toggle d-flex align-items-center justify-content-center"
@@ -325,7 +326,7 @@ function Header({ onToggleSidebar }) {
         </button>
       </div>
       <div className="navbar-menu-wrapper navbar-search-wrapper d-none d-lg-flex align-items-center">
-        <ul className="navbar-nav mr-lg-2">
+        {/* <ul className="navbar-nav mr-lg-2">
           <li className="nav-item nav-search d-none d-lg-block">
             <div className="input-group">
               <input
@@ -337,7 +338,7 @@ function Header({ onToggleSidebar }) {
               />
             </div>
           </li>
-        </ul>
+        </ul> */}
         <ul className="navbar-nav navbar-nav-right">
           <li className="nav-item nav-profile dropdown">
             {userAuth && (

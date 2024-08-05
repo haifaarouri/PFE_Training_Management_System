@@ -20,6 +20,7 @@ import {
 import Swal from "sweetalert2";
 import { fetchAllSessions } from "../../services/SessionServices";
 import ReactPaginate from "react-paginate";
+import { fetchAllFormations } from "../../services/FormationServices";
 
 ChartJS.register(
   CategoryScale,
@@ -55,7 +56,8 @@ function ParticipantFeedback() {
   const endOffset = itemOffset + itemsPerPage;
   const currentItems = feedbacks?.slice(itemOffset, endOffset);
   const pageCount = Math.ceil(feedbacks?.length / itemsPerPage);
-  const [recommendations, setRecommendations] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [formations, setFormations] = useState([]);
 
   const handlePageClick = (event) => {
     const newOffset = (event.selected * itemsPerPage) % feedbacks.length;
@@ -117,6 +119,7 @@ function ParticipantFeedback() {
   };
 
   useEffect(() => {
+    setRecommendations([]);
     fetchAllSessions().then(setSessions);
 
     const u = async () => {
@@ -125,6 +128,8 @@ function ParticipantFeedback() {
     };
 
     if (selectedSession) u();
+
+    fetchAllFormations().then(setFormations);
   }, [selectedSession]);
 
   const fetchData = async () => {
@@ -224,138 +229,175 @@ function ParticipantFeedback() {
   };
 
   const handleAnalyse = async (feedbacks) => {
+    setLoading(true);
     const formData = new FormData();
     formData.append("feedbacks", JSON.stringify(feedbacks));
 
-    if (!localStorage.getItem("token")) {
-      const res = await axios.post("/api/sentiment", formData, {
-        headers: {
+    try {
+      if (!localStorage.getItem("token")) {
+        const res = await axios.post("/api/sentiment", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        setSentiments(res.data[0]);
+
+        const labels = new Set();
+        const datasets = {};
+
+        res.data[0].data.forEach((item, i) => {
+          Object.keys(item).forEach((key) => {
+            if (
+              key.endsWith("_sentiment") &&
+              key !== "ParticipantID_sentiment"
+            ) {
+              const question = key.replace("_sentiment", "");
+              labels.add(`Participant ${i + 1}`);
+              if (!datasets[question]) {
+                datasets[question] = [];
+              }
+              datasets[question].push(item[key]);
+            }
+          });
+        });
+
+        datasets &&
+          labels &&
+          setChartData({
+            labels: Array.from(labels),
+            datasets: Object.keys(datasets).map((key, index) => ({
+              label: key,
+              data: datasets[key],
+              backgroundColor: () => {
+                let bgColors = [];
+                if (datasets) {
+                  for (let index = 0; index < datasets[key].length; index++) {
+                    if (datasets[key][index] > 3) {
+                      bgColors.push("rgba(0, 208, 130, 0.6)");
+                    } else {
+                      bgColors.push("rgba(34, 62, 156, 0.6)");
+                    }
+                  }
+                  return bgColors;
+                }
+              },
+              borderColor: () => {
+                let borderColors = [];
+                if (datasets) {
+                  for (let index = 0; index < datasets[key].length; index++) {
+                    if (datasets[key][index] > 3) {
+                      borderColors.push("rgba(0, 208, 130, 1)");
+                    } else {
+                      borderColors.push("rgba(34, 62, 156, 1)");
+                    }
+                  }
+                  return borderColors;
+                }
+              },
+              borderWidth: 2,
+            })),
+          });
+
+        Swal.fire({
+          icon: "success",
+          title:
+            "Les scores de l'analyse des sentiments des feedbacks ont été calculés avec succès !",
+          showConfirmButton: false,
+          timer: 3000,
+        });
+        setLoading(false);
+      } else {
+        const headers = {
           "Content-Type": "multipart/form-data",
-        },
-      });
+        };
 
-      setSentiments(res.data[0]);
+        const token = localStorage.getItem("token");
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
 
-      const labels = new Set();
-      const datasets = {};
+        const response = await axios.post("/api/sentiment", formData, {
+          headers: headers,
+        });
 
-      res.data[0].data.forEach((item, i) => {
-        Object.keys(item).forEach((key) => {
-          if (key.endsWith("_sentiment") && key !== "ParticipantID_sentiment") {
-            const question = key.replace("_sentiment", "");
-            labels.add(`Participant ${i + 1}`);
-            if (!datasets[question]) {
-              datasets[question] = [];
+        setSentiments(response.data[0]);
+
+        const labels = new Set();
+        const datasets = {};
+
+        response.data[0].data.forEach((item, i) => {
+          Object.keys(item).forEach((key) => {
+            if (
+              key.endsWith("_sentiment") &&
+              key !== "ParticipantID_sentiment"
+            ) {
+              const question = key.replace("_sentiment", "");
+              labels.add(`Participant ${i + 1}`);
+              if (!datasets[question]) {
+                datasets[question] = [];
+              }
+              datasets[question].push(item[key]);
             }
-            datasets[question].push(item[key]);
-          }
+          });
         });
-      });
 
-      datasets &&
-        labels &&
-        setChartData({
-          labels: Array.from(labels),
-          datasets: Object.keys(datasets).map((key, index) => ({
-            label: key,
-            data: datasets[key],
-            backgroundColor: () => {
-              let bgColors = [];
-              if (datasets) {
-                for (let index = 0; index < datasets[key].length; index++) {
-                  if (datasets[key][index] > 3) {
-                    bgColors.push("rgba(0, 208, 130, 0.6)");
-                  } else {
-                    bgColors.push("rgba(34, 62, 156, 0.6)");
+        datasets &&
+          labels &&
+          setChartData({
+            labels: Array.from(labels),
+            datasets: Object.keys(datasets).map((key, index) => ({
+              label: key,
+              data: datasets[key],
+              backgroundColor: () => {
+                let bgColors = [];
+                if (datasets) {
+                  for (let index = 0; index < datasets[key].length; index++) {
+                    if (datasets[key][index] > 3) {
+                      bgColors.push("rgba(0, 208, 130, 0.6)");
+                    } else {
+                      bgColors.push("rgba(34, 62, 156, 0.6)");
+                    }
                   }
+                  return bgColors;
                 }
-                return bgColors;
-              }
-            },
-            borderColor: () => {
-              let borderColors = [];
-              if (datasets) {
-                for (let index = 0; index < datasets[key].length; index++) {
-                  if (datasets[key][index] > 3) {
-                    borderColors.push("rgba(0, 208, 130, 1)");
-                  } else {
-                    borderColors.push("rgba(34, 62, 156, 1)");
+              },
+              borderColor: () => {
+                let borderColors = [];
+                if (datasets) {
+                  for (let index = 0; index < datasets[key].length; index++) {
+                    if (datasets[key][index] > 3) {
+                      borderColors.push("rgba(0, 208, 130, 1)");
+                    } else {
+                      borderColors.push("rgba(34, 62, 156, 1)");
+                    }
                   }
+                  return borderColors;
                 }
-                return borderColors;
-              }
-            },
-            borderWidth: 2,
-          })),
+              },
+              borderWidth: 2,
+            })),
+          });
+
+        Swal.fire({
+          icon: "success",
+          title:
+            "Les scores de l'analyse des sentiments des feedbacks ont été calculés avec succès !",
+          showConfirmButton: false,
+          timer: 3000,
         });
-    } else {
-      const headers = {
-        "Content-Type": "multipart/form-data",
-      };
-
-      const token = localStorage.getItem("token");
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        setLoading(false);
       }
-
-      const response = await axios.post("/api/sentiment", formData, {
-        headers: headers,
+    } catch (error) {
+      setLoading(false);
+      Swal.fire({
+        icon: "error",
+        title:
+          "Erreur lors de l'analyse sentimentale des feedbacks des participants !",
+        text: error.message,
+        showConfirmButton: false,
+        timer: 3000,
       });
-
-      setSentiments(response.data[0]);
-
-      const labels = new Set();
-      const datasets = {};
-
-      response.data[0].data.forEach((item, i) => {
-        Object.keys(item).forEach((key) => {
-          if (key.endsWith("_sentiment") && key !== "ParticipantID_sentiment") {
-            const question = key.replace("_sentiment", "");
-            labels.add(`Participant ${i + 1}`);
-            if (!datasets[question]) {
-              datasets[question] = [];
-            }
-            datasets[question].push(item[key]);
-          }
-        });
-      });
-
-      datasets &&
-        labels &&
-        setChartData({
-          labels: Array.from(labels),
-          datasets: Object.keys(datasets).map((key, index) => ({
-            label: key,
-            data: datasets[key],
-            backgroundColor: () => {
-              let bgColors = [];
-              if (datasets) {
-                for (let index = 0; index < datasets[key].length; index++) {
-                  if (datasets[key][index] > 3) {
-                    bgColors.push("rgba(0, 208, 130, 0.6)");
-                  } else {
-                    bgColors.push("rgba(34, 62, 156, 0.6)");
-                  }
-                }
-                return bgColors;
-              }
-            },
-            borderColor: () => {
-              let borderColors = [];
-              if (datasets) {
-                for (let index = 0; index < datasets[key].length; index++) {
-                  if (datasets[key][index] > 3) {
-                    borderColors.push("rgba(0, 208, 130, 1)");
-                  } else {
-                    borderColors.push("rgba(34, 62, 156, 1)");
-                  }
-                }
-                return borderColors;
-              }
-            },
-            borderWidth: 2,
-          })),
-        });
     }
   };
 
@@ -591,22 +633,42 @@ function ParticipantFeedback() {
         try {
           if (!localStorage.getItem("token")) {
             const response = await axios.get(`/api/get-recommendations/${id}`);
-            console.log(response.data);
-            setRecommendations(response.data);
+
             if (response) {
               setLoading(false);
+              Swal.fire({
+                icon: "success",
+                title: `Les recommandations pour le participant avec l'ID : ${response.data.participantId} ont été générées avec succès !`,
+                showConfirmButton: false,
+                timer: 3000,
+              });
+              setRecommendations((prev) => [...prev, response.data]);
             }
           } else {
             const response = await apiFetch(`get-recommendations/${id}`);
-            console.log(response);
-            setRecommendations(response);
+
             if (response) {
               setLoading(false);
+              Swal.fire({
+                icon: "success",
+                title: `Les recommandations pour le participant avec l'ID : ${response.participantId} ont été générées avec succès !`,
+                showConfirmButton: false,
+                timer: 3000,
+              });
+              setRecommendations((prev) => [...prev, response]);
             }
           }
         } catch (error) {
           setLoading(false);
           console.log("Error fetching recommendations :", error);
+          Swal.fire({
+            icon: "error",
+            title:
+              "Erreur lors de la générations des recommendations des formations !",
+            text: error.message,
+            showConfirmButton: false,
+            timer: 3000,
+          });
         }
       });
     }
@@ -810,50 +872,92 @@ function ParticipantFeedback() {
                   )}
                 </div>
               )}
-              {averagePerParticipant && (
-                <div className="my-5 d-flex justify-content-center">
-                  <Button
-                    className="mt-3 btn-block btn-inverse-success"
-                    onClick={handleRecomendations}
-                  >
-                    Afficher les recommendations des formations pour tous les
-                    participants
-                  </Button>
-                  {/* <div className="table-responsive">
+              <div className="my-5 d-flex justify-content-center">
+                <Button
+                  className="mt-3 btn-block btn-inverse-success"
+                  onClick={handleRecomendations}
+                >
+                  Afficher les recommandations des formations pour tous les
+                  participants
+                </Button>
+              </div>
+              <div className="d-flex justify-content-center">
+                {recommendations?.length > 0 && (
+                  <div className="table-responsive">
                     <table className="table table-striped table-hover">
                       <thead>
-                        {feedbacks?.length > 0 &&
-                          currentItems?.length > 0 &&
-                          currentItems.map((f, i) => (
-                            <tr key={i}>
-                              {f.data[0].length > 0 &&
-                                f.data[0].map((q, ind) => (
-                                  <th key={ind} style={{ color: "black" }}>
-                                    {q}
-                                  </th>
-                                ))}
-                            </tr>
-                          ))}
+                        <tr>
+                          <th>Participant ID avec dernière formation</th>
+                          <th style={{ width: "80%" }}>
+                            Formations recommandées avec leurs distances
+                            calculées par le modèle de l'apprentissage
+                            automatique
+                          </th>
+                        </tr>
                       </thead>
                       <tbody>
-                        {feedbacks?.length > 0 &&
-                          currentItems.map((f) =>
-                            f.data.map(
-                              (response, i) =>
-                                i !== 0 && (
-                                  <tr key={i}>
-                                    {Object.keys(response).map((key, j) => (
-                                      <td key={j}>{response[key]}</td>
-                                    ))}
-                                  </tr>
-                                )
-                            )
-                          )}
+                        {recommendations?.length > 0 &&
+                          recommendations.map((r, i) => (
+                            <tr key={i}>
+                              <td>
+                                {r.participantId} - {r.lastCourse}
+                              </td>
+                              <td>
+                                <div>
+                                  <strong>
+                                    Formations recommandées en se basant sur le
+                                    dernière formation de ce participant :
+                                  </strong>
+                                  {Object.entries(r.recommendations).map(
+                                    ([key, value]) =>
+                                      key !== "similar_courses" &&
+                                      formations.length > 0 &&
+                                      (formations.find(
+                                        (f) =>
+                                          f.entitled.includes(value.course) ||
+                                          value.course.includes(f.entitled)
+                                      ) ? (
+                                        <div
+                                          key={`rec-${key}`}
+                                          style={{ color: "#00d082" }}
+                                        >
+                                          {value.course} avec distance:{" "}
+                                          {value.distance.toFixed(4)}
+                                        </div>
+                                      ) : (
+                                        <div
+                                          key={`rec-${key}`}
+                                          style={{ color: "#223e9c" }}
+                                        >
+                                          {value.course} avec distance:{" "}
+                                          {value.distance.toFixed(4)}
+                                        </div>
+                                      ))
+                                  )}
+                                </div>
+                                {/* {r.recommendations.similar_courses?.length >
+                                      0 && (
+                                      <div style={{ marginTop: "10px" }}>
+                                        <strong>
+                                          Formations similaires :
+                                        </strong>
+                                        {r.recommendations.similar_courses.map(
+                                          (course, index) => (
+                                            <div key={`sim-${index}`}>
+                                              {course}
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    )} */}
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
-                  </div> */}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

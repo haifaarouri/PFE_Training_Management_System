@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Formation;
 use App\Models\Participant;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
@@ -38,77 +37,6 @@ class SentimentAnalysisController extends Controller
         }
     }
 
-    // public function getRecommendations($participantId)
-    // {
-    //     // Fetch data from your database
-    //     $participant = Participant::with(['formations'])->find($participantId);
-
-    //     if (!$participant) {
-    //         return response()->json(['message' => 'No data found for participant ID: ' . $participantId], 404);
-    //     }
-
-    //     // Convert the data to an array
-    //     $features = [
-    //         'features' => $participant->formations->map(function ($formation) use ($participant) {
-    //             return [
-    //                 'reviewer_id' => $participant->id,
-    //                 'course_id' => $formation->id,
-    //                 // 'name' => $formation->entitled
-    //             ];
-    //         })->toArray()
-    //     ];
-
-    //     $lastCourse = $participant->formations->last();
-    //     if (!$lastCourse) {
-    //         return response()->json(['message' => 'No courses found for this participant'], 404);
-    //     }
-
-    //     // Send the data to the Flask API
-    //     $response = $this->client->request('POST', 'http://localhost:5000/recommendations', [
-    //         'json' => ['course_name' => $lastCourse->name]
-    //         //  ['data' => $features]
-    //     ]);
-    //     \Log::info(json_decode($response->getBody(), true));
-    //     if ($response->getStatusCode() != 200) {
-    //         return response()->json(['error' => 'Failed to get recommendations'], 500);
-    //     }
-
-    //     // $responseBody = json_decode($response->getBody(), true);
-    //     // return response()->json($responseBody);
-
-    //     $courseraRecommendations = json_decode($response->getBody(), true)['results'];
-
-    //     // Process recommendations
-    //     $recommendations = [];
-    //     foreach ($courseraRecommendations as $rec) {
-    //         $courseName = $rec['course'];
-    //         $distance = $rec['distance'];
-
-    //         // Check if a similar formation exists in your database
-    //         $similarFormation = Formation::where('name', 'LIKE', "%{$courseName}%")->first();
-
-    //         if ($similarFormation) {
-    //             $recommendations[] = [
-    //                 'type' => 'internal',
-    //                 'formation' => $similarFormation,
-    //                 'similarity' => $distance
-    //             ];
-    //         } else {
-    //             $recommendations[] = [
-    //                 'type' => 'external',
-    //                 'course_name' => $courseName,
-    //                 'similarity' => $distance,
-    //                 'message' => 'Similar course not available. Consider this as a future addition.'
-    //             ];
-    //         }
-    //     }
-
-    //     return response()->json([
-    //         'recommendations' => $recommendations,
-    //         'message' => 'Recommendations include both available formations and suggested external courses.'
-    //     ]);
-    // }
-
     public function getRecommendations($participantId)
     {
         $participant = Participant::with(['formations'])->find($participantId);
@@ -137,14 +65,17 @@ class SentimentAnalysisController extends Controller
                 }
 
                 return response()->json([
+                    'participantId' => $participantId,
+                    'lastCourse' => $lastCourse->entitled,
                     'recommendations' => $recommendations,
-                    'message' => 'Recommendations successfully retrieved.'
+                    'message' => 'Les recommandations ont été générées avec succès !'
                 ]);
             } else {
                 return response()->json(['error' => 'Failed to get recommendations from the Flask API'], $response->getStatusCode());
             }
         } catch (\GuzzleHttp\Exception\RequestException $e) {
-            return response()->json(['error' => 'API request failed: ' . $e->getMessage()], 500);
+            \Log::error($e->getMessage());
+            return response()->json(['error' => 'Erreur lors de la génération des recommendations des formations !'], 500);
         }
     }
 }

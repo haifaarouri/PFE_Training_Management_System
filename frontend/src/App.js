@@ -6,8 +6,7 @@ import pusher from "./services/pusherConfig";
 import { setNotifications } from "./store/slices/notificationsSlice";
 import { fetchAllUnreadNotifs } from "./services/CommandeServices";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "./services/axios";
-import { setUser } from "./store/slices/authenticatedUserSlice";
+require("moment/locale/fr");
 
 function App() {
   const persistRootData = localStorage.getItem("persist:root");
@@ -230,7 +229,6 @@ function App() {
                 <RequireAuth
                   allowedRoles={[
                     "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -248,8 +246,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -267,8 +263,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -286,8 +280,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -305,8 +297,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -324,8 +314,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -343,8 +331,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -362,8 +348,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -389,9 +373,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
-                    // "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
                     "CommunityManager",
@@ -408,8 +389,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -427,8 +406,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -488,8 +465,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -507,8 +482,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -526,8 +499,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -545,8 +516,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -564,8 +533,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -583,8 +550,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -602,8 +567,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -621,8 +584,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -640,8 +601,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -659,8 +618,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -678,8 +635,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -697,8 +652,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -716,8 +669,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -735,8 +686,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -754,8 +703,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -773,8 +720,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -792,8 +737,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -811,8 +754,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
@@ -830,8 +771,6 @@ function App() {
               element={
                 <RequireAuth
                   allowedRoles={[
-                    "Admin",
-                    "SuperAdmin",
                     "PiloteDuProcessus",
                     "Sales",
                     "ChargéFormation",
