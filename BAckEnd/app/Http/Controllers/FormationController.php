@@ -22,7 +22,7 @@ class FormationController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $formations = Formation::with('sousCategorie.categorie', 'programme', 'programme.jourFormations', 'programme.jourFormations.sousParties')->get();
+            $formations = Formation::with('sousCategorie.categorie', 'programme', 'programme.jourFormations', 'programme.jourFormations.sousParties', 'candidats', 'participants', 'sessions', 'partenaire')->get();
             return response()->json($formations);
         } else {
             // User does not have access, return a 403 response
@@ -132,7 +132,7 @@ class FormationController extends Controller
     public function show($id)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
-            $formation = Formation::with('sousCategorie.categorie', 'programme', 'programme.jourFormations', 'programme.jourFormations.sousParties')->find($id);
+            $formation = Formation::with('sousCategorie.categorie', 'programme', 'programme.jourFormations', 'programme.jourFormations.sousParties', 'candidats', 'participants', 'sessions', 'partenaire')->find($id);
             if (!$formation) {
                 return response()->json(['error' => 'formation avec cette ID non trouvé !'], 404);
             }

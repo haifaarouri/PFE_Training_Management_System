@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Formation;
 use App\Models\Partenaire;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PartenaireController extends Controller
@@ -58,7 +59,7 @@ class PartenaireController extends Controller
 
                 return response()->json($partenaire, 201);
             } catch (\Exception $e) {
-                \Log::error('Error: ' . $e->getMessage());
+                Log::error('Error: ' . $e->getMessage());
                 return response()->json(['error' => 'Erreur lors de l\'ajout du Partenaire !'], 500);
             }
         } else {
@@ -116,7 +117,7 @@ class PartenaireController extends Controller
 
                 return response()->json($partenaire, 200);
             } catch (\Exception $e) {
-                \Log::error('Error: ' . $e->getMessage());
+                Log::error('Error: ' . $e->getMessage());
                 dd($e->getMessage());
                 return response()->json(['error' => 'Erreur lors de la mise à jour du Partenaire !'], 500);
             }
@@ -134,6 +135,11 @@ class PartenaireController extends Controller
                 return response()->json(['error' => 'Partenaire avec cette ID non trouvé !'], 404);
             }
 
+            // Detach related formations
+            if ($partenaire->formations) {
+                $partenaire->formations()->update(['partenaire_id' => null]);
+            }
+            
             $partenaire->delete();
             return response()->json(['message' => 'Partenaire supprimée avec succès !']);
         } else {

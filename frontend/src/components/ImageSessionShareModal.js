@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button } from "react-bootstrap";
 import "./imageSessionShare.css";
-import { FaFacebook, FaLinkedin } from "react-icons/fa";
+import { FaLinkedin } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { setImage, setMessage } from "../store/slices/shareInLinkedinSlice";
-import axios from "../services/axios";
 
 const ImageSessionShareModal = ({ show, handleClose, imageToShare }) => {
   const [popupVisible, setPopupVisible] = useState(false);
@@ -32,15 +31,15 @@ const ImageSessionShareModal = ({ show, handleClose, imageToShare }) => {
     window.location.href = url;
   };
 
-  const handleFacebookLogin = () => {
-    dispatch(setImage(imageId));
-    dispatch(setMessage(messageToSend));
-    const redirectUri = `http://localhost:3000/facebook/callback`;
-    const clientId = "925700196029185";
-    const url = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=email,public_profile,pages_manage_posts`;
+  // const handleFacebookLogin = () => {
+  //   dispatch(setImage(imageId));
+  //   dispatch(setMessage(messageToSend));
+  //   const redirectUri = `http://localhost:3000/facebook/callback`;
+  //   const clientId = "925700196029185";
+  //   const url = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=email,public_profile,pages_manage_posts`;
 
-    window.location.href = url;
-  };
+  //   window.location.href = url;
+  // };
 
   return (
     <Modal
@@ -77,13 +76,13 @@ const ImageSessionShareModal = ({ show, handleClose, imageToShare }) => {
                     placeholder="Saisir un message pour le partager avec l'image"
                   />
                 </div>
-                <p className="text-center">Partager avec</p>
+                <p className="text-center">Partager avec LinkedIn</p>
                 <ul className="icons no-bullets d-flex justify-content-center">
-                  <li>
+                  {/* <li>
                     <a href="#">
                       <FaFacebook size={25} onClick={handleFacebookLogin} />
                     </a>
-                  </li>
+                  </li> */}
                   <li>
                     <a href="#">
                       <FaLinkedin size={25} onClick={handleLogin} />

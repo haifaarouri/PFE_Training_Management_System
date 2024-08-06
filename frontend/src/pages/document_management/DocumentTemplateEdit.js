@@ -103,10 +103,10 @@ function DocumentTemplateEdit() {
       const blob = await getDocumentAsBlob();
       blob
         ? formData.append(
-            "docName",
-            blob,
-            `TemplateDocument.${docTemplate.type}.docx`
-          )
+          "docName",
+          blob,
+          `TemplateDocument.${docTemplate.type}.docx`
+        )
         : formData.append("docName", docTemplate.docName);
 
       const res = await editDocument(id, formData);
@@ -145,6 +145,20 @@ function DocumentTemplateEdit() {
 
   const handleCloseVariableModal = () => {
     setShowVariableModal(false);
+  };
+
+  const downloadDocument = async () => {
+    const blob = await getDocumentAsBlob();
+    if (blob) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = docTemplate?.type; //file name
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    }
   };
 
   return (
@@ -295,9 +309,18 @@ function DocumentTemplateEdit() {
                         Ajouter nouvelle variable
                       </Button>
                     </Form.Group>
-                    <div className="d-flex justify-content-end">
+                    <div className="d-flex justify-content-between">
+                      {variables.length > 0 && variableTemplates.length > 0 && (
+                        <div> Variables séléctionnées :
+                          {variableTemplates.map((v) => {
+                            const found = variables.find((varItem) => varItem == v.id);
+                            return found ? <span key={v.id}>{"${"}{v.variable_name}{"}"} - </span> : null;
+                          })}
+                        </div>
+                      )}
                       <button
-                        onClick={saveDocumentTemplate}
+                        type="button"
+                        onClick={downloadDocument}
                         style={{ marginBottom: 20 }}
                         className="btn btn-linkedin btn-social-icon-text"
                       >

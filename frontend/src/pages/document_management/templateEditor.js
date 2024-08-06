@@ -157,19 +157,19 @@ function TemplateEditor() {
     }
   };
 
-  // const downloadDocument = async () => {
-  //   const blob = await getDocumentAsBlob();
-  //   if (blob) {
-  //     const url = window.URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = "EditedDocument.docx"; // Specify the file name
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     a.remove();
-  //     window.URL.revokeObjectURL(url);
-  //   }
-  // };
+  const downloadDocument = async () => {
+    const blob = await getDocumentAsBlob();
+    if (blob) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = type; //file name
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    }
+  };
 
   const handleShowVariableModal = () => {
     setShowVariableModal(true);
@@ -303,9 +303,24 @@ function TemplateEditor() {
                 </Form.Group>
                 {docName === "" ? (
                   <>
-                    <div className="d-flex justify-content-end">
+                    <Alert variant="info">
+                      Veuillez saisir dans le contenu du document, les variables
+                      qui seront remplacées par des valeurs dynamiques lors de
+                      la génération automatique du document, selon cette format
+                      : <b>{"${nomDuVariable}"}</b>
+                    </Alert>
+                    <div className="d-flex justify-content-between">
+                      {variables.length > 0 && variableTemplates.length > 0 && (
+                        <div> Variables séléctionnées :
+                          {variableTemplates.map((v) => {
+                            const found = variables.find((varItem) => varItem == v.id);
+                            return found ? <span key={v.id}>{"${"}{v.variable_name}{"}"} - </span> : null;
+                          })}
+                        </div>
+                      )}
                       <button
-                        onClick={saveDocumentTemplate}
+                        type="button"
+                        onClick={downloadDocument}
                         style={{ marginBottom: 20 }}
                         className="btn btn-linkedin btn-social-icon-text"
                       >

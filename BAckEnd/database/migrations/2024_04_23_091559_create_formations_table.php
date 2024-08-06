@@ -27,7 +27,7 @@ return new class extends Migration {
             $table->foreign('sous_categorie_id')->references('id')->on('sous_categories')->onDelete('cascade')->onUpdate('cascade');
 
             $table->unsignedBigInteger('partenaire_id')->nullable();
-            $table->foreign('partenaire_id')->references('id')->on('partenaires')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('partenaire_id')->references('id')->on('partenaires')->onDelete('set null')->onUpdate('cascade');
             $table->timestamps();
         });
     }

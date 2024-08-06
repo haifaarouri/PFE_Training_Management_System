@@ -211,9 +211,11 @@ function AllCandidats() {
           }
         } catch (error) {
           console.log(error);
-          // if (error && error.response.status === 422) {
-          //   handleError(error.response.data.message);
-          // }
+          
+          handleError(error.response.data.error);
+          if (error && error.response.status === 422) {
+            handleError(error.response.data.message);
+          }
         }
       }
     });

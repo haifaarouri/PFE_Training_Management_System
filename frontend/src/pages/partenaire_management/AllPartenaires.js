@@ -305,6 +305,7 @@ function Allparteniares() {
                                   onClick={() => handleDeletePartenaire(p.id)}
                                   variant="outline-danger"
                                   className="btn btn-sm"
+                                  disabled={p.formations.length > 0}
                                 >
                                   Supprimer <i className="mdi mdi-delete"></i>
                                 </Button>
@@ -374,6 +375,7 @@ function Allparteniares() {
                                   onClick={() => handleDeletePartenaire(p.id)}
                                   variant="outline-danger"
                                   className="btn btn-sm"
+                                  disabled={p.formations.length > 0}
                                 >
                                   Supprimer <i className="mdi mdi-delete"></i>
                                 </Button>

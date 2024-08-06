@@ -267,7 +267,7 @@ export const reserveTrainerForDay = async (sessionId, formData) => {
       );
       return response;
     }
-  } catch (error) {
+  } catch (error) {    
     handleError(error.response.data.error);
     Swal.fire({
       icon: "error",

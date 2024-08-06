@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\VariableTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class VariableTemplateController extends Controller
@@ -20,7 +21,7 @@ class VariableTemplateController extends Controller
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
 
-            $variableTemplates = VariableTemplate::all();
+            $variableTemplates = VariableTemplate::with('documentTemplates', 'emailTemplates')->get();
             return response()->json($variableTemplates);
         } else {
             // User does not have access, return a 403 response
@@ -85,7 +86,7 @@ class VariableTemplateController extends Controller
 
                 return response()->json($variableTemplate, 201);
             } catch (\Exception $e) {
-                \Log::error('Error : ' . $e->getMessage());
+                Log::error('Error : ' . $e->getMessage());
                 return response()->json(['error' => 'Erreur lors de l\'ajout du VariableTemplate !'], 500);
             }
         } else {
@@ -97,7 +98,7 @@ class VariableTemplateController extends Controller
     public function show($id)
     {
         if ($this->list_roles->contains(auth()->user()->role)) {
-            $variableTemplate = VariableTemplate::find($id);
+            $variableTemplate = VariableTemplate::with('documentTemplates', 'emailTemplates')->find($id);
             if (!$variableTemplate) {
                 return response()->json(['error' => 'VariableTemplate avec cette ID non trouvé !'], 404);
             }
@@ -137,7 +138,7 @@ class VariableTemplateController extends Controller
 
                 return response()->json($variableTemplate, 200);
             } catch (\Exception $e) {
-                \Log::error('Error : ' . $e->getMessage());
+                Log::error('Error : ' . $e->getMessage());
                 return response()->json(['error' => 'Erreur lors de la mise à jour du VariableTemplate !'], 500);
             }
         } else {

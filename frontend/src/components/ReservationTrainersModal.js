@@ -135,32 +135,34 @@ function ReservationTrainersModal({ show, onHide, session }) {
           formData.append("formateurId", selectedFormateurId);
           formData.append("dayId", selectedDayId);
 
-          reserveTrainerForDay(session.id, formData)
-            .then((response) => {
-              Swal.fire({
-                title:
-                  "La réservation du formateur pour ce jour de la session est en cours...",
-                html: "Vérification de la disponibilité du formateur et de ses spécialités si elles correspondent aux spécifications du cours à l’aide d’un modèle d’apprentissage automatique !",
-                timer: 5000,
-                timerProgressBar: true,
-              }).then((result) => {
-                if (result.dismiss === Swal.DismissReason.timer) {
-                  console.log("I was closed by the timer");
-                }
-              });
+          const response = await reserveTrainerForDay(session.id, formData)
 
-              setLoading(false);
+          if (response) {
+            Swal.fire({
+              title:
+                "La réservation du formateur pour ce jour de la session est en cours...",
+              html: "Vérification de la disponibilité du formateur et de ses spécialités si elles correspondent aux spécifications du cours à l’aide d’un modèle d’apprentissage automatique !",
+              timer: 5000,
+              timerProgressBar: true,
+            }).then((result) => {
+              if (result.dismiss === Swal.DismissReason.timer) {
+                console.log("I was closed by the timer");
+              }
+            });
 
-              handleSuccess("Le formateur a été réservé avec succès !");
-              Swal.fire({
-                icon: "success",
-                title: "Le formateur a été réservé avec succès !",
-                showConfirmButton: false,
-                timer: 2000,
-              });
-              onHide();
-            })
-            .catch((e) => console.log(e));
+            setLoading(false);
+
+            handleSuccess("Le formateur a été réservé avec succès !");
+            Swal.fire({
+              icon: "success",
+              title: "Le formateur a été réservé avec succès !",
+              showConfirmButton: false,
+              timer: 2000,
+            });
+            onHide();
+          } else {
+            setLoading(false);
+          }
         } catch (error) {
           setLoading(false);
 
@@ -171,6 +173,7 @@ function ReservationTrainersModal({ show, onHide, session }) {
               });
             }
             handleError(error.response.data.message);
+            handleError(error.response.data.error);
             Swal.fire({
               icon: "error",
               title: "Oops...",

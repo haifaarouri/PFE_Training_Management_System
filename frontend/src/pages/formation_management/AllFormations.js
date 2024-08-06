@@ -504,6 +504,7 @@ function AllFormations() {
                                       }
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={f.candidats.length > 0 || f.sessions.length > 0}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
@@ -597,6 +598,7 @@ function AllFormations() {
                                       }
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={f.candidats.length > 0 || f.sessions.length > 0}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
@@ -654,6 +656,7 @@ function AllFormations() {
                             <Button
                               onClick={() => handleDeleteFormation(f.id)}
                               className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
+                              disabled={f.candidats.length > 0 || f.sessions.length > 0}
                             >
                               Supprimer <i className="mdi mdi-delete"></i>
                             </Button>

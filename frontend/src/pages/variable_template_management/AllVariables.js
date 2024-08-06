@@ -163,6 +163,7 @@ function Allvariables() {
                                   onClick={() => handleDeleteVariable(u.id)}
                                   variant="outline-danger"
                                   className="btn btn-sm"
+                                  disabled={u.document_templates.length > 0 || u.email_templates.length > 0}
                                 >
                                   Supprimer <i className="mdi mdi-delete"></i>
                                 </Button>

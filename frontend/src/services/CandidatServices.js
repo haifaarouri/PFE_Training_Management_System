@@ -116,6 +116,12 @@ export const convertToParticipant = async (candidatId) => {
         text: "Il doit avoir au moins une inscription confirmée !",
         icon: "error",
       });
+    } else {
+      Swal.fire({
+        title: error,
+        text: "Il doit avoir au moins une inscription confirmée !",
+        icon: "error",
+      });
     }
   }
 };

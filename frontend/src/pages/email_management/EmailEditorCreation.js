@@ -379,6 +379,16 @@ function EmailEditorCreation() {
                     </Button>
                   </Link>
                 </Form.Group>
+                <div className="my-3">
+                  {variables.length > 0 && variableTemplates.length > 0 && (
+                    <div> Variables séléctionnées :
+                      {variableTemplates.map((v) => {
+                        const found = variables.find((varItem) => varItem == v.id);
+                        return found ? <span key={v.id}>{"{"}{v.variable_name}{"}"} - </span> : null;
+                      })}
+                    </div>
+                  )}
+                </div>
                 <EmailEditor
                   ref={emailEditorRef}
                   // onLoad={()=>onLoad(<div>tempalte</div>)}
