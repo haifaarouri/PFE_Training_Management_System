@@ -234,6 +234,13 @@ class CommandeController extends Controller
                 }
 
                 return response()->json(['message' => 'Le statut de la commande est ' . $request->status . ' !']);
+            } else if ($request->status === "Consommé") {
+                $commande = Commande::find($id);
+
+                $commande->status = $request->status;
+                $commande->save();
+
+                return response()->json(['message' => 'Le statut de la commande est ' . $request->status . ' !']);
             }
         } else {
             return response()->json(['error' => "Vous n'avez pas d'accès à cette route !"], 403);

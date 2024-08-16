@@ -435,6 +435,12 @@ function AllCommandes() {
                                         variant="outline-primary"
                                         onClick={() => handleButtonEdit(c.id)}
                                         className="btn btn-sm mb-2"
+                                        disabled={
+                                          c.status === "Annulé" ||
+                                          c.status === "Confirmé" ||
+                                          c.status === "Réceptionné" ||
+                                          c.status === "Consommé"
+                                        }
                                       >
                                         Modifier{" "}
                                         <i
@@ -446,6 +452,12 @@ function AllCommandes() {
                                         onClick={() => handleSendCommande(c.id)}
                                         variant="outline-success"
                                         className="btn btn-sm mb-2"
+                                        disabled={
+                                          c.status === "Annulé" ||
+                                          c.status === "Confirmé" ||
+                                          c.status === "Réceptionné" ||
+                                          c.status === "Consommé"
+                                        }
                                       >
                                         Envoyer{" "}
                                         <BsFillSendCheckFill size={18} />

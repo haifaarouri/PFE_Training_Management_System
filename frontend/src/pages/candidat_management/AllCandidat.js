@@ -57,18 +57,18 @@ function AllCandidats() {
     if (columnName && columnName !== "Colonne") {
       const newFilter =
         candidats.length > 0 &&
-        candidats.filter((formateur) =>
-          formateur[columnName].toLowerCase().includes(searchWord.toLowerCase())
+        candidats.filter((candidat) =>
+          candidat[columnName]?.toLowerCase().includes(searchWord.toLowerCase())
         );
       setFilteredData(newFilter);
     } else {
       const newFilter =
         candidats.length > 0 &&
-        candidats.filter((formateur) => {
-          const formateurFields = Object.values(formateur)
+        candidats.filter((candidat) => {
+          const candidatFields = Object.values(candidat)
             .join(" ")
             .toLowerCase();
-          return formateurFields.includes(searchWord);
+          return candidatFields.includes(searchWord);
         });
       setFilteredData(newFilter);
     }
@@ -211,7 +211,7 @@ function AllCandidats() {
           }
         } catch (error) {
           console.log(error);
-          
+
           handleError(error.response.data.error);
           if (error && error.response.status === 422) {
             handleError(error.response.data.message);
@@ -372,7 +372,7 @@ function AllCandidats() {
                                           bg={
                                             form.pivot.registerStatus ===
                                               "EnAttente" ||
-                                            form.pivot.registerStatus ===
+                                              form.pivot.registerStatus ===
                                               "Annulé"
                                               ? "danger"
                                               : "success"
@@ -429,6 +429,7 @@ function AllCandidats() {
                                       onClick={() => handleDeleteCandidat(f.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={f.formations?.length > 0}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
@@ -472,7 +473,7 @@ function AllCandidats() {
                                           bg={
                                             form.pivot.registerStatus ===
                                               "EnAttente" ||
-                                            form.pivot.registerStatus ===
+                                              form.pivot.registerStatus ===
                                               "Annulé"
                                               ? "danger"
                                               : "success"
@@ -529,6 +530,7 @@ function AllCandidats() {
                                       onClick={() => handleDeleteCandidat(f.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={f.formations?.length > 0}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
@@ -593,6 +595,7 @@ function AllCandidats() {
                             <Button
                               onClick={() => handleDeleteCandidat(f.id)}
                               className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
+                              disabled={f.formations?.length > 0}
                             >
                               Supprimer <i className="mdi mdi-delete"></i>
                             </Button>
@@ -660,7 +663,7 @@ function AllCandidats() {
                                               bg={
                                                 form.pivot.registerStatus ===
                                                   "EnAttente" ||
-                                                form.pivot.registerStatus ===
+                                                  form.pivot.registerStatus ===
                                                   "Annulé"
                                                   ? "danger"
                                                   : "success"

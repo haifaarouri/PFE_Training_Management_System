@@ -99,6 +99,7 @@ const EventModal = ({ show, onHide, event }) => {
   const [sessionCommandes, setSessionCommandes] = useState([]);
 
   useEffect(() => {
+    setDaySessions([])
     if (event && event.id) {
       fetchSessionDays(event.id).then((days) => {
         setDaySessions(days)
@@ -137,9 +138,10 @@ const EventModal = ({ show, onHide, event }) => {
           console.error("Failed to fetch commandes:", error);
         });
     }
-  }, [event]);
+  }, [event, showRoomReservationModal, showBookTrainersModal, showBookMaterialsModal, showCommandeModal]);
 
   useEffect(() => {
+    setDaySessions([])
     event && event.id && fetchSessionDays(event.id).then(setDaySessions);
   }, [event, showEditModal]);
 

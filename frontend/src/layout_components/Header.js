@@ -1,7 +1,7 @@
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "../services/axios";
 import { setUser } from "../store/slices/authenticatedUserSlice";
 import { Button } from "react-bootstrap";
@@ -17,6 +17,7 @@ function Header({ onToggleSidebar }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [listNotif, setListNotif] = useState([]);
+  const location = useLocation();
 
   const result = useSelector((state) => state.user); //pour récuperer la value de user inside redux
   const notifsRedux = useSelector((state) => state.notifications); //pour récuperer la liste des notifications inside redux
@@ -72,6 +73,12 @@ function Header({ onToggleSidebar }) {
 
       let unread = listNotif.filter((n) => n.id !== id);
       setListNotif(unread);
+    }
+
+    if (location.pathname === "/commandes") {
+      window.location.reload();
+    } else {
+      navigate("/commandes");
     }
   };
 
@@ -244,11 +251,11 @@ function Header({ onToggleSidebar }) {
                     .slice()
                     .reverse()
                     .map((n, i) => (
-                      <Link
+                      <Button
                         id="list-example"
                         key={i}
                         className="dropdown-item preview-item"
-                        to="/commandes"
+                        // to="/commandes"
                         onClick={() => readNotif(n.id)}
                       >
                         <div className="preview-thumbnail">
@@ -273,7 +280,7 @@ function Header({ onToggleSidebar }) {
                               .replace(/pm/g, "après-midi")}
                           </p>
                         </div>
-                      </Link>
+                      </Button>
                     ))
                 ) : (
                   <div className="dropdown-item preview-item preview-item-content">

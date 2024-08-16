@@ -135,7 +135,7 @@ function ReservationTrainersModal({ show, onHide, session }) {
           formData.append("formateurId", selectedFormateurId);
           formData.append("dayId", selectedDayId);
 
-          const response = await reserveTrainerForDay(session.id, formData)
+          const response = await reserveTrainerForDay(session.id, formData);
 
           if (response) {
             Swal.fire({
@@ -165,21 +165,20 @@ function ReservationTrainersModal({ show, onHide, session }) {
           }
         } catch (error) {
           setLoading(false);
-
-          if (error) {
-            if (error.response.data.error) {
-              Object.values(error.response.data.error).forEach((element) => {
-                handleError(element[0]);
-              });
-            }
-            handleError(error.response.data.message);
-            handleError(error.response.data.error);
-            Swal.fire({
-              icon: "error",
-              title: "Oops...",
-              text: "Quelque chose s'est mal passé !",
-            });
-          }
+          // if (error) {
+          //   if (error.response.data.error) {
+          //     Object.values(error.response.data.error).forEach((element) => {
+          //       handleError(element[0]);
+          //     });
+          //   }
+          //   handleError(error.response.data.message);
+          //   handleError(error.response.data.error);
+          //   Swal.fire({
+          //     icon: "error",
+          //     title: "Oops...",
+          //     text: "Quelque chose s'est mal passé !",
+          //   });
+          // }
         }
       }
     });
@@ -304,21 +303,24 @@ function ReservationTrainersModal({ show, onHide, session }) {
               >
                 <option value="">Choisir un formateur</option>
                 {formateurs.length > 0 &&
-                  filteredData.length < 0 &&
-                  available.length === 0 &&
+                  filteredData.length === 0 &&
+                  available.length > 0 &&
                   available.map((formateur) => (
                     <option key={formateur.id} value={formateur.id}>
                       {formateur.firstName} {formateur.lastName}
                     </option>
                   ))}
                 {formateurs.length > 0 &&
-                  filteredData.length > 0 &&
                   available.length > 0 &&
-                  filteredData.map((formateur) => (
-                    <option key={formateur.id} value={formateur.id}>
-                      {formateur.firstName} {formateur.lastName}
-                    </option>
-                  ))}
+                  filteredData.length > 0 &&
+                  filteredData.map((fil) => {
+                    const isAvailable = available.some((a) => a.id === fil.id);
+                    return isAvailable ? (
+                      <option key={fil.id} value={fil.id}>
+                        {fil.firstName} {fil.lastName}
+                      </option>
+                    ) : null;
+                  })}
               </Form.Select>
               <Form.Control.Feedback>Cela semble bon !</Form.Control.Feedback>
               <Form.Control.Feedback type="invalid">

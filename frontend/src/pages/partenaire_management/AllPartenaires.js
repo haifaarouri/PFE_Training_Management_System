@@ -41,7 +41,7 @@ function Allparteniares() {
     };
 
     u();
-  }, []);
+  }, [showAssignFormationModal]);
 
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();

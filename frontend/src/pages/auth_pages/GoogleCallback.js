@@ -31,30 +31,40 @@ function GoogleCallback() {
       .then((data) => {
         console.log(data);
         if (data.error) {
+          setLoading(false);
           Swal.fire({
             icon: "error",
             title: data.error,
-            showConfirmButton: false,
+            text: "Erreur lors de la connexion avec Google !",
+            showCancelButton: false,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Retour à la page de connexion",
+          }).then(async (result) => {
+            if (result.isConfirmed) {
+              navigate("/login")
+            }
+          });
+        } else {
+          setLoading(false);
+          setData(data);
+          localStorage.setItem("token", data.access_token); // Store the token
+
+          fetchUserData().then((user) => {
+            //stock user in redux
+            dispatch(setUser(user));
+            setUserAuth(user);
+            dispatch(setNotifications(user.notifications));
+
+            if (user) {
+              if (user.role === "SuperAdmin") {
+                navigate("/super-admin/users");
+              } else {
+                navigate("/dashboard");
+              }
+            }
           });
         }
-        setLoading(false);
-        setData(data);
-        localStorage.setItem("token", data.access_token); // Store the token
-
-        fetchUserData().then((user) => {
-          //stock user in redux
-          dispatch(setUser(user));
-          setUserAuth(user);
-          dispatch(setNotifications(user.notifications));
-
-          if (user) {
-            if (user.role === "SuperAdmin") {
-              navigate("/super-admin/users");
-            } else {
-              navigate("/dashboard");
-            }
-          }
-        });
       });
   }, []);
 
@@ -78,7 +88,7 @@ function GoogleCallback() {
 
   if (loading) {
     return <DisplayLoading />;
-  } 
+  }
   // else {
   //   return !userAuth && <Navigate to="/login" replace />;
   // }

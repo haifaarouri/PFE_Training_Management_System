@@ -162,8 +162,8 @@ function AllConfirmedCommandes() {
           const res = await editStatusCommande(id, "Consommé");
           if (res.message) {
             Swal.fire({
-              title: "Annulée avec succès!",
-              text: "Commande est non confirmée !",
+              title: "Modifié avec succès!",
+              text: "Commande est consommée !",
               icon: "success",
             });
             const d = await fetchData();

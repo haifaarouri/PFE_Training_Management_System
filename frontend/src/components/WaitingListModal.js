@@ -120,13 +120,13 @@ const WaitingListModal = ({ show, handleClose }) => {
             <table className="table table-striped table-hover">
               <thead>
                 <tr>
-                  <th>Nom</th>
-                  <th>Prénom</th>
-                  <th>E-mail</th>
-                  <th>Numéro de téléphone</th>
-                  <th>Adresse</th>
-                  <th>Type</th>
-                  <th>Entreprise</th>
+                  <th style={{ color: "black" }}>Nom</th>
+                  <th style={{ color: "black" }}>Prénom</th>
+                  <th style={{ color: "black" }}>E-mail</th>
+                  <th style={{ color: "black" }}>Numéro de téléphone</th>
+                  <th style={{ color: "black" }}>Adresse</th>
+                  <th style={{ color: "black" }}>Type</th>
+                  <th style={{ color: "black" }}>Entreprise</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,7 +150,7 @@ const WaitingListModal = ({ show, handleClose }) => {
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : selectedSession && (
           <div className="d-flex justify-content-center">
             <Alert variant="info" style={{ width: "43%" }}>
               Pas de participants dans la liste d'attente !

@@ -71,7 +71,7 @@ function AllParticipants() {
       const newFilter =
         Participants.length > 0 &&
         Participants.filter((formateur) =>
-          formateur[columnName].toLowerCase().includes(searchWord.toLowerCase())
+          formateur[columnName]?.toLowerCase().includes(searchWord.toLowerCase())
         );
       setFilteredData(newFilter);
     } else {
@@ -312,15 +312,15 @@ function AllParticipants() {
                     <table className="table table-striped table-hover">
                       <thead>
                         <tr>
-                          <th>Nom</th>
-                          <th>Prénom</th>
-                          <th>E-mail</th>
-                          <th>Numéro de téléphone</th>
-                          <th>Adresse</th>
-                          <th>Type</th>
-                          <th>Entreprise</th>
-                          <th>Sessions</th>
-                          <th>Actions</th>
+                          <th style={{ color: "black" }}>Nom</th>
+                          <th style={{ color: "black" }}>Prénom</th>
+                          <th style={{ color: "black" }}>E-mail</th>
+                          <th style={{ color: "black" }}>Numéro de téléphone</th>
+                          <th style={{ color: "black" }}>Adresse</th>
+                          <th style={{ color: "black" }}>Type</th>
+                          <th style={{ color: "black" }}>Entreprise</th>
+                          <th style={{ color: "black" }}>Sessions</th>
+                          <th style={{ color: "black" }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -354,9 +354,9 @@ function AllParticipants() {
                                           bg={
                                             form.pivot.participationStatus ===
                                               "Pending" ||
-                                            form.pivot.participationStatus ===
+                                              form.pivot.participationStatus ===
                                               "Cancelled" ||
-                                            form.pivot.participationStatus ===
+                                              form.pivot.participationStatus ===
                                               "Waitlisted"
                                               ? "danger"
                                               : "success"
@@ -403,6 +403,7 @@ function AllParticipants() {
                                       }
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={f.sessions?.length > 0}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
@@ -446,9 +447,9 @@ function AllParticipants() {
                                           bg={
                                             form.pivot.participationStatus ===
                                               "Pending" ||
-                                            form.pivot.participationStatus ===
+                                              form.pivot.participationStatus ===
                                               "Cancelled" ||
-                                            form.pivot.participationStatus ===
+                                              form.pivot.participationStatus ===
                                               "Waitlisted"
                                               ? "danger"
                                               : "success"
@@ -495,6 +496,7 @@ function AllParticipants() {
                                       }
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={f.sessions?.length > 0}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
@@ -566,6 +568,7 @@ function AllParticipants() {
                             <Button
                               onClick={() => handleDeleteParticipant(f.id)}
                               className="btn btn-sm m-1 btn-rounded col-lg-2 col-xs-12"
+                              disabled={f.sessions?.length > 0}
                             >
                               Supprimer <i className="mdi mdi-delete"></i>
                             </Button>
@@ -633,11 +636,11 @@ function AllParticipants() {
                                                 session.pivot
                                                   .participationStatus ===
                                                   "Pending" ||
-                                                session.pivot
-                                                  .participationStatus ===
+                                                  session.pivot
+                                                    .participationStatus ===
                                                   "Cancelled" ||
-                                                session.pivot
-                                                  .participationStatus ===
+                                                  session.pivot
+                                                    .participationStatus ===
                                                   "Waitlisted"
                                                   ? "danger"
                                                   : "success"
