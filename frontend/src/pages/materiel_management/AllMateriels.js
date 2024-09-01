@@ -206,7 +206,7 @@ function AllMateriels() {
               <ToastContainer />
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
-                  Liste de tous les matériaux
+                  Liste de tous les matériels
                 </h4>
                 <Button
                   variant="outline-success"
@@ -267,7 +267,7 @@ function AllMateriels() {
                               <Form.Control
                                 id="search"
                                 type="text"
-                                placeholder="Recherchez des matériaux ..."
+                                placeholder="Recherchez des matériels ..."
                                 size="lg"
                                 name=""
                                 value={wordEntered}

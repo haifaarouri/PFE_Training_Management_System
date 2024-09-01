@@ -110,6 +110,7 @@ const EmailTemplateModal = ({ show, onHide, emailTemplate }) => {
                   <Button
                     className="btn-sm btn-icon btn-inverse-danger mx-1"
                     onClick={() => handleDelete(emailTemplate.id)}
+                    disabled={emailTemplate.variable_templates.length > 0}
                   >
                     <AiFillDelete size={22} />
                   </Button>
@@ -347,6 +348,10 @@ function AllEmailTemplates() {
                                       }
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={
+                                        emailTemplate.variable_templates
+                                          .length > 0
+                                      }
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>

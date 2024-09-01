@@ -393,6 +393,7 @@ function AllSalles() {
                                       onClick={() => handleDeleteSalle(u.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={u.state === "USED"}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>
@@ -454,6 +455,7 @@ function AllSalles() {
                                       onClick={() => handleDeleteSalle(u.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={u.state === "USED"}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>

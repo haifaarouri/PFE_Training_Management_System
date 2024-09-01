@@ -198,6 +198,7 @@ function ParticipantFeedback() {
               ids = surveys[index].session_ids.map((id) => id);
             }
           }
+
           if (ids.includes(selectedSession)) {
             for (let index = 0; index < ids.length; index++) {
               try {
@@ -219,6 +220,14 @@ function ParticipantFeedback() {
 
             setLoading(false);
             return responsesToken;
+          } else {
+            Swal.fire({
+              icon: "warning",
+              title: "Cette session de formation n'a pas de feedbacks !",
+              showConfirmButton: false,
+              timer: 3000,
+            });
+            setLoading(false);
           }
         }
       }

@@ -209,6 +209,7 @@ function Alldocuments() {
                                       onClick={() => handleDeleteDocument(d.id)}
                                       variant="outline-danger"
                                       className="btn btn-sm"
+                                      disabled={d.variable_templates.length > 0}
                                     >
                                       Supprimer{" "}
                                       <i className="mdi mdi-delete"></i>

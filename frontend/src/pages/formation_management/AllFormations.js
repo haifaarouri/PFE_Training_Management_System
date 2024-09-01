@@ -14,6 +14,7 @@ import { GrPlan } from "react-icons/gr";
 import ProgrammeFormationModal from "../../components/ProgrammeFormationModal";
 import axios from "../../services/axios";
 import ReactPaginate from "react-paginate";
+import Spinner from "../../components/Spinner";
 require("moment/locale/fr");
 
 function AllFormations() {
@@ -34,6 +35,7 @@ function AllFormations() {
   const endOffset = itemOffset + itemsPerPage;
   const currentItems = formations?.slice(itemOffset, endOffset);
   const pageCount = Math.ceil(formations?.length / itemsPerPage);
+  const [loading, setLoading] = useState(false);
 
   const handlePageClick = (event) => {
     const newOffset = (event.selected * itemsPerPage) % formations.length;
@@ -190,6 +192,7 @@ function AllFormations() {
   };
 
   const handleCatalog = async (type) => {
+    setLoading(true);
     try {
       if (!localStorage.getItem("token")) {
         const headers = {
@@ -203,6 +206,7 @@ function AllFormations() {
         });
 
         if (response.status === 200) {
+          setLoading(false);
           window.open(response.data.url, "_blank");
           Swal.fire({
             icon: "success",
@@ -227,9 +231,11 @@ function AllFormations() {
         );
 
         if (!response.ok) {
+          setLoading(false);
           const errorData = await response.json();
           throw new Error(`API request failed: ${errorData.error}`);
         }
+        setLoading(false);
         const json = await response.json();
         window.open(json.url, "_blank");
         Swal.fire({
@@ -238,6 +244,7 @@ function AllFormations() {
         });
       }
     } catch (error) {
+      setLoading(false);
       if (!localStorage.getItem("token")) {
         handleError(error.response.data.error);
         Swal.fire({
@@ -262,6 +269,7 @@ function AllFormations() {
           <div className="card shadow-lg p-3 mb-5 bg-white rounded">
             <div className="card-body">
               <ToastContainer />
+              {loading ? <Spinner /> : null}
               <div className="d-flex justify-content-between">
                 <h4 className="card-title mb-5 mt-2">
                   Liste de toutes les formations
@@ -276,7 +284,7 @@ function AllFormations() {
               </div>
               <div className="d-flex justify-content-between px-3 py-3">
                 <div>
-                  <p>Télécharger le catalogue des formations</p>
+                  <p>Télécharger le catalogue des formations</p> 
                   <div className="btn-group">
                     <Button
                       className="btn btn-sm btn-inverse-success"

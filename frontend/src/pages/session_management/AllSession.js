@@ -418,7 +418,7 @@ const EventModal = ({ show, onHide, event }) => {
           {sessionMaterials.length > 0 && (
             <Card className="mb-3">
               <Card.Body>
-                <b>Matériaux réservés pour cette session :</b>
+                <b>matériels réservés pour cette session :</b>
                 <ul>
                   {sessionMaterials.map((material) => (
                     <li key={material.id}>
@@ -468,7 +468,7 @@ const EventModal = ({ show, onHide, event }) => {
                   className="btn-sm btn-inverse-primary"
                   onClick={handleShowMaterialReservationModal}
                 >
-                  Réserver matériaux
+                  Réserver matériels
                   <MdLaptopChromebook size={25} />
                 </Button>
                 <Button

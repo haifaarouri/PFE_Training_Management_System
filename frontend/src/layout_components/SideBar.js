@@ -41,7 +41,7 @@ function SideBar({ isSidebarVisible }) {
     {
       path: "/materiaux",
       icon: "mdi-laptop",
-      title: "Gestions des Materiaux",
+      title: "Gestions des Matériels",
     },
     {
       path: "/formateurs",

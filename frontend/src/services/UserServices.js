@@ -1,5 +1,19 @@
+import Swal from "sweetalert2";
 import { apiFetch } from "./api";
 import axios from "./axios";
+import { toast } from "react-toastify";
+
+const handleError = (err) =>
+  toast.error(err, {
+    position: "top-center",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+  });
 
 export const fetchUserData = async () => {
   try {
@@ -76,7 +90,16 @@ export const editUser = async (id, formData) => {
       return response;
     }
   } catch (error) {
-    console.log("Error editing user with this id :", error);
+    console.log(error);
+      Object.keys(error.response.data.errors).forEach((e) => {
+        handleError(error.response.data.errors[e][0]);
+      });
+      handleError(error.response.data.message);
+      Swal.fire({
+        icon: "error",
+        title: `Oops...!`,
+        text: "Quelque chose s'est mal passé !",
+      });
   }
 };
 

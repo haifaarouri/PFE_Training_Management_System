@@ -1,19 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
-// import DatePicker from "react-datepicker";
-// import "react-datepicker/dist/react-datepicker.css";
-// import "../../components/datePicker.css";
 import axios from "../../services/axios";
 import Swal from "sweetalert2";
 import { useNavigate, useParams } from "react-router-dom";
 import { editSalle, fetchSalleById } from "../../services/SalleServices";
-// import { formatISO } from "date-fns";
-// import moment from "moment";
-// require("moment/locale/fr");
 
 const EditSalle = () => {
-  // const [dates, setDates] = useState([{ startDate: null, endDate: null }]);
   const [validated, setValidated] = useState(false);
   const formRef = useRef();
   const navigate = useNavigate();
@@ -24,7 +17,6 @@ const EditSalle = () => {
     capacity: "",
     id: "",
     disposition: "",
-    // disponibility: [],
     image: "",
     state: "",
   });
@@ -33,35 +25,12 @@ const EditSalle = () => {
     const fetchSalle = async () => {
       const salleData = await fetchSalleById(id);
       setSalle(salleData);
-      // const initialDates = salleData.disponibility.map((dispo) => {
-      //   return {
-      //     startDate: dispo.startDate ? new Date(dispo.startDate.date) : null,
-      //     endDate: dispo.endDate ? new Date(dispo.endDate.date) : null,
-      //   };
-      // });
-      // setDates(initialDates);
-      // setSalle({ ...salleData, disponibility: initialDates });
     };
 
     if (id) {
       fetchSalle();
     }
   }, [id]);
-
-  // const handleDateChange = (dates, index) => {
-  //   const [start, end] = dates;
-  //   setDates((current) =>
-  //     current?.map((range, i) =>
-  //       i === index ? { ...range, startDate: start, endDate: end } : range
-  //     )
-  //   );
-  //   setSalle((prev) => ({ ...prev, disponibility: dates }));
-  // };
-
-  // const addNewRange = () => {
-  //   setDates((current) => [...current, { startDate: null, endDate: null }]);
-  //   setSalle((prev) => ({ ...prev, disponibility: dates }));
-  // };
 
   const isWhitespace = (str) => {
     return str.trim() === "";
@@ -93,23 +62,11 @@ const EditSalle = () => {
 
       setValidated(true);
 
-      // const formattedDisponibility = dates
-      //   .map((range) => ({
-      //     startDate: range.startDate
-      //       ? formatISO(range.startDate, { representation: "date" })
-      //       : null,
-      //     endDate: range.endDate
-      //       ? formatISO(range.endDate, { representation: "date" })
-      //       : null,
-      //   }))
-      //   .filter((range) => range.startDate && range.endDate);
-
       const formData = new FormData();
       formData.append("_method", "PUT");
       formData.append("name", salle.name);
       formData.append("capacity", salle.capacity);
       formData.append("disposition", salle.disposition);
-      // formData.append("disponibility", JSON.stringify(formattedDisponibility));
       formData.append("image", salle.image);
       formData.append("state", salle.state);
 
@@ -128,14 +85,12 @@ const EditSalle = () => {
           capacity: "",
           id: "",
           disposition: "",
-          // disponibility: [],
           image: "",
           state: "",
         });
         navigate("/salles");
       }
     } catch (error) {
-      console.log(error);
       if (error && error.response.status === 422) {
         handleError(error.response.data.message);
         Swal.fire({

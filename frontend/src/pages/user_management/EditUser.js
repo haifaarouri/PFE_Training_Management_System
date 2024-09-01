@@ -58,8 +58,7 @@ function EditUser() {
 
       const res = await editUser(id, formData);
 
-      if (res.data.message) {
-
+      if (res) {
         Swal.fire({
           icon: "success",
           title: res.data.message,
@@ -79,9 +78,7 @@ function EditUser() {
         navigate("/super-admin/users");
       }
     } catch (error) {
-      if (error.response.status === 422) {
-        console.log(error.response.data.message);
-      }
+      console.log(error);
     }
   };
 

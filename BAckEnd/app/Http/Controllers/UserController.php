@@ -65,7 +65,7 @@ class UserController extends Controller
             $request->validate([
                 'firstName' => 'required|string|max:255',
                 'lastName' => 'required|string|max:255',
-                'phoneNumber' => 'required|string|max:255',
+                'phoneNumber' => 'required|string|min:8|max:8',
                 'email' => 'required|string|email|max:255|unique:users',
                 'profileImage' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'role' => 'required|string|max:255'
@@ -103,7 +103,7 @@ class UserController extends Controller
                 $request->validate([
                     'firstName' => 'required|string|max:255',
                     'lastName' => 'required|string|max:255',
-                    'phoneNumber' => 'required|string|max:255',
+                    'phoneNumber' => 'required|string|max:8|min:8',
                     'email' => 'required|string|email|max:255',
                     'role' => 'required|string|max:255'
                 ]);
@@ -172,7 +172,7 @@ class UserController extends Controller
                 $request->validate([
                     'firstName' => 'required|string|max:255',
                     'lastName' => 'required|string|max:255',
-                    'phoneNumber' => 'required|string|max:255',
+                    'phoneNumber' => 'required|string|max:8|min:8',
                     'email' => 'required|string|email|max:255',
                     'password' => 'required|string|min:8|confirmed',
                 ]);
