@@ -240,7 +240,7 @@ function Allparteniares() {
               <div className="table-responsive">
                 <table className="table table-striped table-hover">
                   <thead>
-                    <tr>
+                    <tr style={{ color: "black" }}>
                       <th>Nom de l'entreprise</th>
                       <th>Nom du contact</th>
                       <th>E-mail</th>
