@@ -54,6 +54,7 @@ function AllFormations() {
   const handleFilter = (event) => {
     const searchWord = event.target.value.toLowerCase();
     setWordEntered(searchWord);
+
     if (
       columnName &&
       columnName !== "Colonne" &&
@@ -77,7 +78,9 @@ function AllFormations() {
           (formation) => formation[columnName] === parseInt(searchWord)
         );
       setFilteredData(newFilter);
-    } else {
+    } else if (
+      columnName &&
+      columnName !== "Colonne") {
       const newFilter =
         formations.length > 0 &&
         formations.filter((formation) => {
@@ -284,7 +287,7 @@ function AllFormations() {
               </div>
               <div className="d-flex justify-content-between px-3 py-3">
                 <div>
-                  <p>Télécharger le catalogue des formations</p> 
+                  <p>Télécharger le catalogue des formations</p>
                   <div className="btn-group">
                     <Button
                       className="btn btn-sm btn-inverse-success"

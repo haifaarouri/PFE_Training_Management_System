@@ -66,7 +66,7 @@ function AssignFormationModal({ show, handleClose, partenaireId }) {
         if (res) {
           Swal.fire({
             icon: "success",
-            title: res.data.message,
+            title: res.message,
             showConfirmButton: false,
             timer: 2000,
           });
